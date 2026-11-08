@@ -11,7 +11,7 @@ public struct AppConfig: Sendable, Equatable {
     public var hotlineNumber: String
     public var appGroup: String
 
-    public static let defaultAppGroup = "group.com.kavach.app"
+    public static let defaultAppGroup = "group.com.hack.kavach.app"
 
     public init(displayName: String, spacetimeURL: URL, databaseName: String, agentURL: URL,
                 hotlineNumber: String = "", appGroup: String = AppConfig.defaultAppGroup) {

@@ -50,5 +50,7 @@
 		<key>NSExtensionPrincipalClass</key>
 		<string>$(PRODUCT_MODULE_NAME).ReportViewController</string>
 	</dict>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>$(APP_DISPLAY_NAME) connects to its server on your local network to check messages and alert your family.</string>
 </dict>
 </plist>

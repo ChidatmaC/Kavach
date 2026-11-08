@@ -24,7 +24,7 @@
 	<array>
 		<dict>
 			<key>CFBundleURLName</key>
-			<string>com.kavach.app</string>
+			<string>com.hack.kavach.app</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
 				<string>kavach</string>
@@ -54,13 +54,15 @@
 	</dict>
 	<key>NSFaceIDUsageDescription</key>
 	<string>Confirm it's really you before answering a family check.</string>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>$(APP_DISPLAY_NAME) connects to its server on your local network to check messages and alert your family.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Choose a screenshot of a message to check it.</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
 	<string>Not used.</string>
 	<key>NSUserActivityTypes</key>
 	<array>
-		<string>com.kavach.app.companion</string>
+		<string>com.hack.kavach.app.companion</string>
 	</array>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>

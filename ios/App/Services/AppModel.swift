@@ -254,7 +254,7 @@ final class AppModel {
 }
 
 enum CallDirectoryReloader {
-    static let extensionId = "com.kavach.app.CallDirectory"
+    static let extensionId = "com.hack.kavach.app.CallDirectory"
     static func reload() {
         CXCallDirectoryManager.sharedInstance.reloadExtension(withIdentifier: extensionId) { _ in }
     }

@@ -67,11 +67,11 @@ copy and Siri phrases (`\(.applicationName)`) all follow it.
 ## Running on a device
 
 1. In Xcode, select your team on **all five** targets (app + 4 extensions). Bundle ids are
-   `com.kavach.app`, `.CallDirectory`, `.Report`, `.Share`, `.MessageFilter`; change the prefix if your
+   `com.hack.kavach.app`, `.CallDirectory`, `.Report`, `.Share`, `.MessageFilter`; change the prefix if your
    team can't use them. Then also change the App Group (`APP_GROUP_ID` in the xcconfig) and
    `CallDirectoryReloader.extensionId` in `App/Services/AppModel.swift`.
-2. Capabilities that automatic signing must provision: App Groups (`group.com.kavach.app`) on every
-   target, Push Notifications on the app, Keychain Sharing (`com.kavach.shared`).
+2. Capabilities that automatic signing must provision: App Groups (`group.com.hack.kavach.app`) on every
+   target, Push Notifications on the app, Keychain Sharing (`com.hack.kavach.shared`).
 3. Run the app once and register (name + phone). This stores the token the extensions use.
 
 ### Enable the extensions (on the iPhone)
@@ -111,7 +111,7 @@ For rehearsals and screenshots on the Simulator:
 ```sh
 SIMCTL_CHILD_KAVACH_DEBUG_TOKEN=<spacetime token> \
 SIMCTL_CHILD_KAVACH_DEBUG_ROUTE=companion \   # or check, help, actnow:<incident id>
-xcrun simctl launch booted com.kavach.app
+xcrun simctl launch booted com.hack.kavach.app
 ```
 
 ## What only a device can verify

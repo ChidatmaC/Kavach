@@ -1,5 +1,6 @@
 #!/bin/sh
-# Starts the local Kavach backend: agent service (:8088) and photon-worker in console mode (:8090).
+# Starts the local Kavach backend: agent service (:8088) and photon-worker (:8090), whose gateway
+# (console or photon) comes from MESSAGING_GATEWAY in .env.
 # SpacetimeDB must already be running (`spacetime start` in another terminal).
 # Logs: .run/agents.log, .run/photon.log. Text the agent with scripts/text.sh. Stop with scripts/stop_local.sh.
 set -e
@@ -15,7 +16,7 @@ scripts/stop_local.sh >/dev/null 2>&1 || true
 rm -f .run/photon.in && mkfifo .run/photon.in
 nohup sh -c 'exec 3<>.run/photon.in; sleep 2147483647' >/dev/null 2>&1 &
 echo $! > .run/fifo_holder.pid
-(cd photon-worker && MESSAGING_GATEWAY=console nohup npx tsx src/main.ts < ../.run/photon.in > ../.run/photon.log 2>&1 &)
+(cd photon-worker && nohup npx tsx src/main.ts < ../.run/photon.in > ../.run/photon.log 2>&1 &)
 
 printf 'Waiting for services'
 for i in $(seq 1 30); do

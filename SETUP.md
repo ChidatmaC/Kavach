@@ -148,11 +148,37 @@ see `voice/README.md`.
 
 ## Running on a real iPhone
 
-See `ios/README.md`. In short: choose your Apple team on all five targets (app plus four extensions),
-change the bundle ids and App Group if needed, and point the app at the Mac's LAN IP (Settings → Server
-settings in the app, or `ios/Config/Local.xcconfig`). Start SpacetimeDB so other devices can reach it:
-`spacetime start --listen-addr 0.0.0.0:3000`. Caller labels, the Recents report extension, the Action
-Button and push notifications only work on a device.
+See `ios/README.md` for details. Put your settings in `ios/Config/Local.xcconfig` (gitignored), not in
+Xcode, because `xcodegen generate` rewrites the project:
+
+```
+DEVELOPMENT_TEAM = <your Apple team id>
+SPACETIME_URL = https:/$()/<spacetimedb address>
+AGENT_SERVICE_URL = https:/$()/<agent service address>
+```
+
+The bundle ids are `com.hack.kavach.app` (+ `.CallDirectory`, `.Report`, `.Share`, `.MessageFilter`). If
+your team can't use them, change the prefix everywhere in `ios/` (project.yml, entitlements, App Group in
+`Config/Kavach.xcconfig`, `AppModel.swift`, `SharedStore.swift`, `AppConfig.swift`) and `APNS_TOPIC` in
+`.env`; extension ids must start with the app's id.
+
+**Reaching the backend from the phone.** `127.0.0.1` on a phone is the phone itself. Two options:
+
+- **Tunnels (works on any network, recommended):** `brew install cloudflared`, then
+  `cloudflared tunnel --url http://127.0.0.1:3000` and `cloudflared tunnel --url http://127.0.0.1:8088`
+  in two terminals. Use the two `https://….trycloudflare.com` addresses they print as `SPACETIME_URL` and
+  `AGENT_SERVICE_URL`. The addresses change every time the tunnels restart, and anyone with them can
+  reach your dev backend while they run.
+- **Same Wi-Fi:** start SpacetimeDB with `spacetime start --listen-addr 0.0.0.0:3000` and use
+  `http:/$()/<Mac IP>:3000` / `:8088` (`ipconfig getifaddr en0`). Fails on hotspots and on campus or venue
+  Wi-Fi that blocks device-to-device traffic.
+
+**Push notifications** need an APNs key (paid Apple Developer account): set `APNS_KEY_ID`,
+`APNS_TEAM_ID` and `APNS_KEY_P8` (path to the `.p8` file) in `.env`, then restart the services. Xcode
+builds use Apple's sandbox push server, which is the default.
+
+Caller labels, the Recents report extension, the Action Button and push notifications only work on a
+device.
 
 ## Troubleshooting
 

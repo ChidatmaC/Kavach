@@ -1,6 +1,6 @@
 name: Kavach
 options:
-  bundleIdPrefix: com.kavach
+  bundleIdPrefix: com.hack.kavach
   deploymentTarget:
     iOS: "26.0"
   createIntermediateGroups: true
@@ -18,7 +18,6 @@ settings:
     MARKETING_VERSION: "0.1.0"
     CURRENT_PROJECT_VERSION: "1"
     ENABLE_USER_SCRIPT_SANDBOXING: YES
-    DEVELOPMENT_TEAM: ""
     CODE_SIGN_STYLE: Automatic
     GENERATE_INFOPLIST_FILE: NO
 
@@ -33,6 +32,7 @@ x-kavach-info: &kavachInfo
   KavachHotlineNumber: $(HOTLINE_NUMBER)
   KavachAppGroup: $(APP_GROUP_ID)
   AppIdentifierPrefix: $(AppIdentifierPrefix)
+  NSLocalNetworkUsageDescription: $(APP_DISPLAY_NAME) connects to its server on your local network to check messages and alert your family.
   NSAppTransportSecurity:
     NSAllowsLocalNetworking: true
     # Hackathon: the backend runs on a laptop over plain HTTP on the LAN.
@@ -42,7 +42,7 @@ x-group-entitlements: &groupEntitlements
   com.apple.security.application-groups:
     - $(APP_GROUP_ID)
   keychain-access-groups:
-    - $(AppIdentifierPrefix)com.kavach.shared
+    - $(AppIdentifierPrefix)com.hack.kavach.shared
 
 targets:
   KavachKit:
@@ -54,7 +54,7 @@ targets:
         buildPhase: resources
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.kavach.KavachKit
+        PRODUCT_BUNDLE_IDENTIFIER: com.hack.kavach.KavachKit
         APPLICATION_EXTENSION_API_ONLY: YES
         GENERATE_INFOPLIST_FILE: YES
         SKIP_INSTALL: YES
@@ -85,9 +85,9 @@ targets:
         NSFaceIDUsageDescription: Confirm it's really you before answering a family check.
         NSPhotoLibraryUsageDescription: Choose a screenshot of a message to check it.
         NSSpeechRecognitionUsageDescription: Not used.
-        NSUserActivityTypes: [com.kavach.app.companion]
+        NSUserActivityTypes: [com.hack.kavach.app.companion]
         CFBundleURLTypes:
-          - CFBundleURLName: com.kavach.app
+          - CFBundleURLName: com.hack.kavach.app
             CFBundleURLSchemes: [kavach]
     entitlements:
       path: App/Kavach.entitlements
@@ -96,7 +96,7 @@ targets:
         aps-environment: development
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.kavach.app
+        PRODUCT_BUNDLE_IDENTIFIER: com.hack.kavach.app
         PRODUCT_NAME: Kavach
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
@@ -124,7 +124,7 @@ targets:
       properties: *groupEntitlements
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.kavach.app.CallDirectory
+        PRODUCT_BUNDLE_IDENTIFIER: com.hack.kavach.app.CallDirectory
         APPLICATION_EXTENSION_API_ONLY: YES
 
   ReportExtension:
@@ -150,7 +150,7 @@ targets:
       properties: *groupEntitlements
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.kavach.app.Report
+        PRODUCT_BUNDLE_IDENTIFIER: com.hack.kavach.app.Report
         APPLICATION_EXTENSION_API_ONLY: YES
 
   ShareExtension:
@@ -179,7 +179,7 @@ targets:
       properties: *groupEntitlements
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.kavach.app.Share
+        PRODUCT_BUNDLE_IDENTIFIER: com.hack.kavach.app.Share
         APPLICATION_EXTENSION_API_ONLY: YES
 
   MessageFilterExtension:
@@ -203,7 +203,7 @@ targets:
       properties: *groupEntitlements
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.kavach.app.MessageFilter
+        PRODUCT_BUNDLE_IDENTIFIER: com.hack.kavach.app.MessageFilter
         APPLICATION_EXTENSION_API_ONLY: YES
 
   KavachTests:
@@ -214,7 +214,7 @@ targets:
       - target: KavachKit
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.kavach.KavachTests
+        PRODUCT_BUNDLE_IDENTIFIER: com.hack.kavach.KavachTests
         GENERATE_INFOPLIST_FILE: YES
 
 schemes:

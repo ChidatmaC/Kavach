@@ -678,31 +678,24 @@
 				LastUpgradeCheck = 1430;
 				TargetAttributes = {
 					121AAACB6BEE5B28FDA71916 = {
-						DevelopmentTeam = "";
 						ProvisioningStyle = Automatic;
 					};
 					1803C113802066D9CAD2AA7E = {
-						DevelopmentTeam = "";
 						ProvisioningStyle = Automatic;
 					};
 					235EFA7FFEDE1D67A9ADEFE2 = {
-						DevelopmentTeam = "";
 						ProvisioningStyle = Automatic;
 					};
 					5C062110D4AE58A966C5E845 = {
-						DevelopmentTeam = "";
 						ProvisioningStyle = Automatic;
 					};
 					65075F434038BCFBC0DED49D = {
-						DevelopmentTeam = "";
 						ProvisioningStyle = Automatic;
 					};
 					806E936E28710ADB89D3CA7C = {
-						DevelopmentTeam = "";
 						ProvisioningStyle = Automatic;
 					};
 					CFBC2F8E507A4D0B664FF3BE = {
-						DevelopmentTeam = "";
 						ProvisioningStyle = Automatic;
 					};
 				};
@@ -905,7 +898,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.kavach.app;
+				PRODUCT_BUNDLE_IDENTIFIER = com.hack.kavach.app;
 				PRODUCT_NAME = Kavach;
 				SDKROOT = iphoneos;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -930,7 +923,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.kavach.KavachKit;
+				PRODUCT_BUNDLE_IDENTIFIER = com.hack.kavach.KavachKit;
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -948,7 +941,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.kavach.KavachTests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.hack.kavach.KavachTests;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -965,7 +958,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.kavach.app.Share;
+				PRODUCT_BUNDLE_IDENTIFIER = com.hack.kavach.app.Share;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -982,7 +975,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.kavach.app.MessageFilter;
+				PRODUCT_BUNDLE_IDENTIFIER = com.hack.kavach.app.MessageFilter;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -999,7 +992,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.kavach.app.CallDirectory;
+				PRODUCT_BUNDLE_IDENTIFIER = com.hack.kavach.app.CallDirectory;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -1016,7 +1009,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.kavach.app.Share;
+				PRODUCT_BUNDLE_IDENTIFIER = com.hack.kavach.app.Share;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -1060,7 +1053,6 @@
 				COPY_PHASE_STRIP = NO;
 				CURRENT_PROJECT_VERSION = 1;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				DEVELOPMENT_TEAM = "";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
@@ -1098,7 +1090,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.kavach.app;
+				PRODUCT_BUNDLE_IDENTIFIER = com.hack.kavach.app;
 				PRODUCT_NAME = Kavach;
 				SDKROOT = iphoneos;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -1118,7 +1110,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.kavach.app.Report;
+				PRODUCT_BUNDLE_IDENTIFIER = com.hack.kavach.app.Report;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -1134,7 +1126,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.kavach.KavachTests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.hack.kavach.KavachTests;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -1156,7 +1148,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.kavach.KavachKit;
+				PRODUCT_BUNDLE_IDENTIFIER = com.hack.kavach.KavachKit;
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -1175,7 +1167,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.kavach.app.CallDirectory;
+				PRODUCT_BUNDLE_IDENTIFIER = com.hack.kavach.app.CallDirectory;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -1219,7 +1211,6 @@
 				COPY_PHASE_STRIP = NO;
 				CURRENT_PROJECT_VERSION = 1;
 				DEBUG_INFORMATION_FORMAT = dwarf;
-				DEVELOPMENT_TEAM = "";
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
@@ -1263,7 +1254,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.kavach.app.Report;
+				PRODUCT_BUNDLE_IDENTIFIER = com.hack.kavach.app.Report;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -1280,7 +1271,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.kavach.app.MessageFilter;
+				PRODUCT_BUNDLE_IDENTIFIER = com.hack.kavach.app.MessageFilter;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};

@@ -46,7 +46,7 @@ public struct SharedStore: Sendable {
 
     // MARK: Token (Keychain, shared with extensions)
 
-    public static let keychainService = "com.kavach.spacetime"
+    public static let keychainService = "com.hack.kavach.spacetime"
     public static let keychainAccount = "app-token"
 
     /// Stores the SpacetimeDB token in the Keychain. Tries the shared access group first (so the
@@ -83,7 +83,7 @@ public struct SharedStore: Sendable {
     }
 
     private static var accessGroups: [String?] {
-        // $(AppIdentifierPrefix)com.kavach.shared: the prefix is the team id, read from any
+        // $(AppIdentifierPrefix)com.hack.kavach.shared: the prefix is the team id, read from any
         // existing item is not possible up front, so try the bare app group access as well.
         [sharedAccessGroup, nil]
     }
@@ -91,7 +91,7 @@ public struct SharedStore: Sendable {
     private static var sharedAccessGroup: String? {
         guard let prefix = Bundle.main.object(forInfoDictionaryKey: "AppIdentifierPrefix") as? String, !prefix.isEmpty
         else { return nil }
-        return prefix + "com.kavach.shared"
+        return prefix + "com.hack.kavach.shared"
     }
 
     private static func baseQuery(group: String?) -> [String: Any] {
