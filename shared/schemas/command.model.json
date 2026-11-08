@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "MODEL_FAST command parse",
+  "type": "object",
+  "properties": {
+    "action": {
+      "enum": [
+        "report",
+        "add_family",
+        "remove_family",
+        "list_family",
+        "status",
+        "set_code_word",
+        "get_code_word",
+        "briefing",
+        "feedback",
+        "help"
+      ]
+    },
+    "phone": {
+      "type": "string",
+      "maxLength": 40
+    },
+    "link": {
+      "type": "string",
+      "maxLength": 200
+    },
+    "target": {
+      "enum": [
+        "last",
+        "value",
+        ""
+      ]
+    },
+    "name": {
+      "type": "string",
+      "maxLength": 60
+    },
+    "relationship": {
+      "type": "string",
+      "maxLength": 40
+    },
+    "code_word": {
+      "type": "string",
+      "maxLength": 60
+    },
+    "label": {
+      "enum": [
+        "safe",
+        "suspicious",
+        "likely_scam",
+        ""
+      ]
+    },
+    "correct": {
+      "type": [
+        "boolean",
+        "null"
+      ]
+    }
+  },
+  "required": [
+    "action"
+  ],
+  "additionalProperties": true
+}

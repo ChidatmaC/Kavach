@@ -6,7 +6,7 @@ import {
   ZERO_TS, appName, e164, oneOf, queueMessage, requirePersonAccess, requireService, senderPerson, serviceRole,
 } from '../lib';
 
-const ROLES = ['agents', 'photon', 'voice', 'admin'] as const;
+const ROLES = ['agents', 'photon', 'admin'] as const;
 const CHANNELS = ['imessage', 'sms', 'rcs', 'whatsapp'] as const;
 
 /** A service presents the shared claim key once to bind its identity to a role (spec 12). */
@@ -24,36 +24,21 @@ export const claim_service = spacetimedb.reducer(
 function newPerson(phone: string, name: string, ownerHex: string, now: Timestamp) {
   return {
     id: 0n, owner_hex: ownerHex, phone_e164: phone, display_name: name,
-    accessibility_mode: false, sharing_paused: false, critical_overrides_pause: false, practice_consent: false,
+    accessibility_mode: false, sharing_paused: false, critical_overrides_pause: false,
     apns_token: '', family_code_word: '', tz_offset_minutes: -360,
     recovery_watch_until: ZERO_TS, campaign_watch_until: ZERO_TS, watch_campaign_id: 0n, watch_caller_e164: '',
-    created_at: now,
+    created_at: now, last_sign_in_at: ZERO_TS,
   };
 }
 
-/** iOS app: create or claim the person for this phone and bind it to the caller's identity. */
+/**
+ * Retired: phone numbers are now proven with a texted code (request_sign_in -> verify_sign_in in
+ * reducers/auth.ts). Kept so old app builds get a clear error instead of "no such reducer".
+ */
 export const register_person = spacetimedb.reducer(
   { phone: t.string(), name: t.string() },
-  (ctx, { phone, name }) => {
-    e164('phone', phone);
-    const n = name.trim().slice(0, 60);
-    if (!n) throw new SenderError('name required');
-    const mine = senderPerson(ctx);
-    if (mine && mine.phone_e164 !== phone) throw new SenderError('this device is registered to another number');
-    const existing = ctx.db.person.phone_e164.find(phone);
-    const hex = ctx.sender.toHexString();
-    if (existing) {
-      // MVP: phone ownership is not verified by SMS code yet (see docs/CONTRACTS.md).
-      if (existing.owner_hex && existing.owner_hex !== hex) throw new SenderError('number already registered');
-      ctx.db.person.id.update({ ...existing, owner_hex: hex, display_name: n });
-    } else {
-      ctx.db.person.insert(newPerson(phone, n, hex, ctx.timestamp));
-    }
-    // Link any contact rows that point at this number.
-    const p = ctx.db.person.phone_e164.find(phone)!;
-    for (const c of ctx.db.contact.phone_e164.filter(phone)) {
-      ctx.db.contact.id.update({ ...c, is_app_user: true, linked_person_id: p.id });
-    }
+  (_ctx, _args) => {
+    throw new SenderError('register_person is retired: use request_sign_in, then verify_sign_in');
   }
 );
 
@@ -61,7 +46,7 @@ export const register_person = spacetimedb.reducer(
 export const ensure_person = spacetimedb.reducer(
   { phone: t.string(), name: t.string() },
   (ctx, { phone, name }) => {
-    requireService(ctx, 'photon', 'voice', 'agents');
+    requireService(ctx, 'photon', 'agents');
     e164('phone', phone);
     if (!ctx.db.person.phone_e164.find(phone)) ctx.db.person.insert(newPerson(phone, name.trim().slice(0, 60) || 'Friend', '', ctx.timestamp));
   }
@@ -73,7 +58,6 @@ export const update_settings = spacetimedb.reducer(
     accessibility_mode: t.bool(),
     sharing_paused: t.bool(),
     critical_overrides_pause: t.bool(),
-    practice_consent: t.bool(),
     apns_token: t.string(),
     family_code_word: t.string(),
     tz_offset_minutes: t.i32(),
@@ -86,7 +70,6 @@ export const update_settings = spacetimedb.reducer(
       accessibility_mode: a.accessibility_mode,
       sharing_paused: a.sharing_paused,
       critical_overrides_pause: a.critical_overrides_pause,
-      practice_consent: a.practice_consent,
       apns_token: a.apns_token.slice(0, 200),
       family_code_word: a.family_code_word.trim().slice(0, 60),
       tz_offset_minutes: a.tz_offset_minutes,

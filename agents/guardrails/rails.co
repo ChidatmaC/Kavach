@@ -8,14 +8,8 @@ define flow kavach scope check
 define bot refuse off topic
   "I can only help with scams and staying safe. Forward me a message you're unsure about, or text help."
 
-# Output rails. The service marks practice texts with a "[practice]" user turn, which adds the
-# practice rails: no real links and never asking for anything real.
+# Output rail: never ask for codes or payment, no medical/legal/financial advice.
 define flow kavach output safety
-  if $user_message == "[practice]"
-    $practice_ok = execute check_practice_output(text=$bot_message)
-    if not $practice_ok
-      bot refuse unsafe practice
-      stop
   $ok = execute check_output_safety(text=$bot_message)
   if not $ok
     bot refuse unsafe output
@@ -23,6 +17,3 @@ define flow kavach output safety
 
 define bot refuse unsafe output
   "I can't send that. Never share codes, PINs, passwords or payment details with anyone."
-
-define bot refuse unsafe practice
-  "Practice text blocked: it must not contain links or ask for anything real."

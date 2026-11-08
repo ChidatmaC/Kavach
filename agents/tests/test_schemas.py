@@ -11,7 +11,7 @@ from kavach.workflows.scam_check import fallback_output
 
 def test_all_schemas_load():
     names = all_schema_names()
-    for wf in ("router", "scam_check", "interview", "family_alert", "verify_relative", "trusted_sender", "briefing", "practice", "push"):
+    for wf in ("router", "scam_check", "interview", "family_alert", "verify_relative", "trusted_sender", "briefing", "command", "advise", "app_feedback", "call_report", "push"):
         assert f"{wf}.output" in names and f"{wf}.input" in names
     for n in names:
         validate(n, {}) if False else None  # check_schema runs on load

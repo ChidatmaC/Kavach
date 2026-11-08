@@ -13,26 +13,39 @@ struct KavachApp: App {
                 .environment(model)
                 .kavachDisplay(model.prefs)
                 .onOpenURL { url in handle(url) }
-                .task { model.startPolling() }
+                .task {
+                    model.startPolling()
+                    await model.refreshNotificationStatus()
+                    #if DEBUG
+                    if ProcessInfo.processInfo.environment["KAVACH_DEBUG_CALL_FOLLOWUP"] == "1" {
+                        CallFollowUpCenter.shared.debugShowPrompt()
+                    }
+                    #endif
+                }
         }
         .onChange(of: phase) { _, new in
             switch new {
             case .active:
                 model.reloadConfig()
                 model.startPolling()
+                CallFollowUpCenter.shared.appBecameActive()
+                Task { await model.refreshNotificationStatus() }
             case .background:
                 model.stopPolling()
+                CallFollowUpCenter.shared.appEnteredBackground()
             default: break
             }
         }
     }
 
-    /// kavach://companion, kavach://check, kavach://help (used by the Share extension "Open app").
+    /// kavach://companion, kavach://check, kavach://help (used by the Share extension "Open app"),
+    /// kavach://report (Report a call).
     private func handle(_ url: URL) {
         switch url.host() {
         case "companion": model.route = .companion
         case "check": model.route = .check(prefill: nil)
         case "help": model.route = .needHelp
+        case "report": model.route = .reportCall
         default: break
         }
     }
@@ -44,7 +57,9 @@ struct RootView: View {
     var body: some View {
         @Bindable var model = model
         Group {
-            if model.isRegistered {
+            if model.shouldOfferAgentContact {
+                AgentContactStepView()
+            } else if model.isRegistered {
                 MainTabs()
             } else {
                 OnboardingView()
@@ -56,7 +71,9 @@ struct RootView: View {
                 case .check(let prefill): CheckMessageView(prefill: prefill ?? "")
                 case .needHelp: NeedHelpView()
                 case .actNow(let id): ActNowView(incidentId: id)
-                case .interview(let id): InterviewFlowView(incidentId: id)
+                case .interview(let id):
+                    InterviewFlowView(incidentId: id, reportNumber: model.reportNumber(for: id))
+                case .reportCall: ReportCallView()
                 case .companion: EmptyView()
                 }
             }
@@ -82,13 +99,21 @@ struct RootView: View {
 
 struct MainTabs: View {
     @Environment(AppModel.self) private var model
+    @State private var tab = "home"
 
     var body: some View {
-        TabView {
-            Tab("Home", systemImage: "shield.lefthalf.filled") { NavigationStack { HomeView() } }
-            Tab("This week", systemImage: "calendar") { NavigationStack { ThisWeekView() } }
-            Tab("Family", systemImage: "person.2.fill") { NavigationStack { FamilyView() } }
-            Tab("Settings", systemImage: "gearshape.fill") { NavigationStack { SettingsView() } }
+        TabView(selection: $tab) {
+            Tab("Home", systemImage: "shield.lefthalf.filled", value: "home") { NavigationStack { HomeView() } }
+            Tab("Network", systemImage: "point.3.connected.trianglepath.dotted", value: "network") {
+                NavigationStack { NetworkDashboardView() }
+            }
+            Tab("Family", systemImage: "person.2", value: "family") { NavigationStack { FamilyView() } }
+            Tab("Settings", systemImage: "gearshape", value: "settings") { NavigationStack { SettingsView() } }
+        }
+        .onAppear {
+            #if DEBUG
+            if let t = model.debugTab { tab = t }
+            #endif
         }
     }
 }

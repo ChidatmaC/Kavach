@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "POST /app/feedback (app token)",
+  "type": "object",
+  "properties": {
+    "check_id": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "request_key": {
+      "type": "string",
+      "maxLength": 64
+    },
+    "correct": {
+      "type": "boolean"
+    },
+    "label": {
+      "enum": [
+        "safe",
+        "suspicious",
+        "likely_scam"
+      ]
+    },
+    "note": {
+      "type": "string",
+      "maxLength": 500
+    }
+  },
+  "required": [
+    "correct"
+  ],
+  "anyOf": [
+    {
+      "required": [
+        "check_id"
+      ]
+    },
+    {
+      "required": [
+        "request_key"
+      ]
+    }
+  ],
+  "additionalProperties": false
+}

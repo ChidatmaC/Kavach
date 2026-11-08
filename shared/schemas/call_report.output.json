@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "POST /ios/call-report response",
+  "type": "object",
+  "properties": {
+    "ok": {
+      "type": "boolean"
+    },
+    "incident_id": {
+      "type": "integer"
+    },
+    "severity": {
+      "type": "string"
+    },
+    "request_key": {
+      "type": "string"
+    },
+    "duplicate": {
+      "type": "boolean"
+    },
+    "answers_saved": {
+      "type": "integer"
+    },
+    "reported": {
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "ok",
+    "incident_id",
+    "severity",
+    "request_key",
+    "duplicate"
+  ],
+  "additionalProperties": false
+}

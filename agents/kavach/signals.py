@@ -179,8 +179,39 @@ TACTIC_PATTERNS: dict[str, re.Pattern[str]] = {
     "job_offer": re.compile(r"(?i)\b(recruit(er|ing)|remote (job|role|position|work)|part[- ]time|per day|\$\d+ ?(/|a|per) ?(day|hour)|hiring)\b"),
     "prize": re.compile(r"(?i)\b(you('ve| have)? won|winner|prize|lottery|sweepstakes|claim your (reward|prize))\b"),
     "remote_access": re.compile(r"(?i)\b(anydesk|teamviewer|remote access|install (this|the) app|screen ?share)\b"),
-    "money_request": re.compile(r"(?i)\b(send (me )?money|wire|bail|zelle|venmo|cash ?app|bitcoin|crypto|western union|need \$?\d+|pay (a|the|my) bill)\b"),
+    "money_request": re.compile(r"(?i)\b(send (me |us |him |her |them )?(all |some )?(of )?(your |the |my )?(money|cash|funds|savings)|(transfer|move|wire) (the |your |all )?(money|funds|savings)|wire|bail|zelle|venmo|cash ?app|paypal me|bitcoin|crypto|western union|moneygram|need \$?\d+|lend me|loan me|pay (a|the|my) bill|pay (us|me|him|her)|you owe|pay (today|now|immediately|right away|the fine|the fee|back taxes|what you owe))\b"),
+    "legal_threat": re.compile(r"(?i)\b(arrest(ed)?|warrant|lawsuit|sue you|deport(ed|ation)?|jail time|suspend(ed)? your (social|ssn|license)|legal action)\b"),
+    # Named banks, agencies and companies scammers impersonate, when the message claims to be them.
+    "org_impersonation": re.compile(r"(?i)\b(this is|we are|we're|i am|i'?m|calling from|from|on behalf of|representing)\s+(the\s+|your\s+)?(bank of america|chase|wells fargo|citi(bank)?|capital one|us bank|pnc|td bank|navy federal|your bank|the bank|irs|internal revenue|social security|ssa|medicare|amazon|apple( support)?|microsoft|paypal|venmo|zelle|usps|fedex|ups|dmv|police|sheriff|fbi|the government|customs|t-mobile|verizon|at&t|geek squad|norton|mcafee)\b"),
+    # A relative or friend in trouble who needs help now (the grandparent / family-emergency scam).
+    "family_emergency": re.compile(r"(?i)\b(grand(son|daughter|child|ma|pa|mother|father)|nephew|niece|son|daughter|cousin|mom|dad|brother|sister|friend)\b.{0,80}\b(emergency|jail|arrested|bail|hospital|accident|stuck|stranded|in trouble|lawyer|stolen wallet)\b|\b(emergency|jail|arrested|bail|hospital|accident|stranded|in trouble)\b.{0,80}\b(grand(son|daughter|child)|nephew|niece|son|daughter)\b"),
 }
+
+# Asking someone to buy/send/read gift cards, as opposed to merely mentioning one.
+_GIFT_CARD_ASK = re.compile(r"(?i)\b(buy|get|send|purchase|pick up|grab|scratch|read|text|photo|picture|pay (with|in|using))\b.{0,40}\b(gift ?cards?|itunes|google play|apple cards?|steam cards?|ebay cards?)\b|\b(gift ?cards?|itunes|google play|steam cards?)\b.{0,40}\b(numbers?|codes?|pins?|back of)\b")
+_MONEY_PRESSURE = {"org_impersonation", "impersonation", "urgency", "secrecy", "new_number", "family_emergency",
+                   "upfront_fee", "fee_threat", "legal_threat"}
+
+
+def risk_floor(tactics: list[str], text: str) -> tuple[str, str]:
+    """Rule-based minimum verdict from red-flag tactics, returned as (floor, why). Like the community
+    floor (D14), a model may raise a verdict above it but never lower it: requests for gift cards,
+    codes or remote access, and money requests under pressure or impersonation, are never "safe"."""
+    t = set(tactics)
+    if "gift_card_request" in t and _GIFT_CARD_ASK.search(text or ""):
+        return "likely_scam", "gift_cards"
+    if "code_request" in t:
+        return "likely_scam", "code"
+    if "remote_access" in t:
+        return "likely_scam", "remote_access"
+    if "money_request" in t and t & _MONEY_PRESSURE:
+        return "likely_scam", "money_pressure"
+    if "recovery_offer" in t and "upfront_fee" in t:
+        return "likely_scam", "recovery_fee"
+    if t & {"money_request", "org_impersonation", "family_emergency", "new_number",
+             "upfront_fee", "prize"}:
+        return "suspicious", "money_or_impersonation"
+    return "safe", ""
 
 
 def tactics_of(text: str) -> list[str]:

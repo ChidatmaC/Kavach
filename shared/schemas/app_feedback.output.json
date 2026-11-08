@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "POST /app/feedback response",
+  "type": "object",
+  "properties": {
+    "ok": {
+      "type": "boolean"
+    },
+    "check_id": {
+      "type": "integer"
+    },
+    "label": {
+      "enum": [
+        "safe",
+        "suspicious",
+        "likely_scam",
+        ""
+      ]
+    },
+    "correct": {
+      "type": [
+        "boolean",
+        "null"
+      ]
+    },
+    "label_id": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "ok",
+    "check_id",
+    "label"
+  ],
+  "additionalProperties": false
+}

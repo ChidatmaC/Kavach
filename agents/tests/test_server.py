@@ -11,6 +11,7 @@ def client(monkeypatch):
     monkeypatch.setenv("AGENT_RUN_TIMEOUT_S", "0.2")
     monkeypatch.setenv("KAVACH_USE_NAT", "false")
     monkeypatch.setenv("AGENT_TASK_POLLER", "false")
+    monkeypatch.setenv("KAVACH_OUTCOME_WATCHER", "false")
     from kavach import config
 
     config.settings.cache_clear()

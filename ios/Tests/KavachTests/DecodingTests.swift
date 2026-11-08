@@ -14,11 +14,11 @@ final class DecodingTests: XCTestCase {
         let elements = [
             col("id", "U64"), col("owner_hex", "String"), col("phone_e164", "String"), col("display_name", "String"),
             col("accessibility_mode", "Bool"), col("sharing_paused", "Bool"), col("critical_overrides_pause", "Bool"),
-            col("practice_consent", "Bool"), col("apns_token", "String"), col("family_code_word", "String"),
+            col("apns_token", "String"), col("family_code_word", "String"),
             col("tz_offset_minutes", "I32"), ts("recovery_watch_until"), ts("campaign_watch_until"),
             col("watch_campaign_id", "U64"), col("watch_caller_e164", "String"), ts("created_at"),
         ].joined(separator: ",")
-        let json = #"[{"schema":{"elements":[\#(elements)]},"rows":[[3,"c200bb","+15555559911","Test",false,true,false,false,"","blue pancake",-360,[0],[1794135650335796],0,"",[1794135650335796]]],"total_duration_micros":1286,"stats":{"rows_inserted":0}}]"#
+        let json = #"[{"schema":{"elements":[\#(elements)]},"rows":[[3,"c200bb","+15555559911","Test",false,true,false,"","blue pancake",-360,[0],[1794135650335796],0,"",[1794135650335796]]],"total_duration_micros":1286,"stats":{"rows_inserted":0}}]"#
         let people = try SQLDecoder.decode(Person.self, from: Data(json.utf8))
         XCTAssertEqual(people.count, 1)
         let p = people[0]

@@ -1,9 +1,5 @@
-"""briefing (spec 7) and practice (Stretch).
-
-briefing: summarize the week's incidents and checks, add one habit and current campaigns, then
-`save_briefing` (which also texts it). Tool calls: get_person, read incidents, read checks, save = 4.
-practice: pick a template, write a harmless practice text (no links, never asks for anything real),
-queue it. Tool calls: read drill, get_person, enqueue = 3.
+"""briefing (spec 7): summarize the week's incidents and checks, add one habit and current campaigns,
+then `save_briefing` (which also texts it). Tool calls: get_person, read incidents, read checks, save = 4.
 """
 from __future__ import annotations
 
@@ -13,8 +9,7 @@ from typing import Any
 
 from ..community import load_corpus
 from ..llm import prompt
-from ..log import log
-from .base import MAX_BRIEFING, BadRequest, NotFound, Run, clamp, outbox_args
+from .base import MAX_BRIEFING, BadRequest, NotFound, Run, clamp
 
 WEEK_US = 7 * 24 * 3600 * 1_000_000
 HABITS = [
@@ -86,41 +81,3 @@ async def run_briefing(run: Run, p: dict[str, Any]) -> dict[str, Any]:
     await run.tools.call("reducer", {"name": "save_briefing", "args": {
         "person_id": person_id, "week_start_micros": since, "summary_text": summary, "spoken_text": spoken}})
     return {"summary_text": summary, "spoken_text": spoken}
-
-
-PRACTICE_TEMPLATES = {
-    "new_number": "Hi, it's me! I got a new phone and this is my new number. Text me back here when you can?",
-    "toll": "Toll notice: you have an unpaid toll from last week. Reply to this message to see details.",
-    "carrier_code": "This is your phone carrier's security team. We noticed unusual activity on your line. Reply to this message to talk to us.",
-    "prize": "Congratulations! You've been selected for a special reward. Reply to this message to find out more.",
-    "grandchild": "Grandpa, it's me. I'm in a bit of trouble and I don't want mom to know. Can you text me back?",
-}
-
-
-async def run_practice(run: Run, p: dict[str, Any]) -> dict[str, Any]:
-    drill_id = int(p.get("drill_id") or 0)
-    if not drill_id:
-        raise BadRequest("drill_id required")
-    run.fields["drill_id"] = drill_id
-    rows = await run.tools.call("read", {"query": f"SELECT * FROM svc_drill WHERE id = {drill_id}"})
-    if not rows:
-        raise NotFound("unknown drill")
-    drill = rows[0]
-    person = await run.tools.call("get_person", {"person_id": int(drill["person_id"])})
-    if not person:
-        raise NotFound("unknown person")
-    if not person.get("practice_consent"):
-        raise BadRequest("practice consent is off")
-    template = PRACTICE_TEMPLATES.get(drill.get("template_key") or "", PRACTICE_TEMPLATES["new_number"])
-    body = template
-    model = await run.llm.json("writer", prompt("practice"), json.dumps({"template": template}),
-                               "practice.model", workflow=run.workflow, timeout=6.0)
-    if model:
-        body = model["body"]
-    if not (await run.guard.check_output(body, kind="practice")).ok:
-        log("practice_rail_blocked", workflow=run.workflow, drill_id=drill_id)
-        body = template
-    body = clamp(body, 600)
-    await run.tools.call("reducer", {"name": "enqueue_outbox", "args": outbox_args(
-        person["phone_e164"], "imessage", "practice", body, "normal")})
-    return {"body": body}

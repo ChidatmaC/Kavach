@@ -8,6 +8,7 @@ Tool calls: get_incident, get_person, get_contacts, recovery_steps, enqueue (bat
 from __future__ import annotations
 
 import json
+import re
 from typing import Any
 
 from ..llm import prompt
@@ -58,6 +59,21 @@ def scam_kind(inc: dict, campaign_title: str) -> str:
     return "scam " + ("call" if inc.get("entry_point") in ("companion", "report_swipe", "hotline") else "message")
 
 
+_REPLY = re.compile(r"(?i)\breply\b")
+
+
+def with_reply_prompt(body: str, person_name: str, severity: str, limit: int = 600) -> str:
+    """Every alert asks for a reply (the module tracks it as an alert_request). Critical alerts ask for
+    "I'm calling"; others for an OK. Ours is added here, inside the limit, so the module never has to
+    append (and truncate) its own " Reply OK so <name> knows you saw this."."""
+    body = " ".join((body or "").split())
+    if _REPLY.search(body):
+        return clamp(body, limit)
+    ask = (' Reply "I\'m calling" if you\'re on it.' if severity == "critical"
+           else f" Reply OK so {person_name or 'they'} knows you saw this.")
+    return clamp(body, limit - len(ask)) + ask
+
+
 def explained_alert(app: str, person: dict, inc: dict, steps: list[dict], campaign_title: str = "") -> str:
     """Deterministic explained alert (no model). Different from the module's template fallback."""
     name = person.get("display_name") or "Your family member"
@@ -77,13 +93,11 @@ def explained_alert(app: str, person: dict, inc: dict, steps: list[dict], campai
     if first:
         parts.append(f"First: {human_list(first)}.")
     parts.append(CHECK_IN.get(sev, CHECK_IN["default"]))
-    if sev == "critical":
-        parts.append("Reply \"I'm calling\" if you're on it.")
     body = " ".join(parts)
-    if len(body) > 600:  # drop the least important parts first
+    if len(body) > 550:  # drop the least important parts first, leaving room for the reply prompt
         parts = [x for x in parts if not x.startswith("Tactics:")]
         body = " ".join(parts)
-    return clamp(body, 600)
+    return with_reply_prompt(body, person.get("display_name") or "", sev)
 
 
 async def run_family_alert(run: Run, p: dict[str, Any]) -> dict[str, Any]:
@@ -97,7 +111,7 @@ async def run_family_alert(run: Run, p: dict[str, Any]) -> dict[str, Any]:
         raise NotFound("unknown incident")
     person_id = int(inc.get("person_id") or 0)
     if not person_id:
-        return {"alerts": []}  # unregistered hotline caller: nobody to alert
+        return {"alerts": []}  # incident without a registered person: nobody to alert
     person = await run.tools.call("get_person", {"person_id": person_id})
     if not person:
         raise NotFound("unknown person")
@@ -152,6 +166,7 @@ async def write_alert(run: Run, person: dict, inc: dict, steps: list[dict], camp
     body = clamp(model["body"], 600)
     if not body.startswith(run.app):
         body = clamp(f"{run.app}: {body}", 600)
+    body = with_reply_prompt(body, person.get("display_name") or "", inc.get("severity") or "")
     if not (await run.guard.check_output(body)).ok:
         log("family_alert_rail_blocked", workflow=run.workflow, incident_id=inc.get("id"))
         return fallback

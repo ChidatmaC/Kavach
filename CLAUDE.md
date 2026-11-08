@@ -6,8 +6,8 @@ Wire contracts between components: `docs/CONTRACTS.md`. The SpacetimeDB module (
 ## Run (local)
 - `spacetime start` (local server on :3000), then from repo root: `cp .env.example .env` and fill `SERVICE_CLAIM_KEY`, `AGENT_SERVICE_TOKEN`.
 - `npm install && npm run publish:local:clean && npm run tokens && npm run demo:reset && npm run start:local` (full steps: `SETUP.md`)
-- `npm run smoke` — 28 end-to-end checks (wipes and re-seeds first) of the module (access rules, severity, pause/override, community floor, verification, labels).
-- Component READMEs: `agents/`, `photon-worker/`, `voice/`, `ios/`.
+- `npm run smoke` — 55 end-to-end checks (wipes and re-seeds first) of the module (access rules, severity, pause/override, community floor, verification, labels).
+- Component READMEs: `agents/`, `photon-worker/`, `ios/`.
 
 ## Rules that are easy to break
 - Wire names are exact snake_case (module uses `CaseConversionPolicy.None`); reducer/view exports are snake_case.

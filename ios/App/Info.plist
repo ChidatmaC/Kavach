@@ -33,14 +33,14 @@
 	</array>
 	<key>CFBundleVersion</key>
 	<string>$(CURRENT_PROJECT_VERSION)</string>
+	<key>KavachAgentLineNumber</key>
+	<string>$(AGENT_LINE_NUMBER)</string>
 	<key>KavachAgentURL</key>
 	<string>$(AGENT_SERVICE_URL)</string>
 	<key>KavachAppDisplayName</key>
 	<string>$(APP_DISPLAY_NAME)</string>
 	<key>KavachAppGroup</key>
 	<string>$(APP_GROUP_ID)</string>
-	<key>KavachHotlineNumber</key>
-	<string>$(HOTLINE_NUMBER)</string>
 	<key>KavachSpacetimeDB</key>
 	<string>$(SPACETIME_DB_NAME)</string>
 	<key>KavachSpacetimeURL</key>
@@ -52,6 +52,8 @@
 		<key>NSAllowsLocalNetworking</key>
 		<true/>
 	</dict>
+	<key>NSContactsUsageDescription</key>
+	<string>$(APP_DISPLAY_NAME) shows your family members' photos, keeps their names up to date and suggests family to add. Your address book stays on this phone; only people you add are shared.</string>
 	<key>NSFaceIDUsageDescription</key>
 	<string>Confirm it's really you before answering a family check.</string>
 	<key>NSLocalNetworkUsageDescription</key>

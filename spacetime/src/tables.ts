@@ -6,15 +6,16 @@
 //   Timestamp(0) for timestamps. This keeps HTTP JSON simple for Python and Swift.
 // - Enum-like fields are strings validated by reducers.
 import { CaseConversionPolicy, schema, table, t } from 'spacetimedb/server';
+import { Timestamp } from 'spacetimedb';
 
 // --- identities -------------------------------------------------------------
 
-/** Service identities (agents, photon, voice, admin). Private. */
+/** Service identities (agents, photon, admin). Private. */
 export const serviceAccount = table(
   { name: 'service_account' },
   {
     identity: t.identity().primaryKey(),
-    role: t.string(), // agents | photon | voice | admin
+    role: t.string(), // agents | photon | admin
   }
 );
 
@@ -30,7 +31,6 @@ export const person = table(
     accessibility_mode: t.bool(),
     sharing_paused: t.bool(),
     critical_overrides_pause: t.bool(),
-    practice_consent: t.bool(),
     apns_token: t.string(),
     family_code_word: t.string(),
     tz_offset_minutes: t.i32(),
@@ -38,6 +38,38 @@ export const person = table(
     campaign_watch_until: t.timestamp(),
     watch_campaign_id: t.u64(),
     watch_caller_e164: t.string(),
+    created_at: t.timestamp(),
+    last_sign_in_at: t.timestamp().default(new Timestamp(0n)), // last verify_sign_in; [0] for seeded/texter rows
+  }
+);
+
+/**
+ * One pending phone sign-in per app identity (request_sign_in -> verify_sign_in). Private, and no
+ * view exposes code_hash or salt: the app sees only `my_sign_in` (attempts left, last error, expiry).
+ */
+export const signInChallenge = table(
+  { name: 'sign_in_challenge' },
+  {
+    id: t.u64().primaryKey().autoInc(),
+    phone_e164: t.string().index('btree'),
+    requester_hex: t.string().index('btree'),
+    display_name: t.string(),
+    code_hash: t.string(),
+    salt: t.string(),
+    attempts: t.u8(),
+    last_error: t.string(), // "" | wrong_code | too_many_attempts
+    expires_at: t.timestamp(),
+    created_at: t.timestamp(),
+  }
+);
+
+/** Recent request_sign_in calls, for the per-phone and per-identity rate limits. Private. */
+export const signInRequestLog = table(
+  { name: 'sign_in_request_log' },
+  {
+    id: t.u64().primaryKey().autoInc(),
+    phone_e164: t.string().index('btree'),
+    requester_hex: t.string().index('btree'),
     created_at: t.timestamp(),
   }
 );
@@ -107,7 +139,7 @@ export const incident = table(
     id: t.u64().primaryKey().autoInc(),
     request_key: t.string().unique(),
     person_id: t.u64().index('btree'),
-    entry_point: t.string(), // report_swipe | companion | hotline | imessage | app
+    entry_point: t.string(), // report_swipe | companion | imessage | app
     caller_e164: t.string(),
     claimed_identity: t.string(),
     answers_json: t.string(),
@@ -206,7 +238,7 @@ export const outbox = table(
     to_e164: t.string(),
     group_key: t.string(),
     channel: t.string(), // imessage | sms | rcs | whatsapp | push
-    kind: t.string(), // reply | family_alert | checkin | verification | relay | briefing | practice | system
+    kind: t.string(), // reply | family_alert | checkin | verification | relay | briefing | system
     body: t.string(),
     priority: t.string(), // urgent | normal
     related_incident_id: t.u64(),
@@ -231,17 +263,6 @@ export const verification = table(
   }
 );
 
-export const drill = table(
-  { name: 'drill' },
-  {
-    id: t.u64().primaryKey().autoInc(),
-    person_id: t.u64().index('btree'),
-    scheduled_by_contact_id: t.u64(),
-    template_key: t.string(),
-    send_at: t.timestamp(),
-    outcome: t.string(), // pending | checked | ignored | replied
-  }
-);
 
 export const briefing = table(
   { name: 'briefing' },
@@ -262,9 +283,39 @@ export const verificationDeadlineJob = table(
   { scheduled_id: t.u64().primaryKey().autoInc(), scheduled_at: t.scheduleAt(), verification_id: t.u64() }
 );
 
-export const familyAckJob = table(
-  { name: 'family_ack_job' },
-  { scheduled_id: t.u64().primaryKey().autoInc(), scheduled_at: t.scheduleAt(), incident_id: t.u64() }
+/**
+ * A family notification that needs a reply (help during a call, a High/Critical scam alert, or a
+ * "was it really you?" verification). If nobody answers by the deadline, the family is reminded once
+ * and the protected person is warned; after a second window it is marked unanswered.
+ */
+export const alertRequest = table(
+  { name: 'alert_request' },
+  {
+    id: t.u64().primaryKey().autoInc(),
+    person_id: t.u64().index('btree'),
+    incident_id: t.u64(),
+    verification_id: t.u64(),
+    kind: t.string(), // help | alert | verify
+    recipient_contact_ids: t.array(t.u64()),
+    status: t.string(), // pending | acknowledged | unanswered
+    acked_by_contact_id: t.u64(),
+    reminders_sent: t.u8(),
+    last_body: t.string(),
+    created_at: t.timestamp(),
+    deadline: t.timestamp(),
+    resolved_at: t.timestamp(),
+  }
+);
+
+/** Reminds the person to finish an incident questionnaire they started (data collection, spec 8). */
+export const questionnaireReminderJob = table(
+  { name: 'questionnaire_reminder_job' },
+  { scheduled_id: t.u64().primaryKey().autoInc(), scheduled_at: t.scheduleAt(), incident_id: t.u64(), attempt: t.u8() }
+);
+
+export const alertDeadlineJob = table(
+  { name: 'alert_deadline_job' },
+  { scheduled_id: t.u64().primaryKey().autoInc(), scheduled_at: t.scheduleAt(), alert_request_id: t.u64() }
 );
 
 export const checkinJob = table(
@@ -326,6 +377,8 @@ const spacetimedb = schema(
   {
     serviceAccount,
     person,
+    signInChallenge,
+    signInRequestLog,
     contact,
     optOut,
     inboundMessage,
@@ -338,10 +391,11 @@ const spacetimedb = schema(
     campaign,
     outbox,
     verification,
-    drill,
     briefing,
     verificationDeadlineJob,
-    familyAckJob,
+    alertRequest,
+    alertDeadlineJob,
+    questionnaireReminderJob,
     checkinJob,
     agentJob,
     agentTask,

@@ -1,6 +1,7 @@
 // Inbound messages, scam checks and the community corpus (D14/D15, section 7a).
 import { SenderError, t } from 'spacetimedb/server';
 import spacetimedb from '../tables';
+import { burnSharedSignInCodes } from '../signin';
 import {
   communityFloor, e164, maxVerdict, normalizeValue, oneOf, redact, requirePersonAccess,
   requireService, senderPerson, serviceRole, voteReport,
@@ -21,6 +22,8 @@ export const record_inbound_message = spacetimedb.reducer(
       id: 0n, from_e164: a.from_e164, person_id: p?.id ?? 0n, channel: a.channel.slice(0, 16),
       body: a.body.slice(0, 4000), photon_message_id: a.photon_message_id, received_at: ctx.timestamp,
     });
+    // Someone texted their own pending sign-in code (codes are only entered in the app): cancel it.
+    burnSharedSignInCodes(ctx, a.from_e164, a.body);
   }
 );
 
@@ -77,7 +80,7 @@ export const save_message_check = spacetimedb.reducer(
   }
 );
 
-/** Agents/voice: add a redacted evidence row (call scripts from hotline, etc). */
+/** Agents: add a redacted evidence row (e.g. a described call script). */
 export const add_report_evidence = spacetimedb.reducer(
   {
     source: t.string(),
@@ -91,7 +94,7 @@ export const add_report_evidence = spacetimedb.reducer(
     campaign_id: t.u64(),
   },
   (ctx, a) => {
-    requireService(ctx, 'agents', 'voice');
+    requireService(ctx, 'agents');
     oneOf('source', a.source, ['message', 'call', 'hotline', 'seed']);
     oneOf('verdict', a.verdict, ['suspicious', 'likely_scam']);
     e164('sender_e164', a.sender_e164, true);

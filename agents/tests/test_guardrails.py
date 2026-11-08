@@ -2,7 +2,7 @@ import asyncio
 
 import pytest
 
-from kavach.guard import Guard, asks_for_secret_or_payment, is_on_topic, practice_violation
+from kavach.guard import Guard, asks_for_secret_or_payment, is_on_topic
 from kavach.workflows.interview import QUESTIONS
 
 
@@ -55,11 +55,6 @@ def test_input_rail_on_topic(g):
     assert is_on_topic("+1 555 555 0199 keeps calling")
 
 
-def test_practice_rails(g):
-    assert practice_violation("Pay at http://toll.example.com") == "real_link"
-    assert practice_violation("Send me your PIN") == "asks_for_something_real"
-    assert not asyncio.run(g.check_output("Reply with your card number please", kind="practice")).ok
-    assert asyncio.run(g.check_output("Hi, it's me with a new number. Text me back here?", kind="practice")).ok
 
 
 def test_python_seam_gives_same_answers(monkeypatch):

@@ -27,8 +27,14 @@ export function isDemo(ctx: Ctx): boolean {
 export function timers(ctx: Ctx) {
   const demo = isDemo(ctx);
   return {
-    verifyDeadline: demo ? 60n * SEC : 5n * MIN,
-    familyAckDeadline: demo ? 90n * SEC : 10n * MIN,
+    // Family reply windows (each alert gets two: reminder + warning, then unanswered).
+    replyHelp: demo ? 60n * SEC : 2n * MIN,
+    replyVerify: demo ? 60n * SEC : 2n * MIN,
+    replyCritical: demo ? 60n * SEC : 5n * MIN,
+    replyHigh: demo ? 60n * SEC : 15n * MIN,
+    // Unfinished incident questionnaire: first reminder, then a second one later.
+    questionnaireReminder: demo ? 90n * SEC : 10n * MIN,
+    questionnaireReminder2: demo ? 4n * MIN : 2n * HOUR,
     highCheckin: demo ? 2n * MIN : HOUR,
     criticalCheckin: demo ? 3n * MIN : HOUR,
     criticalWatch: 30n * DAY,
@@ -98,7 +104,7 @@ export function requireIncidentAccess(ctx: Ctx, incidentId: bigint): { incident:
   const inc = ctx.db.incident.id.find(incidentId);
   if (!inc) throw new SenderError('unknown incident');
   if (inc.person_id === 0n) {
-    // Unregistered hotline caller: only services may touch it.
+    // Unregistered person: only services may touch it.
     requireService(ctx);
     return { incident: inc, person: null };
   }
@@ -143,6 +149,8 @@ export interface QueueArgs {
   related_incident_id?: bigint;
   recipient_contact_id?: bigint;
   group_key?: string;
+  /** Family alerts are tracked for a reply unless this is false (reminders, informational notices). */
+  track_reply?: boolean;
 }
 
 /** Insert a queued outbox row, honoring opt-outs and length limits. Returns false if suppressed. */
@@ -152,13 +160,23 @@ export function queueMessage(ctx: Ctx, a: QueueArgs): boolean {
   if (a.channel !== 'push' && a.to_e164 && ctx.db.optOut.phone_e164.find(a.to_e164) && a.kind !== 'system') {
     return false;
   }
+  let body = a.body;
+  if (a.kind === 'family_alert' && a.track_reply !== false && a.recipient_contact_id && a.related_incident_id) {
+    const inc = ctx.db.incident.id.find(a.related_incident_id);
+    const p = inc ? ctx.db.person.id.find(inc.person_id) : null;
+    if (inc && p) {
+      body = withReplyPrompt(body, p.display_name);
+      const kind = inc.severity === 'high' || inc.severity === 'critical' ? 'alert' : 'help';
+      trackFamilyRequest(ctx, p.id, kind, a.recipient_contact_id, body, inc.id, 0n, inc.severity);
+    }
+  }
   ctx.db.outbox.insert({
     id: 0n,
     to_e164: a.to_e164,
     group_key: a.group_key ?? '',
     channel: a.channel,
     kind: a.kind,
-    body: a.body,
+    body,
     priority: a.priority ?? 'normal',
     related_incident_id: a.related_incident_id ?? 0n,
     recipient_contact_id: a.recipient_contact_id ?? 0n,
@@ -285,4 +303,66 @@ export function communityFloor(
     }
   }
   return { floor, campaignId };
+}
+
+// --- family replies (help / alert / verify requests) ---------------------------------------
+
+const REPLY_RE = /\breply\b/i;
+
+/** Family notifications ask for a reply so the protected person knows someone saw it. */
+export function withReplyPrompt(body: string, personName: string): string {
+  if (REPLY_RE.test(body)) return body;
+  const prompt = ` Reply OK so ${personName} knows you saw this.`;
+  return body.length + prompt.length <= MAX_BODY ? body + prompt : body.slice(0, MAX_BODY - prompt.length - 1) + '…' + prompt;
+}
+
+export function replyWindow(ctx: Ctx, kind: string, severity: string): bigint {
+  const t = timers(ctx);
+  if (kind === 'verify') return t.replyVerify;
+  if (kind === 'help') return t.replyHelp;
+  return severity === 'critical' ? t.replyCritical : t.replyHigh;
+}
+
+/** Creates the pending request for this notification, or adds a recipient to the existing one. */
+export function trackFamilyRequest(
+  ctx: Ctx, personId: bigint, kind: string, contactId: bigint, body: string,
+  incidentId: bigint, verificationId: bigint, severity: string,
+) {
+  for (const r of ctx.db.alertRequest.person_id.filter(personId)) {
+    if (r.status !== 'pending' || r.kind !== kind) continue;
+    if (r.incident_id !== incidentId || r.verification_id !== verificationId) continue;
+    const ids = r.recipient_contact_ids.some(id => id === contactId) ? r.recipient_contact_ids : [...r.recipient_contact_ids, contactId];
+    ctx.db.alertRequest.id.update({ ...r, recipient_contact_ids: ids, last_body: body });
+    return;
+  }
+  const window = replyWindow(ctx, kind, severity);
+  const req = ctx.db.alertRequest.insert({
+    id: 0n, person_id: personId, incident_id: incidentId, verification_id: verificationId, kind,
+    recipient_contact_ids: [contactId], status: 'pending', acked_by_contact_id: 0n, reminders_sent: 0,
+    last_body: body, created_at: ctx.timestamp, deadline: tsAfter(ctx, window), resolved_at: ZERO_TS,
+  });
+  ctx.db.alertDeadlineJob.insert({ scheduled_id: 0n, scheduled_at: at(ctx, window), alert_request_id: req.id });
+}
+
+/**
+ * A family member replied: resolve their pending requests (optionally only for one incident or
+ * verification) and tell the protected person who saw it. Returns how many were resolved.
+ */
+export function acknowledgeRequests(
+  ctx: Ctx, contact: ContactRow, scope: { incidentId?: bigint; verificationId?: bigint; kinds?: string[] } = {},
+): number {
+  let n = 0;
+  for (const r of ctx.db.alertRequest.person_id.filter(contact.person_id)) {
+    if (r.status !== 'pending' || !r.recipient_contact_ids.some(id => id === contact.id)) continue;
+    if (scope.incidentId !== undefined && r.incident_id !== scope.incidentId) continue;
+    if (scope.verificationId !== undefined && r.verification_id !== scope.verificationId) continue;
+    if (scope.kinds && !scope.kinds.includes(r.kind)) continue;
+    ctx.db.alertRequest.id.update({ ...r, status: 'acknowledged', acked_by_contact_id: contact.id, resolved_at: ctx.timestamp });
+    n++;
+    if (r.kind !== 'verify') {
+      const p = ctx.db.person.id.find(r.person_id);
+      if (p) messagePerson(ctx, p, 'system', `${appName(ctx)}: ${contact.name} saw your ${r.kind === 'help' ? 'request for help' : 'alert'} and replied.`, 'normal', r.incident_id);
+    }
+  }
+  return n;
 }

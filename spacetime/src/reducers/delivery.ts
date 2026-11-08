@@ -1,17 +1,18 @@
-// Outbox (D6), verifications, drills and briefings.
+// Outbox (D6), verifications and briefings.
 import { SenderError, t } from 'spacetimedb/server';
 import { Timestamp } from 'spacetimedb';
 import spacetimedb from '../tables';
+import { scrubSignInCode } from '../signin';
 import {
-  appName, at, canAlertContact, familyRecipients, messagePerson, oneOf, queueAgent, queueMessage,
+  acknowledgeRequests, appName, at, canAlertContact, familyRecipients, trackFamilyRequest, messagePerson, oneOf, queueAgent, queueMessage,
   requirePersonAccess, requireService, senderPerson, serviceRole, timers,
 } from '../lib';
 
 const OUT_CHANNELS = ['imessage', 'sms', 'rcs', 'whatsapp', 'push'] as const;
-const KINDS = ['reply', 'family_alert', 'checkin', 'verification', 'relay', 'briefing', 'practice', 'system'] as const;
+const KINDS = ['reply', 'family_alert', 'checkin', 'verification', 'relay', 'briefing', 'system'] as const;
 
 /**
- * Agents, voice and photon write every outgoing message here. Family alerts are refused
+ * Agents and photon write every outgoing message here. Family alerts are refused
  * unless the contact accepted, and when sharing is paused unless Critical + override +
  * emergency contact (spec 6 and 8).
  */
@@ -27,7 +28,7 @@ export const enqueue_outbox = spacetimedb.reducer(
     group_key: t.string(),
   },
   (ctx, a) => {
-    requireService(ctx, 'agents', 'photon', 'voice');
+    requireService(ctx, 'agents', 'photon');
     oneOf('channel', a.channel, OUT_CHANNELS);
     oneOf('kind', a.kind, KINDS);
     const priority = oneOf('priority', a.priority, ['urgent', 'normal']) as 'urgent' | 'normal';
@@ -57,8 +58,10 @@ export const mark_outbox_status = spacetimedb.reducer(
     if (!row) throw new SenderError('unknown outbox row');
     if (row.status === 'sent') return; // at-least-once delivery: duplicate protection by id
     const attempts = status === 'sending' ? Math.min(row.attempts + 1, 255) : row.attempts;
+    // Sign-in codes stay in the clear only until the text has left (sent or finally failed).
+    const body = (status === 'sent' || status === 'failed') && row.kind === 'system' ? scrubSignInCode(row.body) : row.body;
     ctx.db.outbox.id.update({
-      ...row, status, attempts,
+      ...row, status, attempts, body,
       channel: channel ? oneOf('channel', channel, OUT_CHANNELS) : row.channel,
     });
   }
@@ -78,9 +81,11 @@ export const start_verification = spacetimedb.reducer(
     const t2 = timers(ctx);
     const v = ctx.db.verification.insert({
       id: 0n, request_key: a.request_key, person_id: p.id, contact_id: c.id, kind: a.kind, status: 'pending',
-      deadline: new Timestamp(ctx.timestamp.microsSinceUnixEpoch + t2.verifyDeadline), created_at: ctx.timestamp,
+      // Two reply windows: a reminder + warning after the first, expiry after the second.
+      deadline: new Timestamp(ctx.timestamp.microsSinceUnixEpoch + 2n * t2.replyVerify), created_at: ctx.timestamp,
     });
-    ctx.db.verificationDeadlineJob.insert({ scheduled_id: 0n, scheduled_at: at(ctx, t2.verifyDeadline), verification_id: v.id });
+    ctx.db.verificationDeadlineJob.insert({ scheduled_id: 0n, scheduled_at: at(ctx, 2n * t2.replyVerify), verification_id: v.id });
+    trackFamilyRequest(ctx, p.id, 'verify', c.id, '', 0n, v.id, '');
   }
 );
 
@@ -103,6 +108,7 @@ export const resolve_verification = spacetimedb.reducer(
     }
     if (v.status !== 'pending') return;
     ctx.db.verification.id.update({ ...v, status: result });
+    acknowledgeRequests(ctx, c, { verificationId: v.id });
     const app = appName(ctx);
     if (result === 'confirmed') {
       messagePerson(ctx, p, 'verification', `${app}: ${c.name} confirmed it's really them. Still, never share codes, even with family.`, 'normal');
@@ -118,40 +124,6 @@ export const resolve_verification = spacetimedb.reducer(
         });
       }
     }
-  }
-);
-
-// --- drills (practice scams, Stretch) -------------------------------------------------
-
-export const schedule_drill = spacetimedb.reducer(
-  { person_id: t.u64(), contact_id: t.u64(), template_key: t.string(), send_at_micros: t.i64() },
-  (ctx, a) => {
-    const p = ctx.db.person.id.find(a.person_id);
-    if (!p) throw new SenderError('unknown person');
-    const c = ctx.db.contact.id.find(a.contact_id);
-    if (!c || c.person_id !== p.id) throw new SenderError('unknown contact');
-    if (!serviceRole(ctx)) {
-      const me = senderPerson(ctx);
-      if (!me || (me.id !== p.id && me.id !== c.linked_person_id)) throw new SenderError('not allowed');
-    }
-    if (!p.practice_consent) throw new SenderError('practice consent is off');
-    const sendAt = a.send_at_micros < ctx.timestamp.microsSinceUnixEpoch ? ctx.timestamp.microsSinceUnixEpoch : a.send_at_micros;
-    const d = ctx.db.drill.insert({
-      id: 0n, person_id: p.id, scheduled_by_contact_id: c.id, template_key: a.template_key.slice(0, 40),
-      send_at: new Timestamp(sendAt), outcome: 'pending',
-    });
-    queueAgent(ctx, 'practice', { drill_id: d.id }, sendAt - ctx.timestamp.microsSinceUnixEpoch);
-  }
-);
-
-export const record_drill_outcome = spacetimedb.reducer(
-  { drill_id: t.u64(), outcome: t.string() },
-  (ctx, { drill_id, outcome }) => {
-    oneOf('outcome', outcome, ['pending', 'checked', 'ignored', 'replied']);
-    const d = ctx.db.drill.id.find(drill_id);
-    if (!d) throw new SenderError('unknown drill');
-    requirePersonAccess(ctx, d.person_id);
-    ctx.db.drill.id.update({ ...d, outcome });
   }
 );
 

@@ -70,6 +70,6 @@ def _make(workflow: str):
     return cls
 
 
-WORKFLOW_NAMES = ["router", "scam_check", "interview", "family_alert", "verify_relative", "trusted_sender",
-                  "briefing", "practice"]
+WORKFLOW_NAMES = ["router", "scam_check", "advise", "command", "interview", "family_alert", "verify_relative",
+                  "trusted_sender", "briefing"]
 CONFIG_TYPES = {w: _make(w) for w in WORKFLOW_NAMES}

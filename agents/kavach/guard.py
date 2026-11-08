@@ -6,7 +6,6 @@ Rails:
 - input: off-topic requests get a short scope message
 - output: never ask for codes, PINs, passwords or payment
 - output: no medical, legal or financial advice beyond the vetted steps
-- output (practice texts): no real links, never ask for anything real
 """
 from __future__ import annotations
 
@@ -74,10 +73,6 @@ _ADVICE = re.compile(
     r"(hire|get) a (lawyer|attorney) (to|and) sue|file a lawsuit|legal advice|take (out )?a loan|withdraw your (savings|retirement)|"
     r"medication|dosage|diagnos(is|e)|prescri(be|ption)|see a doctor about|mg\b)"
 )
-_PRACTICE_ASK = re.compile(
-    r"(?i)\b(code|pin|password|passcode|card|account|ssn|social security|bank|address|date of birth|gift ?cards?|"
-    r"pay|payment|fee|money|\$\s?\d|wire|zelle|venmo|bitcoin|crypto|install|download)\b"
-)
 
 
 def _negated(text: str, start: int) -> bool:
@@ -96,14 +91,6 @@ def asks_for_secret_or_payment(text: str) -> bool:
 
 def gives_restricted_advice(text: str) -> bool:
     return bool(_ADVICE.search(text or ""))
-
-
-def practice_violation(text: str) -> str:
-    if extract_urls(text or ""):
-        return "real_link"
-    if _PRACTICE_ASK.search(text or ""):
-        return "asks_for_something_real"
-    return ""
 
 
 @dataclass
@@ -128,7 +115,6 @@ class Guard:
             rails = LLMRails(cfg)
             rails.register_action(self._act_scope, name="check_scope")
             rails.register_action(self._act_output, name="check_output_safety")
-            rails.register_action(self._act_practice, name="check_practice_output")
             self._rails = rails
             self.engine = "nemoguardrails"
         except Exception as e:  # noqa: BLE001 - never block the service on the framework
@@ -143,11 +129,6 @@ class Guard:
     def _act_output(text: str | None = None) -> bool:
         t = text or ""
         return not asks_for_secret_or_payment(t) and not gives_restricted_advice(t)
-
-    @staticmethod
-    def _act_practice(text: str | None = None) -> bool:
-        t = text or ""
-        return not practice_violation(t) and not asks_for_secret_or_payment(t)
 
     async def _check(self, messages: list[dict], rail_type: str) -> tuple[bool, str]:
         from nemoguardrails.rails.llm.options import RailType
@@ -167,19 +148,16 @@ class Guard:
         ok = self._act_scope(text)
         return RailResult(ok, "" if ok else "kavach scope check", "" if ok else msg)
 
-    async def check_output(self, text: str, kind: str = "reply") -> RailResult:
-        """kind=practice adds the practice-text rails."""
+    async def check_output(self, text: str) -> RailResult:
         if self._rails is not None:
             try:
-                # The practice rail is selected through the user turn marker the flow checks for.
-                user = "[practice]" if kind == "practice" else "[reply]"
                 ok, rail = await self._check(
-                    [{"role": "user", "content": user}, {"role": "assistant", "content": text}], "output")
+                    [{"role": "user", "content": "[reply]"}, {"role": "assistant", "content": text}], "output")
                 return RailResult(ok, rail)
             except Exception as e:  # noqa: BLE001
                 log("guardrails_error", error=type(e).__name__)
-        ok = self._act_practice(text) if kind == "practice" else self._act_output(text)
-        return RailResult(ok, "" if ok else ("kavach practice safety" if kind == "practice" else "kavach output safety"))
+        ok = self._act_output(text)
+        return RailResult(ok, "" if ok else "kavach output safety")
 
 
 _guard: Guard | None = None

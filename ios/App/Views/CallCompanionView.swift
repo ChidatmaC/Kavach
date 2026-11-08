@@ -2,62 +2,67 @@ import KavachKit
 import SwiftUI
 
 /// Full-screen, high-contrast help during a call. Opening it calls `open_incident` with entry
-/// `companion`, which tells the family (module side). When the call ends we speak a short check-in
-/// and open the interview; "I've hung up" is the fallback if the CallKit event doesn't arrive.
+/// `companion`, which tells the family (module side) and creates a reply request; the banner shows
+/// that request live (told → seen by Tommy). When the call ends we speak a short check-in and open
+/// the interview; "I've hung up" is the fallback if the CallKit event doesn't arrive.
 struct CallCompanionView: View {
     @Environment(AppModel.self) private var model
     @Environment(\.dismiss) private var dismiss
     @Environment(\.displayPreferences) private var prefs
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var incident: Incident?
     @State private var opening = true
     @State private var showInterview = false
     @State private var showVerify = false
     @State private var watcher = CallWatcher()
 
-    private let yellow = Color(red: 1, green: 0.86, blue: 0.2)
-
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(alignment: .leading, spacing: 16) {
-                    banner
-                    companionCard(icon: "lock.fill", title: "Don't share codes",
+                VStack(alignment: .leading, spacing: Theme.Space.m) {
+                    familyStatus
+                    companionCard(number: 1, icon: "lock", title: "Don't share codes",
                                   body: "No real bank, phone company or government will ask for a code, PIN or password.")
-                    companionCard(icon: "key.fill", title: "Ask for our family code word",
+                    companionCard(number: 2, icon: "key", title: "Ask for our family code word",
                                   body: codeWordText)
-                    companionCard(icon: "phone.down.fill", title: "Hang up and call back",
+                    companionCard(number: 3, icon: "phone.arrow.down.left", title: "Hang up and call back",
                                   body: "Call back on a number you already know, like the one on your card or in your contacts.")
 
-                    Button { showVerify = true } label: {
-                        Label("Verify this person", systemImage: "person.badge.shield.checkmark.fill")
-                    }
-                    .buttonStyle(CompanionButtonStyle(fill: yellow, text: .black))
+                    VStack(spacing: Theme.Space.s) {
+                        Button { showVerify = true } label: {
+                            Label("Verify this person", systemImage: "person.badge.shield.checkmark")
+                        }
+                        .buttonStyle(CompanionButtonStyle(prominent: true))
 
-                    Button { endAndReport() } label: {
-                        Label("End and report", systemImage: "phone.down.circle.fill")
-                    }
-                    .buttonStyle(CompanionButtonStyle(fill: .white, text: .black))
+                        Button { endAndReport() } label: {
+                            Label("End and report", systemImage: "phone.down")
+                        }
+                        .buttonStyle(CompanionButtonStyle(prominent: false))
 
-                    Button { callEnded(spoken: true) } label: {
-                        Label("I've hung up", systemImage: "checkmark.circle")
+                        Button { callEnded(spoken: true) } label: {
+                            Text("I've hung up")
+                                .font(TypeScale.headline)
+                                .frame(maxWidth: .infinity, minHeight: Theme.minTarget)
+                                .contentShape(Rectangle())
+                        }
+                        .buttonStyle(PressableStyle())
+                        .foregroundStyle(Theme.accent)
+                        .accessibilityHint("Use this if the call has ended")
                     }
-                    .buttonStyle(CompanionButtonStyle(fill: .clear, text: .white))
-                    .accessibilityHint("Use this if the call has ended")
+                    .padding(.top, Theme.Space.xs)
                 }
-                .padding()
+                .padding(Theme.Space.m)
             }
-            .background(Color.black.ignoresSafeArea())
-            .foregroundStyle(.white)
+            .debugScrollAnchor()
+            .kavachScreenBackground()
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button { dismiss() } label: { Image(systemName: "xmark").font(.title2) }
-                        .tint(.white)
+                    Button { dismiss() } label: { Image(systemName: "xmark") }
                         .accessibilityLabel("Close Call Companion")
                 }
             }
             .navigationTitle("Call Companion")
             .navigationBarTitleDisplayMode(.inline)
-            .toolbarColorScheme(.dark, for: .navigationBar)
             .navigationDestination(isPresented: $showInterview) {
                 if let incident { InterviewFlowView(incidentId: incident.id) }
             }
@@ -81,36 +86,80 @@ struct CallCompanionView: View {
                          : "Our code word is “\(w)”. If they don't know it, hang up."
     }
 
-    @ViewBuilder private var banner: some View {
+    /// Live: telling the family → told → seen by Tommy (or a warning if nobody answered).
+    @ViewBuilder private var familyStatus: some View {
         if opening {
-            ProgressView("Telling your family…").tint(.white)
-        } else if incident != nil {
-            let paused = model.person?.sharingPaused ?? false
-            Label(paused ? "Sharing is paused, so your family wasn't told." : "Your family has been told you asked for help.",
-                  systemImage: paused ? "pause.circle.fill" : "person.2.wave.2.fill")
-                .font(.title3.weight(.semibold))
-                .padding()
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .background(Theme.accent, in: RoundedRectangle(cornerRadius: 14))
+            HStack(spacing: Theme.Space.s) {
+                ProgressView().tint(Theme.accent)
+                Text("Telling your family…").font(TypeScale.headline).foregroundStyle(Theme.textPrimary)
+            }
+            .padding(Theme.Space.m)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(Theme.surface, in: RoundedRectangle(cornerRadius: Theme.Radius.m, style: .continuous))
+        } else if let incident {
+            let request = model.alertRequest(for: incident.id)
+            let progress = FamilyReplies.progress(for: request, contacts: model.contacts,
+                                                  sharingPaused: model.person?.sharingPaused ?? false)
+            let noFamily = request == nil && model.contacts.allSatisfy { $0.consentStatus != "accepted" }
+            VStack(alignment: .leading, spacing: Theme.Space.s) {
+                HStack(spacing: Theme.Space.s) {
+                    step("Told", done: progress.told, symbol: "paperplane")
+                    Rectangle().fill(progress.seenBy != nil ? Theme.safe : Theme.separator).frame(height: 2)
+                        .accessibilityHidden(true)
+                    step(progress.seenBy.map { "Seen by \($0)" } ?? "Seen", done: progress.seenBy != nil, symbol: "eye")
+                }
+                Text(noFamily && !progress.told ? "No family member has accepted alerts yet. Add family in the Family tab."
+                                                : progress.text)
+                    .font(TypeScale.headline)
+                    .foregroundStyle(progress.urgent ? Theme.caution : (progress.seenBy != nil ? Theme.safe : Theme.textPrimary))
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .padding(Theme.Space.m)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(progress.urgent ? Theme.cautionSoft : Theme.surface,
+                        in: RoundedRectangle(cornerRadius: Theme.Radius.m, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: Theme.Radius.m, style: .continuous)
+                .strokeBorder(progress.urgent ? Theme.caution : Theme.separator, lineWidth: progress.urgent ? 2 : 1))
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel("Your family: \(progress.text)")
+            .accessibilityAddTraits(.updatesFrequently)
+            .animation(Theme.Motion.animation(reduceMotion: reduceMotion), value: progress)
         } else {
-            Label("Couldn't reach \(model.config.displayName). The advice below still works.", systemImage: "wifi.exclamationmark")
-                .font(.headline)
-                .padding()
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .overlay(RoundedRectangle(cornerRadius: 14).stroke(.white, lineWidth: 2))
+            StatusBanner(tone: .caution, systemImage: "wifi.exclamationmark",
+                         title: "Couldn't reach \(model.config.displayName)",
+                         message: "The advice below still works. Hang up if you're unsure.")
         }
     }
 
-    private func companionCard(icon: String, title: String, body: String) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Label(title, systemImage: icon).font(.title.weight(.heavy)).foregroundStyle(yellow)
-            Text(body).font(.title3)
+    private func step(_ title: String, done: Bool, symbol: String) -> some View {
+        Label(title, systemImage: done ? "checkmark.circle.fill" : symbol)
+            .font(TypeScale.callout.weight(.semibold))
+            .foregroundStyle(done ? Theme.safe : Theme.textSecondary)
+            .lineLimit(1)
+            .fixedSize()
+    }
+
+    private func companionCard(number: Int, icon: String, title: String, body: String) -> some View {
+        HStack(alignment: .top, spacing: Theme.Space.m) {
+            Image(systemName: icon)
+                .font(.title2.weight(.semibold))
+                .foregroundStyle(Theme.caution)
+                .frame(width: Theme.Icon.l, height: Theme.Icon.l)
+                .background(Theme.cautionSoft, in: RoundedRectangle(cornerRadius: Theme.Radius.s, style: .continuous))
+                .accessibilityHidden(true)
+            VStack(alignment: .leading, spacing: Theme.Space.xs) {
+                Text(title).font(.title2.weight(.bold)).foregroundStyle(Theme.textPrimary)
+                Text(body).font(.title3).foregroundStyle(Theme.textPrimary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
         }
-        .padding(18)
+        .padding(Theme.Space.m)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color(white: 0.12), in: RoundedRectangle(cornerRadius: 18))
-        .overlay(RoundedRectangle(cornerRadius: 18).stroke(.white.opacity(0.8), lineWidth: 2))
+        .background(Theme.surface, in: RoundedRectangle(cornerRadius: Theme.Radius.l, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: Theme.Radius.l, style: .continuous)
+            .strokeBorder(Theme.borderStrong, lineWidth: prefs.highContrast ? 2 : 1))
         .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(number). \(title). \(body)")
     }
 
     private func open() async {
@@ -137,19 +186,21 @@ struct CallCompanionView: View {
     }
 }
 
+/// Large Companion buttons (64 pt): prominent = accent fill, otherwise outlined.
 struct CompanionButtonStyle: ButtonStyle {
-    let fill: Color
-    let text: Color
+    let prominent: Bool
     @Environment(\.displayPreferences) private var prefs
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .font(.title2.weight(.bold))
+            .font(.title3.weight(.bold))
             .frame(maxWidth: .infinity, minHeight: 64)
-            .foregroundStyle(text)
-            .background(fill, in: RoundedRectangle(cornerRadius: 18))
-            .overlay(RoundedRectangle(cornerRadius: 18).stroke(.white, lineWidth: 2))
-            .opacity(configuration.isPressed ? 0.7 : 1)
+            .foregroundStyle(prominent ? Theme.onAccent : Theme.textPrimary)
+            .background(prominent ? Theme.accentFill : Theme.surface,
+                        in: RoundedRectangle(cornerRadius: Theme.Radius.l, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: Theme.Radius.l, style: .continuous)
+                .strokeBorder(prominent ? Color.clear : Theme.borderStrong, lineWidth: 2))
+            .opacity(configuration.isPressed ? 0.75 : 1)
             .sensoryFeedback(.impact(weight: .heavy), trigger: configuration.isPressed) { _, new in new && prefs.hapticsOnEveryTap }
     }
 }

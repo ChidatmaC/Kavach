@@ -27,6 +27,7 @@ const PRIYA = '+15555550104';
 interface StubCall { path: string; body: Record<string, unknown> }
 const calls: StubCall[] = [];
 let routerReply: (body: Record<string, unknown>) => unknown = () => ({ intent: 'scam_check', args: {} });
+let commandStatus = 200;
 let stub: Server;
 
 function startStub(port: number): Promise<Server> {
@@ -44,6 +45,8 @@ function startStub(port: number): Promise<Server> {
       switch (req.url) {
         case '/run/router': return send(200, routerReply(body));
         case '/run/scam_check': return send(200, { verdict: 'likely_scam', reason: 'stub', campaign_id: 0, tips: [], evidence_count: 0 });
+        case '/run/advise': return send(200, { verdict: 'likely_scam', answer: 'stub', next_steps: [], evidence_count: 0, already_shared: false });
+        case '/run/command': return send(commandStatus, commandStatus === 200 ? { ok: true } : { error: 'boom' });
         case '/run/verify_relative': return send(200, { verification_id: 0, messages: [] });
         case '/run/interview': return send(200, { say: 'Thanks.', next_question: 'Did they ask for money?', done: false });
         case '/push': return send(200, { sent: true });
@@ -136,6 +139,55 @@ describe('photon-worker against kavach-photon', () => {
     expect(calls.map(c => c.path)).toEqual(['/run/router', '/run/scam_check']);
     expect(calls[0].body).toMatchObject({ from_e164: JOE, channel: 'imessage', person_id: joeId, mode: 'text' });
     expect(calls[1].body).toMatchObject({ person_id: joeId, source: 'imessage', reply_to_e164: JOE, reply_channel: 'imessage' });
+  });
+
+  it('an agent-routed text gets an instant urgent acknowledgement queued before the agent answers', async () => {
+    calls.length = 0;
+    routerReply = () => ({ intent: 'scam_check', args: {} });
+    const before = (await photonDb.sql(`SELECT * FROM svc_outbox WHERE to_e164 = '${JOE}'`)).length;
+    await inbound.handle(ev(JOE, 'Is this legit? Pay your toll at txtag-pay.top'));
+    const rows = (await photonDb.sql(`SELECT * FROM svc_outbox WHERE to_e164 = '${JOE}'`)).slice(before);
+    const ack = rows.find(r => String(r.body).includes('Checking this now'));
+    expect(ack).toBeTruthy();
+    expect(ack!.priority).toBe('urgent');
+  });
+
+  it('a question routed as advise runs the advise workflow with reply_to_e164', async () => {
+    calls.length = 0;
+    routerReply = () => ({ intent: 'advise', args: { person_id: joeId, text: 'my nephew wants gift cards, should I?' } });
+    const outcome = await inbound.handle(ev(JOE, 'my nephew wants gift cards, should I?'));
+    expect(outcome).toBe('routed:advise');
+    expect(calls.map(c => c.path)).toEqual(['/run/router', '/run/advise']);
+    expect(calls[1].body).toMatchObject({ person_id: joeId, text: 'my nephew wants gift cards, should I?', reply_to_e164: JOE, mode: 'text' });
+  });
+
+  it('a text routed as command runs /run/command with the router args and reply_to_e164', async () => {
+    calls.length = 0;
+    routerReply = () => ({ intent: 'command', args: { action: 'list_family' } });
+    const outcome = await inbound.handle(ev(JOE, 'who is in my family list?'));
+    expect(outcome).toBe('routed:command');
+    expect(calls.map(c => c.path)).toEqual(['/run/router', '/run/command']);
+    expect(calls[1].body).toEqual({
+      person_id: joeId, text: 'who is in my family list?', reply_to_e164: JOE, reply_channel: 'imessage',
+      args: { action: 'list_family' },
+    });
+  });
+
+  it('a failing /run/command queues a fallback reply', async () => {
+    commandStatus = 500;
+    routerReply = () => ({ intent: 'command', args: { action: 'status' } });
+    const before = (await photonDb.sql(`SELECT * FROM svc_outbox WHERE to_e164 = '${JOE}'`)).length;
+    await inbound.handle(ev(JOE, 'status'));
+    commandStatus = 200;
+    const rows = (await photonDb.sql(`SELECT * FROM svc_outbox WHERE to_e164 = '${JOE}'`)).slice(before);
+    expect(rows.some(r => String(r.body).includes("I couldn't do that right now"))).toBe(true);
+  });
+
+  it('instant commands are not acknowledged twice', async () => {
+    const before = (await photonDb.sql(`SELECT * FROM svc_outbox WHERE to_e164 = '${JOE}'`)).length;
+    await inbound.handle(ev(JOE, 'help'));
+    const rows = (await photonDb.sql(`SELECT * FROM svc_outbox WHERE to_e164 = '${JOE}'`)).slice(before);
+    expect(rows.some(r => String(r.body).includes('Checking this now'))).toBe(false);
   });
 
   it('router out_of_scope and help produce queued replies that get delivered', async () => {
@@ -276,6 +328,151 @@ describe('photon-worker against kavach-photon', () => {
     expect(await inbound.handle(ev(MARIA, "I'm calling", { channel: 'sms' }))).toBe('command:ack');
     const [acked] = await photonDb.sql<{ family_ack_by: number }>(`SELECT * FROM svc_incident WHERE id = ${incidentId}`);
     expect(acked.family_ack_by).toBe(mariaContact);
+  });
+
+  async function openHelpRequest(): Promise<{ incidentId: number; requestId: number }> {
+    const key = randomUUID();
+    await agentsDb.call('open_incident', { request_key: key, person_id: joeId, entry_point: 'companion', caller_e164: '' });
+    const [inc] = await photonDb.sql<{ id: number }>(`SELECT * FROM svc_incident WHERE request_key = '${key}'`);
+    const [req] = await photonDb.sql<{ id: number; kind: string; status: string }>(
+      `SELECT * FROM svc_alert_request WHERE incident_id = ${inc.id}`);
+    expect(req).toMatchObject({ kind: 'help', status: 'pending' });
+    return { incidentId: inc.id, requestId: req.id };
+  }
+
+  it('Tommy\'s "ok" acknowledges the pending help request: no relay, no scam check, Joe is told', async () => {
+    const { requestId } = await openHelpRequest();
+    await drain();
+    gateway.sent = [];
+    calls.length = 0;
+    const before = (await allOutbox()).length;
+
+    expect(await inbound.handle(ev(TOMMY, 'ok'))).toBe('family_ack');
+    expect(calls).toHaveLength(0); // not routed, not scam-checked
+    const [req] = await photonDb.sql<{ status: string; acked_by_contact_id: number }>(
+      `SELECT * FROM svc_alert_request WHERE id = ${requestId}`);
+    expect(req.status).toBe('acknowledged');
+    expect(req.acked_by_contact_id).toBe(tommyContact);
+    const added = (await allOutbox()).slice(before);
+    expect(added.some(r => r.kind === 'relay' || r.body.startsWith('Tommy:'))).toBe(false);
+    expect(added.some(r => r.body.includes('Checking this now'))).toBe(false);
+
+    await drain();
+    expect(sentTo(JOE).map(s => s.body)).toContain('Kavach: Tommy saw your request for help and replied.');
+    expect(sentTo(TOMMY).map(s => s.body)).toContain("Kavach: Thanks, we've let Joe know you saw it.");
+    expect(sentTo(MARIA)).toHaveLength(0);
+    expect(sentTo(PRIYA)).toHaveLength(0);
+  });
+
+  it('other short acknowledgements ("👍", "got it") are not relayed or scam-checked either', async () => {
+    gateway.sent = [];
+    calls.length = 0;
+    expect(await inbound.handle(ev(PRIYA, '👍'))).toBe('family_ack');
+    expect(await inbound.handle(ev(TOMMY, 'Got it!'))).toBe('family_ack');
+    expect(calls).toHaveLength(0);
+    await drain();
+    expect(gateway.sent.some(s => s.body.includes('👍') || s.body.includes('Got it'))).toBe(false);
+    expect(sentTo(MARIA)).toHaveLength(0);
+  });
+
+  it('a family member\'s free-text reply is relayed AND acknowledges the pending request', async () => {
+    const { requestId } = await openHelpRequest();
+    await drain();
+    gateway.sent = [];
+    calls.length = 0;
+    const text = 'Driving over to see him after work';
+    expect(await inbound.handle(ev(PRIYA, text))).toBe('relay');
+    expect(calls).toHaveLength(0);
+    const [priya] = await photonDb.contactsByPhone(PRIYA);
+    const [req] = await photonDb.sql<{ status: string; acked_by_contact_id: number }>(
+      `SELECT * FROM svc_alert_request WHERE id = ${requestId}`);
+    expect(req).toMatchObject({ status: 'acknowledged', acked_by_contact_id: priya.id });
+    await drain();
+    const relayed = gateway.sent.filter(s => s.body === `Priya: ${text}`);
+    expect(relayed.flatMap(s => s.to).sort()).toEqual([TOMMY, MARIA].sort());
+    expect(sentTo(JOE).map(s => s.body)).toContain('Kavach: Priya saw your request for help and replied.');
+  });
+
+  // --- forwarded-message wrapper and the clarifying question (CONTRACTS section 7) -------------
+
+  it('a wrapped forward with "verify Tommy" inside is routed (scam-checked), not run as a verify command', async () => {
+    calls.length = 0;
+    routerReply = () => ({ intent: 'scam_check', args: { text: 'verify Tommy', sender_e164: '' } });
+    const outcome = await inbound.handle(ev(JOE, 'Forwarded message:\n"verify Tommy"'));
+    expect(outcome).toBe('routed:scam_check');
+    expect(calls.map(c => c.path)).toEqual(['/run/router', '/run/scam_check']);
+    expect(calls[0].body.text).toBe('Forwarded message:\n"verify Tommy"'); // the router strips the wrapper
+    expect(calls[1].body).toMatchObject({ text: 'verify Tommy', person_id: joeId });
+  });
+
+  it('"Check this" and "Forwarded" wrappers are not swallowed by local commands', async () => {
+    for (const text of ['Check this: stop', 'Forwarded: help', 'Check this "yes"']) {
+      calls.length = 0;
+      routerReply = () => ({ intent: 'scam_check', args: {} });
+      expect(await inbound.handle(ev(JOE, text))).toBe('routed:scam_check');
+      expect(calls[0].path).toBe('/run/router');
+    }
+    expect((await photonDb.optOuts()).has(JOE)).toBe(false);
+  });
+
+  it('a family member\'s wrapped forward is not taken as a short ack or relayed: it is routed', async () => {
+    const { requestId } = await openHelpRequest();
+    await drain();
+    gateway.sent = [];
+    calls.length = 0;
+    routerReply = () => ({ intent: 'scam_check', args: { text: 'ok' } });
+    const before = (await allOutbox()).length;
+    expect(await inbound.handle(ev(TOMMY, 'Fwd: ok'))).toBe('routed:scam_check');
+    expect(calls.map(c => c.path)).toEqual(['/run/router', '/run/scam_check']);
+    const added = (await allOutbox()).slice(before);
+    expect(added.some(r => r.kind === 'relay' || r.body.startsWith('Tommy:'))).toBe(false);
+    const [req] = await photonDb.sql<{ status: string }>(`SELECT * FROM svc_alert_request WHERE id = ${requestId}`);
+    expect(req.status).toBe('pending'); // a forward is not "I saw your alert"
+    expect(await inbound.handle(ev(TOMMY, 'ok'))).toBe('family_ack'); // a plain "ok" still is
+  });
+
+  it('a bare "Fwd:" gets no acknowledgement and no reply; the router is told so it can expect the forward', async () => {
+    calls.length = 0;
+    routerReply = () => ({ intent: 'clarify', args: { reply: '', reason: 'await_forward' } });
+    const before = (await photonDb.sql(`SELECT * FROM svc_outbox WHERE to_e164 = '${JOE}'`)).length;
+    expect(await inbound.handle(ev(JOE, 'Fwd:'))).toBe('routed:clarify');
+    expect(calls.map(c => c.path)).toEqual(['/run/router']);
+    expect((await photonDb.sql(`SELECT * FROM svc_outbox WHERE to_e164 = '${JOE}'`)).length).toBe(before);
+  });
+
+  it('an ambiguous text gets the clarifying question; a family member\'s "2" to it goes to the router, not the family relay', async () => {
+    await drain();
+    calls.length = 0;
+    const question = 'Kavach: Is this a message you received, or a question for me? Reply 1 if you received it, 2 if it\'s your question.';
+    routerReply = () => ({ intent: 'clarify', args: { reply: question, reason: 'ambiguous' } });
+    expect(await inbound.handle(ev(JOE, 'send money'))).toBe('routed:clarify');
+    const rows = await photonDb.sql<OutboxRow>(`SELECT * FROM svc_outbox WHERE to_e164 = '${JOE}'`);
+    expect(rows.some(r => r.body === question)).toBe(true);
+    // Tommy (a family contact, recently texted about Joe) also uses Kavach and was asked the same question.
+    await photonDb.enqueue({ to_e164: TOMMY, channel: 'imessage', kind: 'reply', body: question, priority: 'normal' });
+
+    calls.length = 0;
+    routerReply = () => ({ intent: 'advise', args: { text: 'send money' } });
+    expect(await inbound.handle(ev(TOMMY, '2'))).toBe('routed:advise');
+    expect(calls.map(c => c.path)).toEqual(['/run/router', '/run/advise']);
+    expect(calls[1].body).toMatchObject({ text: 'send money', reply_to_e164: TOMMY });
+  });
+
+  it('a command chosen after "2" runs on the remembered text with the router\'s parsed args', async () => {
+    calls.length = 0;
+    routerReply = () => ({ intent: 'command', args: {
+      person_id: joeId, text: 'report the last one', reply_to_e164: JOE, reply_channel: 'imessage',
+      args: { action: 'report', target: 'last' } } });
+    expect(await inbound.handle(ev(JOE, '2'))).toBe('routed:command');
+    expect(calls[1]).toMatchObject({ path: '/run/command', body: {
+      person_id: joeId, text: 'report the last one', args: { action: 'report', target: 'last' } } });
+  });
+
+  it('the scam check passes teach_wrapper through when the router asks for the tip', async () => {
+    calls.length = 0;
+    routerReply = () => ({ intent: 'scam_check', args: { text: 'USPS: your package is on hold', teach_wrapper: true } });
+    await inbound.handle(ev(JOE, 'USPS: your package is on hold'));
+    expect(calls[1].body).toMatchObject({ text: 'USPS: your package is on hold', teach_wrapper: true });
   });
 
   it('"stop" adds an opt-out, confirms once, and later messages are suppressed', async () => {

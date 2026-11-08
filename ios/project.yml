@@ -29,7 +29,7 @@ x-kavach-info: &kavachInfo
   KavachSpacetimeURL: $(SPACETIME_URL)
   KavachSpacetimeDB: $(SPACETIME_DB_NAME)
   KavachAgentURL: $(AGENT_SERVICE_URL)
-  KavachHotlineNumber: $(HOTLINE_NUMBER)
+  KavachAgentLineNumber: $(AGENT_LINE_NUMBER)
   KavachAppGroup: $(APP_GROUP_ID)
   AppIdentifierPrefix: $(AppIdentifierPrefix)
   NSLocalNetworkUsageDescription: $(APP_DISPLAY_NAME) connects to its server on your local network to check messages and alert your family.
@@ -84,6 +84,7 @@ targets:
         UIBackgroundModes: [remote-notification]
         NSFaceIDUsageDescription: Confirm it's really you before answering a family check.
         NSPhotoLibraryUsageDescription: Choose a screenshot of a message to check it.
+        NSContactsUsageDescription: $(APP_DISPLAY_NAME) shows your family members' photos, keeps their names up to date and suggests family to add. Your address book stays on this phone; only people you add are shared.
         NSSpeechRecognitionUsageDescription: Not used.
         NSUserActivityTypes: [com.hack.kavach.app.companion]
         CFBundleURLTypes:
@@ -144,7 +145,10 @@ targets:
         NSExtension:
           NSExtensionPointIdentifier: com.apple.identitylookup.classification-ui
           NSExtensionPrincipalClass: $(PRODUCT_MODULE_NAME).ReportViewController
-          NSExtensionAttributes: {}
+          NSExtensionAttributes:
+            # The extension can't use the network: iOS POSTs the classification response (with our
+            # userInfo) here when the person taps Report. Must be HTTPS on a device (Local.xcconfig).
+            ILClassificationExtensionNetworkReportDestination: $(AGENT_SERVICE_URL)/ios/call-report
     entitlements:
       path: ReportExtension/ReportExtension.entitlements
       properties: *groupEntitlements

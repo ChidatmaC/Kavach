@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "MODEL_WRITER advise answer",
+  "type": "object",
+  "properties": {
+    "verdict": {
+      "type": "string",
+      "enum": [
+        "safe",
+        "suspicious",
+        "likely_scam"
+      ]
+    },
+    "answer": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 600
+    },
+    "next_steps": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "maxLength": 200
+      },
+      "maxItems": 5
+    },
+    "already_shared": {
+      "type": "boolean"
+    },
+    "tactics": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 10
+    }
+  },
+  "required": [
+    "verdict",
+    "answer"
+  ],
+  "additionalProperties": true
+}

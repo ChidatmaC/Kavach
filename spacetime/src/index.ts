@@ -2,6 +2,7 @@
 // view, procedure and lifecycle hook is re-exported so SpacetimeDB registers it.
 export { default } from './tables';
 export * from './reducers/people';
+export * from './reducers/auth';
 export * from './reducers/incidents';
 export * from './reducers/messages';
 export * from './reducers/delivery';

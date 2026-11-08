@@ -25,25 +25,15 @@ public struct KavachAPI: Sendable {
         return KavachAPI(config: config, token: t)
     }
 
-    // MARK: Onboarding
+    // MARK: Onboarding (sign-in by texted code: see SignIn.swift and `SignInFlow`)
 
-    /// Mints an identity (if needed), registers the person and stores the token.
-    public static func register(config: AppConfig, phone: String, name: String) async throws -> (KavachAPI, Person) {
-        let store = SharedStore(appGroup: config.appGroup)
-        let db = SpacetimeClient(config: config)
-        let token: String
-        if let t = store.loadToken() { token = t } else { token = try await db.newIdentity().token }
-        let api = KavachAPI(config: config, token: token)
-        try await api.registerPerson(phone: phone, name: name)
-        guard let me = try await api.myPerson() else { throw KavachError.notRegistered }
-        store.saveToken(token)
-        store.set(me.id, .personId)
-        store.set(me.displayName, .personName)
-        return (api, me)
-    }
-
+    /// Tests and demo personas only: signs in a +1555555xxxx number with the demo code 000000
+    /// (module running with DEMO_MODE=true). Real numbers must use request/verify with the texted code.
+    /// Errors stay raw `KavachError.http` (the module's text).
     public func registerPerson(phone: String, name: String) async throws {
-        try await db.call("register_person", ["phone": .string(phone), "name": .string(name)], token: token)
+        try await db.call("request_sign_in", ["phone": .string(phone), "name": .string(name)], token: token)
+        try await db.call("verify_sign_in", ["phone": .string(phone), "code": .string("000000")], token: token)
+        guard try await myPerson()?.phoneE164 == phone else { throw KavachError.notRegistered }
     }
 
     // MARK: Reads (views)
@@ -74,8 +64,9 @@ public struct KavachAPI: Sendable {
         try await db.query("SELECT * FROM my_briefings", as: Briefing.self, token: token)
             .sorted { $0.createdAt > $1.createdAt }
     }
-    public func myDrills() async throws -> [Drill] {
-        try await db.query("SELECT * FROM my_drills", as: Drill.self, token: token)
+    public func myAlertRequests() async throws -> [AlertRequest] {
+        try await db.query("SELECT * FROM my_alert_requests", as: AlertRequest.self, token: token)
+            .sorted { $0.createdAt > $1.createdAt }
     }
     public func myPendingVerifications() async throws -> [Verification] {
         try await db.query("SELECT * FROM my_pending_verifications", as: Verification.self, token: token)
@@ -93,7 +84,12 @@ public struct KavachAPI: Sendable {
 
     /// Opens an incident and returns it (reducers return nothing; read back by request_key).
     public func openIncident(personId: UInt64, entryPoint: String, callerE164: String = "") async throws -> Incident {
-        let key = UUID().uuidString.lowercased()
+        try await openIncident(requestKey: UUID().uuidString.lowercased(), personId: personId, entryPoint: entryPoint,
+                               callerE164: callerE164)
+    }
+
+    /// Idempotent by `requestKey`: calling it again returns the incident created the first time.
+    public func openIncident(requestKey key: String, personId: UInt64, entryPoint: String, callerE164: String = "") async throws -> Incident {
         try await db.call("open_incident", [
             "request_key": .string(key), "person_id": .id(personId),
             "entry_point": .string(entryPoint), "caller_e164": .string(callerE164),
@@ -137,7 +133,6 @@ public struct KavachAPI: Sendable {
             "accessibility_mode": .bool(p.accessibilityMode),
             "sharing_paused": .bool(p.sharingPaused),
             "critical_overrides_pause": .bool(p.criticalOverridesPause),
-            "practice_consent": .bool(p.practiceConsent),
             "apns_token": .string(p.apnsToken),
             "family_code_word": .string(p.familyCodeWord),
             "tz_offset_minutes": .int(Int64(p.tzOffsetMinutes)),
@@ -163,13 +158,6 @@ public struct KavachAPI: Sendable {
         ], token: token)
     }
 
-    public func scheduleDrill(personId: UInt64, contactId: UInt64, templateKey: String, sendAt: Date) async throws {
-        try await db.call("schedule_drill", [
-            "person_id": .id(personId), "contact_id": .id(contactId), "template_key": .string(templateKey),
-            "send_at_micros": .int(STTimestamp(date: sendAt).micros),
-        ], token: token)
-    }
-
     public func requestBriefing(personId: UInt64) async throws {
         try await db.call("request_briefing", ["person_id": .id(personId)], token: token)
     }
@@ -183,15 +171,10 @@ public struct KavachAPI: Sendable {
     public func verifyRelative(name: String) async throws -> VerifyResult {
         try await agents.verify(relativeName: name, token: token)
     }
-}
 
-/// E.164 normalization for typed US numbers: "(555) 555-0101" → "+15555550101". Display-input helper only;
-/// the module validates.
-public func normalizePhone(_ raw: String) -> String {
-    let trimmed = raw.trimmingCharacters(in: .whitespaces)
-    let digits = trimmed.filter(\.isNumber)
-    if trimmed.hasPrefix("+") { return "+" + digits }
-    if digits.count == 10 { return "+1" + digits }
-    if digits.count == 11, digits.hasPrefix("1") { return "+" + digits }
-    return digits.isEmpty ? "" : "+" + digits
+    /// "Was this right?" (`/app/feedback`). Never throws; returns whether the service accepted it.
+    @discardableResult
+    public func sendFeedback(_ feedback: VerdictFeedback, checkId: UInt64?, requestKey: String?) async -> Bool {
+        await agents.feedback(feedback, checkId: checkId, requestKey: requestKey, token: token)
+    }
 }

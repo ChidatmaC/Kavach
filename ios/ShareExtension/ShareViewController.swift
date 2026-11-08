@@ -1,4 +1,5 @@
 import KavachKit
+import MessageUI
 import SwiftUI
 import UIKit
 import UniformTypeIdentifiers
@@ -32,29 +33,72 @@ struct ShareRootView: View {
     @State private var text = ""
     @State private var result: CheckResult?
     @State private var status = "Reading what you shared…"
+    @State private var composing = false
+    @State private var copiedForward = false
 
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(alignment: .leading, spacing: 16) {
+                VStack(alignment: .leading, spacing: Theme.Space.l) {
                     if let result {
-                        CheckResultView(result: result, message: text)
+                        Card { CheckResultView(result: result, message: text) }
+                        HStack(spacing: Theme.Space.s) {
+                            Button {
+                                Speaker.shared.speak(CheckResultView(result: result, message: text).spokenText)
+                            } label: { Label("Read aloud", systemImage: "speaker.wave.2") }
+                                .buttonStyle(KavachButtonStyle(.secondary))
+                            Button("Done") { close() }
+                                .buttonStyle(KavachButtonStyle(.primary))
+                        }
+                        if !config.agentLineNumber.isEmpty && !text.isEmpty {
+                            Button(action: forward) {
+                                Label("Text it to \(config.displayName)", systemImage: "arrowshape.turn.up.right")
+                            }
+                            .buttonStyle(KavachButtonStyle(.secondary))
+                            .accessibilityHint("Opens a text to \(AgentContact.formatted(config.agentLineNumber)) with the message filled in")
+                            if copiedForward {
+                                Label("Copied. Paste in Messages to \(AgentContact.formatted(config.agentLineNumber)).",
+                                      systemImage: "doc.on.clipboard")
+                                    .font(TypeScale.callout).foregroundStyle(Theme.textSecondary)
+                            }
+                        }
                         RepeatSpeechButton()
-                        Button {
-                            Speaker.shared.speak(CheckResultView(result: result, message: text).spokenText)
-                        } label: { Label("Read aloud", systemImage: "speaker.wave.2.fill") }
-                            .buttonStyle(KavachButtonStyle())
+                        if let api = KavachAPI.stored(config: config) {
+                            VerdictFeedbackControl(verdict: result.verdict) { fb in
+                                await api.sendFeedback(fb, checkId: result.checkId, requestKey: result.requestKey)
+                            }
+                        }
                     } else {
-                        ProgressView(status)
+                        HStack(spacing: Theme.Space.s) {
+                            ProgressView().tint(Theme.accent)
+                            Text(status).font(TypeScale.headline).foregroundStyle(Theme.textPrimary)
+                        }
+                        .padding(.top, Theme.Space.l)
                     }
                 }
-                .padding()
+                .padding(Theme.Space.m)
             }
+            .kavachScreenBackground()
             .navigationTitle("\(config.displayName) check")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { close() } } }
         }
         .task { await run() }
+        .sheet(isPresented: $composing) {
+            MessageComposer(recipient: config.agentLineNumber, body: ForwardToKavach.wrap(text)) { composing = false }
+                .ignoresSafeArea()
+        }
+    }
+
+    /// Share extensions can't open URLs, so compose the text here. Where Messages isn't available
+    /// (e.g. Simulator), copy the wrapped text for the person to paste.
+    private func forward() {
+        if MFMessageComposeViewController.canSendText() {
+            composing = true
+        } else {
+            UIPasteboard.general.string = ForwardToKavach.wrap(text)
+            copiedForward = true
+        }
     }
 
     private func run() async {
@@ -89,6 +133,34 @@ struct ShareRootView: View {
     static func load<T: Transferable & Sendable>(_ type: T.Type, from provider: NSItemProvider) async -> T? {
         await withCheckedContinuation { cont in
             _ = provider.loadTransferable(type: T.self) { result in cont.resume(returning: try? result.get()) }
+        }
+    }
+}
+
+/// Messages compose sheet with the agent number and the wrapped body filled in.
+struct MessageComposer: UIViewControllerRepresentable {
+    let recipient: String
+    let body: String
+    let done: @MainActor () -> Void
+
+    func makeCoordinator() -> Coordinator { Coordinator(done: done) }
+
+    func makeUIViewController(context: Context) -> MFMessageComposeViewController {
+        let vc = MFMessageComposeViewController()
+        vc.recipients = [recipient]
+        vc.body = body
+        vc.messageComposeDelegate = context.coordinator
+        return vc
+    }
+
+    func updateUIViewController(_ vc: MFMessageComposeViewController, context: Context) {}
+
+    @MainActor final class Coordinator: NSObject, MFMessageComposeViewControllerDelegate {
+        let done: @MainActor () -> Void
+        init(done: @escaping @MainActor () -> Void) { self.done = done }
+        nonisolated func messageComposeViewController(_ controller: MFMessageComposeViewController,
+                                                      didFinishWith result: MessageComposeResult) {
+            MainActor.assumeIsolated { done() } // MessageUI calls its delegate on the main thread
         }
     }
 }

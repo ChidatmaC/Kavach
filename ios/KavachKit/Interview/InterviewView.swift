@@ -16,10 +16,13 @@ public struct InterviewView: View {
     @State private var saving = false
     @State private var error: String?
 
-    public init(title: String = "Tell us what happened", save: @escaping Save, onDone: @escaping @MainActor () -> Void) {
+    /// `startIndex` resumes an unfinished questionnaire at its first unanswered question.
+    public init(title: String = "Tell us what happened", startIndex: Int = 0, save: @escaping Save,
+                onDone: @escaping @MainActor () -> Void) {
         self.title = title
         self.save = save
         self.onDone = onDone
+        _index = State(initialValue: max(0, min(startIndex, InterviewScript.questions.count - 1)))
     }
 
     private var questions: [InterviewQuestion] { InterviewScript.questions }
@@ -27,37 +30,45 @@ public struct InterviewView: View {
 
     public var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 18) {
-                HStack {
-                    Text("Question \(index + 1) of \(questions.count)")
-                        .font(.headline).foregroundStyle(.secondary)
-                        .accessibilityLabel("Question \(index + 1) of \(questions.count)")
-                    Spacer()
-                    Button {
-                        Speaker.shared.speak(InterviewScript.spoken(question, index: index))
-                    } label: {
-                        Image(systemName: "speaker.wave.2.fill").font(.title2)
-                            .frame(minWidth: Theme.minTarget, minHeight: Theme.minTarget)
+            VStack(alignment: .leading, spacing: Theme.Space.l) {
+                VStack(alignment: .leading, spacing: Theme.Space.xs) {
+                    HStack(alignment: .center) {
+                        Text("Question \(index + 1) of \(questions.count)")
+                            .font(TypeScale.overline).foregroundStyle(Theme.textSecondary)
+                        Spacer()
+                        Button {
+                            Speaker.shared.speak(InterviewScript.spoken(question, index: index))
+                        } label: {
+                            Image(systemName: "speaker.wave.2")
+                                .font(.title3.weight(.semibold))
+                                .foregroundStyle(Theme.accent)
+                                .frame(minWidth: Theme.minTarget, minHeight: Theme.minTarget)
+                                .contentShape(Rectangle())
+                        }
+                        .accessibilityLabel("Read the question aloud")
                     }
-                    .accessibilityLabel("Read the question aloud")
+                    ProgressView(value: Double(index + 1), total: Double(questions.count))
+                        .tint(Theme.accent)
+                        .accessibilityHidden(true)
                 }
-                ProgressView(value: Double(index + 1), total: Double(questions.count))
-                    .accessibilityHidden(true)
                 Text(question.prompt)
                     .font(.title.weight(.bold))
+                    .foregroundStyle(Theme.textPrimary)
                     .fixedSize(horizontal: false, vertical: true)
                     .accessibilityAddTraits(.isHeader)
 
                 answers
 
                 if let error {
-                    Text(error).foregroundStyle(Theme.amber).font(.callout)
+                    Label(error, systemImage: "exclamationmark.triangle")
+                        .font(TypeScale.callout).foregroundStyle(Theme.caution)
                         .accessibilityLabel("Problem: \(error)")
                 }
-                if saving { ProgressView("Saving…") }
+                if saving { ProgressView("Saving…").tint(Theme.accent) }
             }
-            .padding()
+            .padding(Theme.Space.m)
         }
+        .kavachScreenBackground()
         .navigationTitle(title)
         .navigationBarTitleDisplayMode(.inline)
         .disabled(saving)
@@ -69,29 +80,36 @@ public struct InterviewView: View {
     @ViewBuilder private var answers: some View {
         switch question.kind {
         case .text(let suggestions):
-            VStack(spacing: 10) {
+            VStack(spacing: Theme.Space.s) {
                 ForEach(suggestions, id: \.self) { s in
-                    answerButton(s, symbol: "person.fill.questionmark", selected: false) { submit(s) }
+                    answerButton(s, symbol: "person.crop.circle.badge.questionmark", selected: false) { submit(s) }
                 }
-                TextField("Something else (type it)", text: $text)
-                    .textFieldStyle(.roundedBorder)
-                    .font(.title3)
-                    .frame(minHeight: Theme.minTarget)
-                    .submitLabel(.next)
-                    .onSubmit { if let a = InterviewScript.identityAnswer(text) { submit(a) } }
-                    .accessibilityLabel("Type who they said they were")
+                VStack(alignment: .leading, spacing: Theme.Space.xs) {
+                    Text("Something else").font(TypeScale.overline).foregroundStyle(Theme.textSecondary)
+                    TextField("Type who they said they were", text: $text)
+                        .font(.title3)
+                        .padding(.horizontal, Theme.Space.s)
+                        .frame(minHeight: 52)
+                        .background(Theme.surface, in: RoundedRectangle(cornerRadius: Theme.Radius.m, style: .continuous))
+                        .overlay(RoundedRectangle(cornerRadius: Theme.Radius.m, style: .continuous)
+                            .strokeBorder(Theme.borderStrong, lineWidth: 1))
+                        .submitLabel(.next)
+                        .onSubmit { if let a = InterviewScript.identityAnswer(text) { submit(a) } }
+                        .accessibilityLabel("Type who they said they were")
+                }
+                .padding(.top, Theme.Space.xs)
                 Button("Next") { if let a = InterviewScript.identityAnswer(text) { submit(a) } }
-                    .buttonStyle(KavachButtonStyle(prominent: true))
+                    .buttonStyle(KavachButtonStyle(.primary))
                     .disabled(InterviewScript.identityAnswer(text) == nil)
             }
         case .single(let options):
-            VStack(spacing: 10) {
+            VStack(spacing: Theme.Space.s) {
                 ForEach(options) { o in
                     answerButton(o.label, symbol: o.symbol, selected: false) { submit(o.value) }
                 }
             }
         case .multi(let options, let exclusive):
-            VStack(spacing: 10) {
+            VStack(spacing: Theme.Space.s) {
                 ForEach(options) { o in
                     answerButton(o.label, symbol: o.symbol, selected: multi.contains(o.value)) {
                         multi = InterviewScript.toggle(o.value, in: multi, exclusive: exclusive)
@@ -99,7 +117,8 @@ public struct InterviewView: View {
                     .accessibilityAddTraits(multi.contains(o.value) ? .isSelected : [])
                 }
                 Button("Continue") { if let a = InterviewScript.sharedAnswer(multi) { submit(a) } }
-                    .buttonStyle(KavachButtonStyle(prominent: true))
+                    .buttonStyle(KavachButtonStyle(.primary))
+                    .padding(.top, Theme.Space.xs)
                     .disabled(InterviewScript.sharedAnswer(multi) == nil)
                     .accessibilityHint("Saves your choices")
             }
@@ -141,24 +160,32 @@ struct AnswerButton: View {
             taps += 1
             action()
         } label: {
-            HStack(spacing: 14) {
+            HStack(spacing: Theme.Space.s) {
                 Image(systemName: selected ? "checkmark.circle.fill" : symbol)
-                    .font(.title2).frame(width: 36).accessibilityHidden(true)
-                Text(label).font(.title3.weight(.semibold)).multilineTextAlignment(.leading)
+                    .font(.title3.weight(.semibold))
+                    .foregroundStyle(Theme.accent)
+                    .frame(width: Theme.Icon.s)
+                    .accessibilityHidden(true)
+                Text(label)
+                    .font(.title3.weight(.semibold))
+                    .foregroundStyle(Theme.textPrimary)
+                    .multilineTextAlignment(.leading)
+                    .fixedSize(horizontal: false, vertical: true)
                 Spacer(minLength: 0)
             }
-            .padding(.vertical, prefs.accessibilityMode ? 20 : 14)
-            .padding(.horizontal, 14)
+            .padding(.vertical, prefs.accessibilityMode ? Theme.Space.l : Theme.Space.m)
+            .padding(.horizontal, Theme.Space.m)
             .frame(maxWidth: .infinity, minHeight: 56)
-            .foregroundStyle(selected ? Color.white : Color.primary)
-            .background(selected ? Theme.accent : Color(.secondarySystemGroupedBackground),
-                        in: RoundedRectangle(cornerRadius: 14))
+            .background(selected ? Theme.accentSoft : Theme.surface,
+                        in: RoundedRectangle(cornerRadius: Theme.Radius.m, style: .continuous))
             .overlay {
-                RoundedRectangle(cornerRadius: 14)
-                    .stroke(prefs.highContrast ? Color.primary : Theme.accent.opacity(0.4), lineWidth: prefs.highContrast ? 2 : 1)
+                RoundedRectangle(cornerRadius: Theme.Radius.m, style: .continuous)
+                    .strokeBorder(selected ? Theme.accent : (prefs.highContrast ? Theme.borderStrong : Theme.separator),
+                                  lineWidth: selected || prefs.highContrast ? 2 : 1)
             }
+            .contentShape(RoundedRectangle(cornerRadius: Theme.Radius.m, style: .continuous))
         }
-        .buttonStyle(.plain)
+        .buttonStyle(PressableStyle())
         .sensoryFeedback(.selection, trigger: taps) { _, _ in prefs.hapticsOnEveryTap }
         .accessibilityLabel(label)
     }

@@ -11,7 +11,9 @@ from .llm import ModelSet
 from .log import log
 from .stdb import Stdb
 from .workflows.base import make_run
-from .workflows.briefing import run_briefing, run_practice
+from .workflows.advise import run_advise
+from .workflows.briefing import run_briefing
+from .workflows.command import run_command
 from .workflows.family_alert import run_family_alert
 from .workflows.interview import run_interview
 from .workflows.router import run_router
@@ -37,6 +39,8 @@ async def run_python_workflow(workflow: str, payload: dict[str, Any], models: Mo
             out = await run_router(run, payload, dispatcher=ENGINE.run)
         elif workflow == "scam_check":
             out = await run_scam_check(run, payload, queue_reply=not payload.get("_no_reply"))
+        elif workflow == "advise":
+            out = await run_advise(run, payload)
         elif workflow == "interview":
             out = await run_interview(run, payload)
         elif workflow == "family_alert":
@@ -47,8 +51,8 @@ async def run_python_workflow(workflow: str, payload: dict[str, Any], models: Mo
             out = await run_trusted_sender(run, payload)
         elif workflow == "briefing":
             out = await run_briefing(run, payload)
-        elif workflow == "practice":
-            out = await run_practice(run, payload)
+        elif workflow == "command":
+            out = await run_command(run, payload)
         else:
             raise KeyError(workflow)
         log("workflow_done", workflow=workflow, outcome="ok", tool_calls=run.tools.calls,

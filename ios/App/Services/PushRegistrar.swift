@@ -17,16 +17,25 @@ final class PushRegistrar: NSObject, UNUserNotificationCenterDelegate {
         let yes = UNNotificationAction(identifier: Self.yesAction, title: "Yes, I sent it",
                                        options: [.authenticationRequired, .foreground])
         let no = UNNotificationAction(identifier: Self.noAction, title: "No, it wasn't me", options: [.destructive])
+        // After an incoming call ends (local notification from CallFollowUpCenter).
+        let report = UNNotificationAction(identifier: CallFollowUpCopy.reportAction, title: CallFollowUpCopy.reportLabel,
+                                          options: [.foreground])
+        let fine = UNNotificationAction(identifier: CallFollowUpCopy.fineAction, title: CallFollowUpCopy.fineLabel, options: [])
         center.setNotificationCategories([
             UNNotificationCategory(identifier: Self.trustedSenderCategory, actions: [yes, no], intentIdentifiers: []),
+            UNNotificationCategory(identifier: CallFollowUpCopy.category, actions: [report, fine], intentIdentifiers: []),
         ])
     }
 
     func requestAuthorization() {
+        #if DEBUG
+        if ProcessInfo.processInfo.environment["KAVACH_DEBUG_NO_PUSH_PROMPT"] == "1" { return }
+        #endif
         Task {
             let granted = (try? await UNUserNotificationCenter.current()
                 .requestAuthorization(options: [.alert, .sound, .badge])) ?? false
             if granted { UIApplication.shared.registerForRemoteNotifications() }
+            await AppModel.shared.refreshNotificationStatus()
         }
     }
 
@@ -42,7 +51,19 @@ final class PushRegistrar: NSObject, UNUserNotificationCenterDelegate {
     nonisolated func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse) async {
         let info = response.notification.request.content.userInfo
         let action = response.actionIdentifier
+        let category = response.notification.request.content.categoryIdentifier
         let vid = Self.verificationId(from: info)
+        if category == CallFollowUpCopy.category {
+            await MainActor.run {
+                // Tapping the banner or "Report it" opens Report a call; "It was fine" just clears it.
+                if action == CallFollowUpCopy.fineAction || action == UNNotificationDismissActionIdentifier {
+                    CallFollowUpCenter.shared.dismiss()
+                } else {
+                    CallFollowUpCenter.shared.report()
+                }
+            }
+            return
+        }
         await MainActor.run {
             guard let vid else { return }
             switch action {
@@ -79,7 +100,11 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
     func application(_ application: UIApplication,
                      didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil) -> Bool {
         PushRegistrar.shared.configure()
-        if AppModel.shared.isRegistered { PushRegistrar.shared.requestAuthorization() }
+        CallFollowUpCenter.shared.start()
+        // After onboarding's Save-to-Contacts step, so the two prompts don't stack.
+        if AppModel.shared.isRegistered && !AppModel.shared.shouldOfferAgentContact {
+            PushRegistrar.shared.requestAuthorization()
+        }
         return true
     }
 

@@ -15,49 +15,83 @@ struct CheckMessageView: View {
     @State private var checking = false
     @State private var result: CheckResult?
     @State private var status: String?
+    @FocusState private var focused: Field?
+
+    enum Field { case message, sender }
 
     init(prefill: String = "") { _prefill = State(initialValue: prefill) }
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
+            VStack(alignment: .leading, spacing: Theme.Space.l) {
                 if let result {
-                    CheckResultView(result: result, message: text)
-                    RepeatSpeechButton()
+                    Card { CheckResultView(result: result, message: text) }
                     resultActions(result)
-                    Button("Check another message") { reset() }
-                        .buttonStyle(KavachButtonStyle())
+                    VerdictFeedbackControl(verdict: result.verdict) { fb in
+                        await model.sendFeedback(fb, for: result)
+                    }
+                    .padding(.horizontal, Theme.Space.xxs)
                 } else {
                     input
                 }
                 if let status {
-                    Text(status).font(.callout).foregroundStyle(.secondary).accessibilityLabel(status)
+                    StatusBanner(tone: .neutral, systemImage: "info.circle", title: status)
                 }
             }
-            .padding()
+            .padding(Theme.Space.m)
         }
-        .background(Color(.systemGroupedBackground))
-        .navigationTitle("Check a message")
-        .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Close") { dismiss() } } }
-        .onAppear { if !prefill.isEmpty { text = prefill; prefill = "" } }
+        .debugScrollAnchor()
+        .scrollDismissesKeyboard(.interactively)
+        .kavachScreenBackground()
+        .navigationTitle(result == nil ? "Check a message" : "Result")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .cancellationAction) { Button("Close") { dismiss() } }
+            if result != nil {
+                ToolbarItem(placement: .primaryAction) { Button("Check another") { reset() } }
+            }
+        }
+        .onAppear {
+            if !prefill.isEmpty { text = prefill; prefill = "" }
+            #if DEBUG
+            if ProcessInfo.processInfo.environment["KAVACH_DEBUG_AUTOCHECK"] == "1", !text.isEmpty, result == nil {
+                Task { await check() }
+            }
+            #endif
+        }
         .onChange(of: photo) { _, item in if let item { Task { await readScreenshot(item) } } }
     }
 
     private var input: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            Text("Paste the message, or choose a screenshot of it.").font(.title3)
-            TextEditor(text: $text)
-                .font(.body)
-                .frame(minHeight: 160)
-                .padding(6)
-                .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 12))
-                .overlay(alignment: .topLeading) {
-                    if text.isEmpty {
-                        Text("The message goes here").foregroundStyle(.secondary).padding(14).allowsHitTesting(false)
+        VStack(alignment: .leading, spacing: Theme.Space.m) {
+            Text("Paste the message, or choose a screenshot of it. We'll tell you if it looks like a scam.")
+                .font(TypeScale.body).foregroundStyle(Theme.textSecondary)
+
+            VStack(alignment: .leading, spacing: Theme.Space.xs) {
+                Text("Message").font(TypeScale.overline).foregroundStyle(Theme.textSecondary)
+                TextEditor(text: $text)
+                    .font(TypeScale.body)
+                    .foregroundStyle(Theme.textPrimary)
+                    .scrollContentBackground(.hidden)
+                    .focused($focused, equals: .message)
+                    .frame(minHeight: 160)
+                    .padding(Theme.Space.xs)
+                    .background(Theme.surface, in: RoundedRectangle(cornerRadius: Theme.Radius.m, style: .continuous))
+                    .overlay {
+                        RoundedRectangle(cornerRadius: Theme.Radius.m, style: .continuous)
+                            .strokeBorder(focused == .message ? Theme.accent : Theme.borderStrong.opacity(0.6),
+                                          lineWidth: focused == .message ? 2 : 1)
                     }
-                }
-                .accessibilityLabel("Message to check")
-            HStack(spacing: 12) {
+                    .overlay(alignment: .topLeading) {
+                        if text.isEmpty {
+                            Text("The message goes here").foregroundStyle(Theme.textSecondary)
+                                .padding(Theme.Space.m).allowsHitTesting(false).accessibilityHidden(true)
+                        }
+                    }
+                    .accessibilityLabel("Message to check")
+            }
+
+            HStack(spacing: Theme.Space.s) {
                 PasteButton(payloadType: String.self) { strings in
                     Task { @MainActor in
                         text = strings.joined(separator: "\n")
@@ -65,44 +99,71 @@ struct CheckMessageView: View {
                     }
                 }
                 .labelStyle(.titleAndIcon)
+                .buttonBorderShape(.roundedRectangle(radius: Theme.Radius.m))
+                .tint(Theme.accentFill)
                 .frame(minHeight: Theme.minTarget)
-                .accessibilityLabel("Paste")
                 PhotosPicker(selection: $photo, matching: .screenshots) {
-                    Label("Choose screenshot", systemImage: "photo.on.rectangle")
+                    Label("Screenshot", systemImage: "photo")
                 }
-                .buttonStyle(KavachButtonStyle())
-                .accessibilityLabel("Choose screenshot")
+                .buttonStyle(KavachButtonStyle(.secondary))
+                .accessibilityLabel("Choose a screenshot")
             }
-            if reading { ProgressView("Reading the screenshot…") }
-            TextField("Who sent it? (optional phone number)", text: $sender)
-                .keyboardType(.phonePad)
-                .textFieldStyle(.roundedBorder)
-                .frame(minHeight: Theme.minTarget)
-                .accessibilityLabel("Sender phone number, optional")
+            if reading {
+                ProgressView("Reading the screenshot…").tint(Theme.accent)
+            }
+
+            VStack(alignment: .leading, spacing: Theme.Space.xs) {
+                Text("Who sent it? (optional)").font(TypeScale.overline).foregroundStyle(Theme.textSecondary)
+                TextField("Phone number", text: $sender)
+                    .keyboardType(.phonePad)
+                    .textContentType(.telephoneNumber)
+                    .focused($focused, equals: .sender)
+                    .padding(.horizontal, Theme.Space.s)
+                    .frame(minHeight: 48)
+                    .background(Theme.surface, in: RoundedRectangle(cornerRadius: Theme.Radius.m, style: .continuous))
+                    .overlay {
+                        RoundedRectangle(cornerRadius: Theme.Radius.m, style: .continuous)
+                            .strokeBorder(focused == .sender ? Theme.accent : Theme.borderStrong.opacity(0.6),
+                                          lineWidth: focused == .sender ? 2 : 1)
+                    }
+                    .accessibilityLabel("Sender phone number, optional")
+            }
+
             Button {
+                focused = nil
                 Task { await check() }
             } label: {
-                if checking { ProgressView() } else { Label("Check it", systemImage: "checkmark.shield") }
+                if checking {
+                    HStack(spacing: Theme.Space.xs) { ProgressView().tint(Theme.onAccent); Text("Checking…") }
+                } else {
+                    Label("Check it", systemImage: "checkmark.shield")
+                }
             }
-            .buttonStyle(KavachButtonStyle(prominent: true))
+            .buttonStyle(KavachButtonStyle(.primary))
             .disabled(checking || text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
         }
     }
 
     @ViewBuilder private func resultActions(_ r: CheckResult) -> some View {
-        VStack(spacing: 10) {
+        VStack(spacing: Theme.Space.s) {
             if r.verdict != .safe {
                 Button { Task { await reportAndBlock() } } label: {
-                    Label("Report and block", systemImage: "hand.raised.slash.fill")
+                    Label("Report and block", systemImage: "hand.raised")
                 }
-                .buttonStyle(KavachButtonStyle(prominent: true, tint: r.verdict == .likelyScam ? Theme.danger : Theme.accent))
+                .buttonStyle(KavachButtonStyle(r.verdict == .likelyScam ? .destructive : .primary))
             }
-            Button { Task { await tellFamily(r) } } label: { Label("Tell my family", systemImage: "person.2.fill") }
-                .buttonStyle(KavachButtonStyle())
-            Button {
-                Speaker.shared.speak(CheckResultView(result: r, message: text).spokenText)
-            } label: { Label("Read aloud", systemImage: "speaker.wave.2.fill") }
-                .buttonStyle(KavachButtonStyle())
+            HStack(spacing: Theme.Space.s) {
+                Button { Task { await tellFamily(r) } } label: { Label("Tell my family", systemImage: "person.2") }
+                    .buttonStyle(KavachButtonStyle(r.verdict == .safe ? .primary : .secondary))
+                Button {
+                    Speaker.shared.speak(CheckResultView(result: r, message: text).spokenText)
+                } label: { Label("Read aloud", systemImage: "speaker.wave.2") }
+                    .buttonStyle(KavachButtonStyle(.secondary))
+            }
+            if !model.agentNumber.isEmpty {
+                ForwardByTextButton(message: text, from: sender)
+            }
+            RepeatSpeechButton()
         }
     }
 
@@ -125,6 +186,7 @@ struct CheckMessageView: View {
     private func check() async {
         guard let api = model.api else { return }
         checking = true
+        status = nil
         defer { checking = false }
         let s = normalizePhone(sender)
         result = await api.check(text: text, source: source, senderE164: s.isEmpty ? nil : s)

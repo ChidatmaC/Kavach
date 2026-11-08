@@ -1,7 +1,7 @@
 # Setting up Kavach on a new Mac
 
 This gets the full stack running locally: SpacetimeDB, the agent service (Nemotron via NVIDIA NIM), the
-iMessage/SMS worker in console mode, the voice hotline simulator, and the iPhone app in the Simulator.
+iMessage/SMS worker in console mode, and the iPhone app in the Simulator.
 It takes about 20 minutes, most of it installs.
 
 Versions this was built and tested with are in brackets.
@@ -61,7 +61,6 @@ npm install                                   # root scripts (seed, tokens, smok
 (cd spacetime && npm install)                 # SpacetimeDB module
 (cd photon-worker && npm install)             # iMessage/SMS worker
 (cd agents && uv sync)                        # agent service (NeMo Agent Toolkit, Guardrails)
-(cd voice && uv sync)                         # voice hotline (Pipecat)
 ```
 
 ## 4. Start SpacetimeDB and load the demo data
@@ -110,10 +109,11 @@ cd ios && xcodegen generate && open Kavach.xcodeproj
 ```
 
 In Xcode pick the **Kavach** scheme and an **iPhone 17** simulator, then press **⌘R**. No signing is
-needed for the Simulator. In the app, sign up as **Joe** with **+15555550101** to see the demo data.
+needed for the Simulator. In the app, sign in as **Joe** with **+15555550101**, tap **Text me a code**
+and enter **000000** to see the demo data. (Demo numbers +1 555-555-xxxx accept `000000` while
+`DEMO_MODE=true`; any other number gets a real 6-digit code by text through the Photon worker.)
 
-If the app says the number is already registered (e.g. after an earlier test run), free it with
-`npm run dev:wipe` and sign up again.
+Signing in on a second phone moves the number there; **Settings → Sign out of this phone** releases it.
 
 Ways to feed the app a "message" (the app can't read real SMS; see the spec's platform constraints):
 - `scripts/text.sh +15555550101 "..."`: the check then shows in the app under **This week**.
@@ -125,17 +125,7 @@ Ways to feed the app a "message" (the app can't read real SMS; see the spec's pl
   xcrun simctl push booted com.kavach.app /tmp/kavach.apns
   ```
 
-## 7. Try the voice hotline (no phone line needed)
-
-```sh
-cd voice && uv run python simulate.py --caller +15555550101
-```
-
-Type what the caller says (for example, describe a "grandson in jail" call where you bought gift cards).
-`#1` presses keypad 1, `/hangup` ends the call. A real phone line needs Twilio, Deepgram and Cartesia keys;
-see `voice/README.md`.
-
-## 8. Run the tests
+## 7. Run the tests
 
 | Component | Command |
 | --- | --- |
@@ -143,7 +133,6 @@ see `voice/README.md`.
 | agents (unit) | `cd agents && uv run pytest -m "not integration"` |
 | agents (integration) | see `agents/README.md` (uses its own database, `kavach-agents`) |
 | photon-worker | `cd photon-worker && npm test` |
-| voice | `cd voice && uv run pytest` |
 | iOS | `cd ios && xcodebuild test -scheme Kavach -destination 'platform=iOS Simulator,name=iPhone 17' CODE_SIGNING_ALLOWED=NO` |
 
 ## Running on a real iPhone
@@ -186,8 +175,10 @@ device.
 | --- | --- |
 | `SpacetimeDB is not running` | Run `spacetime start` in another terminal. |
 | `no token for admin; run "npm run tokens"` | Run `npm run tokens` (after every `publish:local:clean`). |
-| `register_person: 530 number already registered` | `npm run dev:wipe` frees app sign-ups and re-seeds. |
+| `register_person is retired` | The app build is older than the module: rebuild the iOS app (sign-in is now `request_sign_in` + `verify_sign_in`). |
+| `000000` is not accepted | Only for +1 555-555-xxxx numbers, and only with `DEMO_MODE=true` in `.env` when publishing. |
+| `too many codes requested` / `too many attempts` | Wait (1 h / 10 min) or `npm run demo:reset`, which clears pending sign-ins. |
 | Replies are generic / say they couldn't check | `NIM_API_KEY` missing, or a model id isn't enabled for your account (see step 2). Check `.run/agents.log`. |
 | `Address already in use` on 8088/8090 | `npm run stop:local`, then start again. |
 | Publish fails with a schema error | `npm run publish:local:clean` (drops local data), then `npm run tokens && npm run demo:reset`. |
-| App shows no data | Make sure you signed up as `+15555550101` and `npm run start:local` is running. |
+| App shows no data | Make sure you signed in as `+15555550101` and `npm run start:local` is running. |

@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import asyncio
 import hmac
+import json
 import time
 from contextlib import asynccontextmanager
 from typing import Any
@@ -17,13 +18,15 @@ from typing import Any
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
-from kavach import apns
+from kavach import apns, training
+from kavach.call_report import CallReportError, handle_call_report, parse_call_report
 from kavach.config import settings
 from kavach.engine import ENGINE, db
 from kavach.guard import guard
 from kavach.log import log
+from kavach.outcomes import OutcomeWatcher
 from kavach.schemas import SchemaError, validate
-from kavach.stdb import ReducerError, SqlError
+from kavach.stdb import ReducerError, SqlError, q
 from kavach.tasks import TaskPoller
 from kavach.tools import ReducerNotAllowed, ToolBudgetExceeded
 from kavach.workflows.base import BadRequest, NotFound, make_run
@@ -31,8 +34,8 @@ from kavach.workflows.interview import QUESTIONS, QUESTION_IDS
 from kavach.workflows.router import HELP_TEXT
 from kavach.workflows.scam_check import fallback_output, send_fallback_reply
 
-WORKFLOWS = {"router", "scam_check", "interview", "family_alert", "verify_relative", "trusted_sender",
-             "briefing", "practice"}
+WORKFLOWS = {"router", "scam_check", "advise", "command", "interview", "family_alert", "verify_relative",
+             "trusted_sender", "briefing"}
 
 
 async def run_validated(workflow: str, payload: dict[str, Any]) -> dict[str, Any]:
@@ -46,6 +49,7 @@ async def run_validated(workflow: str, payload: dict[str, Any]) -> dict[str, Any
 
 
 POLLER = TaskPoller(db(), run_validated)
+OUTCOMES = OutcomeWatcher(db())
 
 
 @asynccontextmanager
@@ -55,9 +59,12 @@ async def lifespan(_app: FastAPI):
     s = settings()
     if s.task_poller:
         POLLER.start()
+    if s.outcome_watcher:
+        OUTCOMES.start()
     log("service_start", method=ENGINE.mode, model=s.model_fast if s.llm_enabled else "none(fallback)",
         path=f"{s.spacetime_uri}/{s.spacetime_db}", enabled=s.task_poller)
     yield
+    await OUTCOMES.stop()
     await POLLER.stop()
     await ENGINE.stop()
 
@@ -189,7 +196,7 @@ async def _app_person(request: Request) -> dict[str, Any] | None:
 async def app_check(request: Request):
     person = await _app_person(request)
     if not person:
-        return _err(401, "unknown app identity; call register_person first")
+        return _err(401, "unknown app identity; sign in first (request_sign_in, then verify_sign_in)")
     try:
         body = await request.json()
         validate("app_check.input", body)
@@ -206,10 +213,74 @@ async def app_check(request: Request):
 async def app_verify(request: Request):
     person = await _app_person(request)
     if not person:
-        return _err(401, "unknown app identity; call register_person first")
+        return _err(401, "unknown app identity; sign in first (request_sign_in, then verify_sign_in)")
     try:
         body = await request.json()
         validate("app_verify.input", body)
     except (ValueError, SchemaError) as e:
         return _err(400, str(e))
     return await execute("verify_relative", {"person_id": int(person["id"]), "relative_name": body["relative_name"]})
+
+
+@app.post("/app/feedback")
+async def app_feedback(request: Request):
+    """"Was this right?" from the app: a training label for one of the person's own checks."""
+    person = await _app_person(request)
+    if not person:
+        return _err(401, "unknown app identity; sign in first (request_sign_in, then verify_sign_in)")
+    try:
+        body = await request.json()
+        validate("app_feedback.input", body)
+    except (ValueError, SchemaError) as e:
+        return _err(400, str(e))
+    tok = request.headers["authorization"][7:].strip()
+    where = f"id = {int(body['check_id'])}" if body.get("check_id") else f"request_key = {q(body['request_key'])}"
+    try:
+        check = await db().one(f"SELECT * FROM my_checks WHERE {where}", token=tok)
+    except SqlError:
+        check = None
+    if not check:
+        return _err(404, "unknown check")
+    pid = int(person["id"])
+    decision = training.decision_for_check(check.get("request_key") or "")
+    if not decision:
+        # A check from before the training log (or another instance): record it from the stored row.
+        did = training.log_decision(
+            workflow="scam_check", person_id=pid, text=check.get("content_redacted") or "", tactics=[], evidence=[],
+            model_verdict=check.get("model_verdict") or "", final_verdict=check.get("verdict") or "", floors={},
+            reason=check.get("reason") or "", check_request_key=check.get("request_key") or "", method="backfill",
+            extra={"source": check.get("source") or ""})
+        decision = training.decision_by_id(did) if did else None
+    lb = training.add_label(decision=decision, person_id=pid, source="app", correct=bool(body["correct"]),
+                            label=body.get("label") or "", note=body.get("note") or "", check_id=int(check["id"]))
+    if not lb:
+        return _err(503, "could not record feedback")
+    out = {"ok": True, "check_id": int(check["id"]), "label": lb["label"], "correct": lb["correct"], "label_id": lb["id"]}
+    return JSONResponse(validate("app_feedback.output", out))
+
+
+@app.post("/ios/call-report")
+async def ios_call_report(request: Request):
+    """Report a call from Recents (iOS Unwanted Communication extension). Payload top-level or nested."""
+    raw = await request.body()
+    try:
+        body = json.loads(raw or b"{}")
+    except ValueError:
+        try:
+            from urllib.parse import parse_qs
+
+            body = {k: v[0] for k, v in parse_qs(raw.decode(errors="replace")).items()}
+        except Exception:  # noqa: BLE001
+            return _err(400, "body must be JSON")
+    auth = request.headers.get("authorization", "")
+    bearer = auth[7:].strip() if auth.lower().startswith("bearer ") else ""
+    try:
+        rep = parse_call_report(body, bearer)
+        out = await asyncio.wait_for(handle_call_report(db(), rep), settings().run_timeout_s)
+    except CallReportError as e:
+        log("call_report", path="/ios/call-report", outcome="rejected", status=e.status)
+        return _err(e.status, str(e))
+    except (ReducerError, SqlError, asyncio.TimeoutError) as e:
+        log("call_report", path="/ios/call-report", outcome="error", error=type(e).__name__)
+        return _err(502, f"could not save the report: {type(e).__name__}")
+    return JSONResponse(validate("call_report.output", out))

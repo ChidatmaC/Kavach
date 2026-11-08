@@ -10,7 +10,7 @@ export async function runSeed() {
   for (const p of seed.persons) {
     await call(admin, 'admin_seed_person', {
       phone: p.phone_e164, name: p.display_name, critical_overrides_pause: p.critical_overrides_pause,
-      practice_consent: p.practice_consent, tz_offset_minutes: p.tz_offset_minutes, family_code_word: seed.family_code_word,
+      tz_offset_minutes: p.tz_offset_minutes, family_code_word: seed.family_code_word,
     });
   }
   for (const c of seed.contacts) {

@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "advise input",
+  "type": "object",
+  "properties": {
+    "person_id": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "text": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 4000
+    },
+    "reply_to_e164": {
+      "type": "string"
+    },
+    "reply_channel": {
+      "type": "string"
+    },
+    "mode": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "person_id",
+    "text"
+  ],
+  "additionalProperties": false
+}

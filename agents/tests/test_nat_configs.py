@@ -5,7 +5,8 @@ import pytest
 
 from kavach.config import CONFIGS_DIR
 
-WORKFLOWS = ["router", "scam_check", "interview", "family_alert", "verify_relative", "trusted_sender", "briefing", "practice"]
+WORKFLOWS = ["router", "scam_check", "advise", "command", "interview", "family_alert", "verify_relative", "trusted_sender",
+             "briefing"]
 
 
 @pytest.mark.parametrize("wf", WORKFLOWS)

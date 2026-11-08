@@ -2,19 +2,21 @@
 //
 // 1. record_inbound_message (skip if this provider message id was already seen)
 // 2. match the sender to a person, or to a family contact
-// 3. local commands first (commands.ts), then family-thread replies, then POST /run/router
+// 3. local commands first (commands.ts), then family replies (acknowledge pending help/alert requests,
+//    relay free text to the rest of the family), then POST /run/router
 // Every reply leaves through enqueue_outbox (D6); this module never sends directly.
 import type { AgentClient, RouterResult } from './agent';
-import { parseCommand, sameName, type Command } from './commands';
+import { CLARIFY_MARKER, forwardWrapper, isClarifyAnswer, isShortAck, parseCommand, sameName, type Command } from './commands';
 import type { InboundEvent } from './gateway/types';
 import { log, maskPhone } from './log';
 import type { ContactRow, IncidentRow, OutboxRow, PersonRow, Stdb, VerificationRow } from './stdb';
 
 export type InboundStore = Pick<Stdb,
   | 'call' | 'inboundSeen' | 'personByPhone' | 'personById' | 'contactsByPhone' | 'contactsOfPerson'
-  | 'pendingVerifications' | 'incidentsOfPerson' | 'outboxTo' | 'optOuts' | 'enqueue' | 'openIncident'>;
+  | 'pendingVerifications' | 'pendingAlertRequests' | 'incidentsOfPerson' | 'outboxTo' | 'optOuts' | 'enqueue'
+  | 'openIncident'>;
 
-export type InboundAgent = Pick<AgentClient, 'router' | 'scamCheck' | 'verifyRelative' | 'interview'>;
+export type InboundAgent = Pick<AgentClient, 'router' | 'scamCheck' | 'advise' | 'command' | 'verifyRelative' | 'interview'>;
 
 export interface InboundOptions {
   appName: string;
@@ -24,17 +26,20 @@ export interface InboundOptions {
 
 export type InboundOutcome =
   | 'duplicate' | 'empty' | 'ignored_opted_out'
-  | `command:${Command['type']}` | 'relay' | 'image_check' | `routed:${string}` | 'router_failed';
+  | `command:${Command['type']}` | 'relay' | 'family_ack' | 'image_check' | `routed:${string}` | 'router_failed';
 
 const E164 = /^\+[1-9]\d{6,14}$/;
 const FAMILY_KINDS = new Set(['family_alert', 'relay', 'verification', 'checkin']);
 const ACTIVE_SEVERITY = new Set(['high', 'critical']);
+const ACK_KINDS = new Set(['help', 'alert']);
 const SEEN_MEMORY = 5_000;
+const CLARIFY_WINDOW_MS = 10 * 60_000; // the router remembers an ambiguous text for 10 minutes
 
 export const SCAM_CHECK_FALLBACK = "I couldn't check this right now. Don't reply or tap any links, and ask someone you trust.";
 
 export function helpText(app: string): string {
   return `${app}: Forward me any text, link or screenshot that worries you and I'll tell you if it looks like a scam. ` +
+    `Start a forwarded text with "Forwarded message:" so I know it's something you received, or just ask me a question. ` +
     `Text "verify" and a name (like "verify Tommy") to check it's really them. ` +
     `Text "pause" or "resume" for family alerts, or "stop" to opt out.`;
 }
@@ -80,7 +85,10 @@ export class InboundProcessor {
     const [person, contacts, optOuts] = await Promise.all([
       this.db.personByPhone(ev.from), this.db.contactsByPhone(ev.from), this.db.optOuts(),
     ]);
-    const cmd = ev.images.length ? null : parseCommand(ev.text);
+    // A forward wrapper ("Forwarded message:", "Fwd:", "Check this"...) is someone else's text: never a local
+    // command or a family "seen it" reply, whatever words are inside it. The router scam-checks it.
+    const wrapped = ev.images.length ? null : forwardWrapper(ev.text);
+    const cmd = ev.images.length || wrapped ? null : parseCommand(ev.text);
 
     if (optOuts.has(ev.from) && cmd?.type !== 'start' && cmd?.type !== 'stop') return 'ignored_opted_out';
 
@@ -89,16 +97,50 @@ export class InboundProcessor {
       if (handled) return `command:${cmd.type}`;
     }
 
-    if (ev.images.length) return this.imageCheck(ev, await this.ensurePerson(ev.from, person));
-
-    if (!ev.isGroup) {
-      const relayed = await this.relayFamilyReply(ev, contacts);
-      if (relayed) return 'relay';
-    } else if (contacts.length) {
-      return 'relay'; // group thread: everyone already saw it
+    if (ev.images.length) {
+      await this.acknowledge(ev, 'image');
+      return this.imageCheck(ev, await this.ensurePerson(ev.from, person));
     }
 
+    // "1" / "2" answering our "received, or your question?" prompt belongs to the router too.
+    const clarifying = !wrapped && isClarifyAnswer(ev.text) && (await this.askedToClarify(ev));
+    if (!wrapped && !clarifying) {
+      const family = await this.familyReply(ev, contacts, cmd);
+      if (family) return family;
+    }
+
+    // A bare marker ("Fwd:") gets no reply: the forwarded text is on its way.
+    if (!wrapped?.bare) await this.acknowledge(ev, 'text');
     return this.route(ev, await this.ensurePerson(ev.from, person));
+  }
+
+  /**
+   * Instant acknowledgement before the agent runs (a full answer takes a few seconds). Urgent, so the
+   * outbox sends it on its next poll, ahead of the answer. Commands skip this: they reply at once.
+   */
+  private async acknowledge(ev: InboundEvent, what: 'text' | 'image'): Promise<void> {
+    const body = what === 'image'
+      ? `${this.opts.appName}: Got your screenshot. Reading it now, one moment…`
+      : `${this.opts.appName}: Got it. Checking this now, one moment…`;
+    try {
+      await this.reply(ev, body, 'system', 'urgent');
+    } catch (err) {
+      log.warn('inbound.ack_failed', { from: maskPhone(ev.from), err });
+    }
+  }
+
+  /** Our latest message to this number, within 10 minutes, was the router's clarifying question. */
+  private async askedToClarify(ev: InboundEvent): Promise<boolean> {
+    try {
+      const since = (this.now() - CLARIFY_WINDOW_MS) * 1000; // micros
+      const latest = (await this.db.outboxTo(ev.from))
+        .filter((r: OutboxRow) => r.created_at >= since && r.kind !== 'push')
+        .sort((a, b) => b.created_at - a.created_at)
+        .find(r => !String(r.body).includes('Checking this now'));
+      return !!latest && String(latest.body).includes(CLARIFY_MARKER);
+    } catch {
+      return false;
+    }
   }
 
   private remember(id: string): void {
@@ -227,7 +269,63 @@ export class InboundProcessor {
     }
   }
 
-  // --- family thread relay (spec 9 outbound step 6) -------------------------------------
+  // --- family replies (CONTRACTS section 7) and thread relay (spec 9 outbound step 6) ----------
+
+  /**
+   * Any reply from an accepted family member counts as "I saw it" for their pending help/alert
+   * requests. Short acknowledgements ("ok", "got it", a thumbs up) stop there: no relay, no scam
+   * check. Free text is also relayed to the rest of the family. Returns null to keep routing.
+   */
+  private async familyReply(ev: InboundEvent, contacts: ContactRow[], cmd: Command | null): Promise<InboundOutcome | null> {
+    if (!contacts.length) return null;
+    if (ev.isGroup) {
+      await this.acknowledgeFamily(contacts);
+      return 'relay'; // group thread: everyone already saw it
+    }
+    // "on it" with no open High/Critical incident fell through from the ack command: still a "seen it".
+    const short = isShortAck(ev.text) || cmd?.type === 'ack';
+    if (short) {
+      const names = await this.acknowledgeFamily(contacts);
+      if (!names.length && !(await this.recentFamilyThread(ev))) return null;
+      await this.reply(ev, names.length
+        ? `${this.opts.appName}: Thanks, we've let ${joinNames(names)} know you saw it.`
+        : `${this.opts.appName}: Thanks, got it.`);
+      return 'family_ack';
+    }
+    const names = await this.acknowledgeFamily(contacts);
+    if (await this.relayFamilyReply(ev, contacts)) return 'relay';
+    if (!names.length) return null;
+    await this.reply(ev, `${this.opts.appName}: Thanks, we've let ${joinNames(names)} know you saw it.`);
+    return 'family_ack';
+  }
+
+  /**
+   * acknowledge_family_alert for every accepted contact row of this number that a pending help/alert
+   * request lists. Returns the names of the people told. Never throws: a failed ack must not lose the reply.
+   */
+  private async acknowledgeFamily(contacts: ContactRow[]): Promise<string[]> {
+    const accepted = contacts.filter(c => c.consent_status === 'accepted');
+    if (!accepted.length) return [];
+    const names: string[] = [];
+    try {
+      const pending = (await this.db.pendingAlertRequests()).filter(r => ACK_KINDS.has(r.kind));
+      for (const c of accepted) {
+        if (!pending.some(r => r.person_id === c.person_id && r.recipient_contact_ids.includes(c.id))) continue;
+        await this.db.call('acknowledge_family_alert', { contact_id: c.id });
+        const person = await this.db.personById(c.person_id);
+        if (person?.display_name && !names.includes(person.display_name)) names.push(person.display_name);
+        log.info('inbound.family_acknowledged', { person_id: c.person_id, contact_id: c.id });
+      }
+    } catch (err) {
+      log.warn('inbound.family_ack_failed', { err });
+    }
+    return names;
+  }
+
+  private async recentFamilyThread(ev: InboundEvent): Promise<boolean> {
+    const since = (this.now() - this.opts.familyReplyWindowMs) * 1000; // micros
+    return (await this.db.outboxTo(ev.from)).some((r: OutboxRow) => FAMILY_KINDS.has(r.kind) && r.created_at >= since);
+  }
 
   /**
    * A contact who we texted about their person recently is replying in the family thread.
@@ -280,6 +378,7 @@ export class InboundProcessor {
         text: typeof args.text === 'string' && args.text ? args.text : ev.text,
         sender_e164: typeof args.sender_e164 === 'string' && E164.test(args.sender_e164) ? args.sender_e164 : undefined,
         source: 'imessage', reply_to_e164: ev.from, reply_channel: ev.channel,
+        ...(args.teach_wrapper === true ? { teach_wrapper: true } : {}),
       });
     } catch (err) {
       log.warn('inbound.scam_check_failed', { person_id: person.id, err });
@@ -292,9 +391,11 @@ export class InboundProcessor {
     try {
       r = await this.agent.router({ text: ev.text, from_e164: ev.from, channel: ev.channel, person_id: person.id });
     } catch (err) {
-      // Most unrecognized texts are forwarded messages: check them rather than go silent.
+      // Check the text rather than go silent (a wrapped forward: only the forwarded part).
       log.warn('inbound.router_failed', { person_id: person.id, err });
-      await this.scamCheck(ev, person);
+      const wrapped = forwardWrapper(ev.text);
+      if (wrapped?.bare) return 'router_failed';
+      await this.scamCheck(ev, person, wrapped ? { text: wrapped.inner } : {});
       return 'router_failed';
     }
     const args = r.args ?? {};
@@ -302,6 +403,31 @@ export class InboundProcessor {
     switch (r.intent) {
       case 'scam_check':
         await this.scamCheck(ev, person, args);
+        break;
+      case 'advise':
+        try {
+          await this.agent.advise({
+            person_id: person.id, text: typeof args.text === 'string' && args.text ? args.text : ev.text,
+            reply_to_e164: ev.from, reply_channel: ev.channel,
+          });
+        } catch (err) {
+          log.warn('inbound.advise_failed', { person_id: person.id, err });
+          await this.reply(ev, `${app}: I couldn't answer that right now. Until we can talk it through, don't send money, gift cards or codes, and check with someone you trust.`);
+        }
+        break;
+      case 'command':
+        try {
+          // args is the /run/command body; args.text is the remembered text after a "2" answer.
+          const body = args as { text?: unknown; args?: unknown };
+          await this.agent.command({
+            person_id: person.id, text: typeof body.text === 'string' && body.text ? body.text : ev.text,
+            reply_to_e164: ev.from, reply_channel: ev.channel,
+            args: body.args && typeof body.args === 'object' ? body.args as Record<string, unknown> : args,
+          });
+        } catch (err) {
+          log.warn('inbound.command_failed', { person_id: person.id, err });
+          await this.reply(ev, `${app}: I couldn't do that right now. Please try again in a minute, or text "help" to see what I can do.`);
+        }
         break;
       case 'verify_relative': {
         const name = typeof args.relative_name === 'string' ? args.relative_name : '';
@@ -311,6 +437,10 @@ export class InboundProcessor {
       }
       case 'interview':
         await this.interview(ev, person, args);
+        break;
+      case 'clarify':
+        // Ambiguous text: one short question ("received, or your question?"). Empty after a bare "Fwd:".
+        if (typeof args.reply === 'string' && args.reply) await this.reply(ev, args.reply);
         break;
       case 'pause':
       case 'resume':
@@ -334,10 +464,15 @@ export class InboundProcessor {
         incidentId = open?.id ?? (await this.db.openIncident(person.id, 'imessage'));
       }
       // D6: in text mode the interview workflow queues its own reply through the outbox.
-      await this.agent.interview({ incident_id: incidentId, mode: 'text', utterance: ev.text });
+      const utterance = typeof args.utterance === 'string' && args.utterance ? args.utterance : ev.text;
+      await this.agent.interview({ incident_id: incidentId, mode: 'text', utterance });
     } catch (err) {
       log.warn('inbound.interview_failed', { person_id: person.id, err });
       await this.reply(ev, `${this.opts.appName}: I couldn't continue right now. If someone is pressuring you, hang up and call a family member.`);
     }
   }
+}
+
+function joinNames(names: string[]): string {
+  return names.length <= 1 ? names.join('') : `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`;
 }

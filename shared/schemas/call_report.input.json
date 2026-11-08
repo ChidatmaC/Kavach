@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "POST /ios/call-report payload (after unwrapping userInfo)",
+  "type": "object",
+  "properties": {
+    "token": {
+      "type": "string",
+      "minLength": 20
+    },
+    "caller_e164": {
+      "type": "string"
+    },
+    "answers": {
+      "type": "object",
+      "propertyNames": {
+        "pattern": "^q_[a-z_]+$"
+      }
+    },
+    "reported_at": {
+      "type": [
+        "number",
+        "string"
+      ]
+    }
+  },
+  "required": [
+    "token"
+  ],
+  "additionalProperties": true
+}

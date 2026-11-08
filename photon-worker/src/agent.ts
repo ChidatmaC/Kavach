@@ -1,6 +1,7 @@
 // Client for the agent service (docs/CONTRACTS.md section 4). 20 s budget per call (spec 13).
 export type Intent =
-  | 'scam_check' | 'verify_relative' | 'interview' | 'pause' | 'resume' | 'stop' | 'help' | 'out_of_scope';
+  | 'scam_check' | 'advise' | 'command' | 'verify_relative' | 'interview' | 'pause' | 'resume' | 'stop' | 'help'
+  | 'out_of_scope' | 'clarify';
 
 export interface RouterResult {
   intent: Intent | string;
@@ -13,6 +14,14 @@ export interface ScamCheckResult {
   campaign_id?: number;
   tips?: string[];
   evidence_count?: number;
+}
+
+export interface AdviseResult {
+  verdict: 'safe' | 'suspicious' | 'likely_scam';
+  answer: string;
+  next_steps: string[];
+  evidence_count: number;
+  already_shared: boolean;
 }
 
 export interface InterviewResult {
@@ -55,9 +64,20 @@ export class AgentClient {
 
   scamCheck(a: {
     person_id: number; text: string; sender_e164?: string; source: string;
-    reply_to_e164?: string; reply_channel?: string; image_base64?: string;
+    reply_to_e164?: string; reply_channel?: string; image_base64?: string; teach_wrapper?: boolean;
   }): Promise<ScamCheckResult> {
     return this.post('/run/scam_check', a);
+  }
+
+  advise(a: { person_id: number; text: string; reply_to_e164?: string; reply_channel?: string }): Promise<AdviseResult> {
+    return this.post('/run/advise', { ...a, mode: 'text' });
+  }
+
+  /** iMessage commands understood by the model (report, family list, status, code word...). Queues its own reply. */
+  command(a: {
+    person_id: number; text: string; reply_to_e164?: string; reply_channel?: string; args?: Record<string, unknown>;
+  }): Promise<Record<string, unknown>> {
+    return this.post('/run/command', a);
   }
 
   verifyRelative(a: { person_id: number; relative_name: string; claim_from_e164?: string }): Promise<VerifyRelativeResult> {

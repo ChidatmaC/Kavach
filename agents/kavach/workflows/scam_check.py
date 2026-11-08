@@ -12,12 +12,15 @@ from functools import lru_cache
 from typing import Any
 
 from ..community import SearchResult, VERDICT_RANK, local_floor, max_verdict
+from ..signals import risk_floor
+from .. import training
 from ..config import SHARED_DIR
 from ..llm import prompt
 from ..log import log
 from ..redact import redact
 from ..stdb import new_key, q
-from .base import BadRequest, NotFound, Run, clamp, outbox_args, tactic_words
+from .base import MAX_BODY, RISK_REASONS, BadRequest, NotFound, Run, clamp, outbox_args, tactic_words
+from .forward import WRAPPER_TIP
 
 SOURCES = {"imessage", "share", "app_paste", "screenshot", "call"}
 LABELS = {"likely_scam": "Likely scam", "suspicious": "Suspicious", "safe": "Looks safe"}
@@ -88,6 +91,11 @@ def heuristic_verdict(search: SearchResult, links: list[dict]) -> tuple[str, lis
                     tactics.append(t)
     verdict = "likely_scam" if score >= 4 else "suspicious" if score >= 2 else "safe"
     return verdict, tactics, score
+
+
+def agent_floor(similarity_floor: str, risk: str) -> str:
+    f = max_verdict(similarity_floor or "safe", risk or "safe")
+    return "" if f == "safe" else f
 
 
 def template_reason(verdict: str, search: SearchResult, links: list[dict], tactics: list[str]) -> str:
@@ -168,6 +176,7 @@ async def run_scam_check(run: Run, p: dict[str, Any], *, queue_reply: bool = Tru
 
     cached = demo_cached(text) if run.s.demo_mode else None
     corpus_camps = {}
+    method = ""
     if cached:
         from ..community import load_corpus
 
@@ -176,25 +185,35 @@ async def run_scam_check(run: Run, p: dict[str, Any], *, queue_reply: bool = Tru
         reason, tips = cached["reason"], list(cached.get("tips", []))
         tactics = list(sig.tactics)
         campaign_id = corpus_camps.get(cached.get("campaign_slug") or "", 0) or search.campaign_id
-        run.fields["method"] = "demo_cache"
+        method = "demo_cache"
     else:
-        model_verdict, tactics, reason, tips = await classify(run, text, search, links)
+        examples = training.few_shot(text)
+        model_verdict, tactics, reason, tips, used_model = await classify(run, text, search, links, examples)
         campaign_id = search.campaign_id if (search.has_community_match or search.evidence) else 0
-        run.fields["method"] = "model" if run.llm.models.enabled else f"heuristic+{search.method}"
+        method = ("model" if used_model else f"heuristic+{search.method}") + (f"+fewshot{len(examples)}" if examples else "")
+    run.fields["method"] = method
 
-    floor = local_floor(search, person, sig.text_redacted, int(time.time() * 1_000_000))
+    tactics = list(dict.fromkeys(list(tactics) + list(sig.tactics)))
+    risk, risk_why = risk_floor(tactics, text)
+    community = local_floor(search, person, sig.text_redacted, int(time.time() * 1_000_000))
+    floor = max_verdict(community, risk)
     verdict = max_verdict(model_verdict, floor)
     if VERDICT_RANK[verdict] > VERDICT_RANK[model_verdict] and not cached:
-        # The community raised the verdict: say so (without quoting anyone's report).
+        # The community or a red flag raised the verdict: say why (without quoting anyone's report).
         reason = template_reason(verdict, search, links, tactics)
+        if risk_why and VERDICT_RANK[risk] >= VERDICT_RANK[community]:
+            lead = "This looks like a scam." if verdict == "likely_scam" else "This could be a scam."
+            reason = f"{lead} {RISK_REASONS[risk_why]}"
         tips = template_tips(search, links, tactics)
+    run.fields["risk_floor"] = risk or "safe"
 
     key = new_key()
     await run.tools.call("reducer", {"name": "save_message_check", "args": {
         "request_key": key, "person_id": person_id, "source": source, "content": redact(text)[:1000],
         "model_verdict": model_verdict, "reason": clamp(reason, 300), "campaign_id": int(campaign_id or 0),
         "sender_e164": sig.sender_e164, "link_domains": sig.domains,
-        "similarity_floor": search.similarity_floor, "tactics": tactics[:8],
+        # The module stores max(model_verdict, community floor, this agent-side floor).
+        "similarity_floor": agent_floor(search.similarity_floor, risk), "tactics": tactics[:8],
         "evidence_count": len(search.evidence),
     }})
     rows = await run.tools.call("read", {"query": f"SELECT * FROM svc_message_check WHERE request_key = {q(key)}"})
@@ -210,6 +229,15 @@ async def run_scam_check(run: Run, p: dict[str, Any], *, queue_reply: bool = Tru
 
     out = {"verdict": verdict, "reason": clamp(reason, 300), "campaign_id": campaign_id,
            "tips": [clamp(t, 160) for t in tips[:3]], "evidence_count": len(search.evidence)}
+    if stored and stored.get("id"):
+        out["check_id"] = int(stored["id"])
+    training.log_decision(
+        workflow="scam_check", person_id=person_id, text=text, tactics=tactics, evidence=search.evidence,
+        model_verdict=model_verdict, final_verdict=verdict, reason=out["reason"], method=method,
+        floors={"community": community, "similarity": search.similarity_floor or "", "exact": search.exact_floor or "",
+                "risk": risk, "risk_why": risk_why, "stored": (stored or {}).get("verdict", "")},
+        sender_e164=sig.sender_e164, link_domains=sig.domains, claimed_identity=sig.claimed_identity,
+        check_request_key=key, extra={"source": source, "campaign_id": campaign_id})
 
     to = p.get("reply_to_e164") or ""
     if queue_reply and to:
@@ -217,17 +245,21 @@ async def run_scam_check(run: Run, p: dict[str, Any], *, queue_reply: bool = Tru
         if not (await run.guard.check_output(body)).ok:
             body = reply_body(run.app, verdict, template_reason(verdict, search, links, tactics),
                               template_tips(search, links, tactics))
+        if p.get("teach_wrapper"):
+            # The router treated an unwrapped text as a forward: once a day, show how to mark one.
+            body = f"{clamp(body, MAX_BODY - len(WRAPPER_TIP) - 1)} {WRAPPER_TIP}"
         await run.tools.call("reducer", {"name": "enqueue_outbox", "args": outbox_args(
             to, p.get("reply_channel") or "imessage", "reply", body,
             "urgent" if verdict == "likely_scam" else "normal")})
     return out
 
 
-async def classify(run: Run, text: str, search: SearchResult, links: list[dict]) -> tuple[str, list[str], str, list[str]]:
-    """MODEL_FAST classifies with the evidence in context; MODEL_WRITER words the reply.
-    Falls back to the heuristic classifier and templates."""
+async def classify(run: Run, text: str, search: SearchResult, links: list[dict],
+                   examples: list[dict] | None = None) -> tuple[str, list[str], str, list[str], bool]:
+    """MODEL_FAST classifies with the evidence (and confirmed labeled examples) in context; MODEL_WRITER
+    words the reply. Falls back to the heuristic classifier and templates. Last item: model was used."""
     h_verdict, h_tactics, _ = heuristic_verdict(search, links)
-    excerpts = [e.excerpt for e in search.evidence if e.excerpt]
+    excerpts = [e.excerpt for e in search.evidence if e.excerpt] + [x["message_redacted"] for x in examples or []]
     facts = {
         "message_redacted": search.signals.text_redacted[:1200],
         "sender_e164": search.signals.sender_e164,
@@ -237,10 +269,15 @@ async def classify(run: Run, text: str, search: SearchResult, links: list[dict])
         "community_evidence": search.evidence_for_model(),
         "community_floor": search.floor,
     }
+    if examples:
+        # Past messages whose correct verdict was confirmed (by people or outcomes). Model-only context.
+        facts["labeled_examples"] = [{"message_redacted": x["message_redacted"], "correct_verdict": x["correct_verdict"]}
+                                     for x in examples]
     model = await run.llm.json("fast", prompt("scam_check"), json.dumps(facts, ensure_ascii=False),
                                "scam_check.model", workflow=run.workflow)
     if not model:
-        return h_verdict, h_tactics, template_reason(h_verdict, search, links, h_tactics), template_tips(search, links, h_tactics)
+        return (h_verdict, h_tactics, template_reason(h_verdict, search, links, h_tactics),
+                template_tips(search, links, h_tactics), False)
 
     verdict = model["verdict"]
     tactics = [t for t in model.get("tactics", []) if re.fullmatch(r"[a-z_]{2,32}", t)] or h_tactics
@@ -255,4 +292,4 @@ async def classify(run: Run, text: str, search: SearchResult, links: list[dict])
     if quotes_evidence(reason + " " + " ".join(tips), excerpts) or not (await run.guard.check_output(reason + " " + " ".join(tips))).ok:
         log("reason_replaced", workflow=run.workflow, outcome="quoted_or_unsafe")
         reason, tips = template_reason(verdict, search, links, tactics), template_tips(search, links, tactics)
-    return verdict, tactics, reason, tips or template_tips(search, links, tactics)
+    return verdict, tactics, reason, tips or template_tips(search, links, tactics), True

@@ -75,7 +75,16 @@ export class PhotonGateway implements Gateway {
         if (!this.running) break;
         try {
           const ev = await this.toEvent(space, message);
-          if (ev) await onMessage(ev);
+          if (!ev) continue;
+          // Immediate acknowledgement (best effort): mark it read and show the typing bubble while
+          // the agent works. The text acknowledgement and the answer go out through the outbox.
+          void space.read(message).catch(() => undefined);
+          void space.startTyping().catch(() => undefined);
+          try {
+            await onMessage(ev);
+          } finally {
+            void space.stopTyping().catch(() => undefined);
+          }
         } catch (err) {
           log.error('photon.inbound_failed', { err });
         }

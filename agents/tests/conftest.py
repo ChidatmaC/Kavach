@@ -35,11 +35,13 @@ class FakeStdb:
 
 
 @pytest.fixture(autouse=True)
-def _no_llm(monkeypatch):
-    """Unit tests always exercise the no-model path unless a test opts in."""
+def _no_llm(monkeypatch, tmp_path):
+    """Unit tests always exercise the no-model path unless a test opts in, and write the training log to a
+    temporary directory (never agents/data/)."""
     from kavach import config, stdb
 
     monkeypatch.setenv("NIM_API_KEY", "")
+    monkeypatch.setenv("KAVACH_TRAINING_DIR", str(tmp_path / "training"))
     config.settings.cache_clear()
     stdb.clear_cache()
     yield

@@ -8,18 +8,19 @@ public struct AppConfig: Sendable, Equatable {
     public var spacetimeURL: URL
     public var databaseName: String
     public var agentURL: URL
-    public var hotlineNumber: String
+    /// The agent's iMessage line (E.164), from `AGENT_LINE_NUMBER`. People text it any message they're unsure about.
+    public var agentLineNumber: String
     public var appGroup: String
 
     public static let defaultAppGroup = "group.com.hack.kavach.app"
 
     public init(displayName: String, spacetimeURL: URL, databaseName: String, agentURL: URL,
-                hotlineNumber: String = "", appGroup: String = AppConfig.defaultAppGroup) {
+                agentLineNumber: String = "", appGroup: String = AppConfig.defaultAppGroup) {
         self.displayName = displayName
         self.spacetimeURL = spacetimeURL
         self.databaseName = databaseName
         self.agentURL = agentURL
-        self.hotlineNumber = hotlineNumber
+        self.agentLineNumber = agentLineNumber
         self.appGroup = appGroup
     }
 
@@ -44,7 +45,7 @@ public struct AppConfig: Sendable, Equatable {
             spacetimeURL: URL(string: str("KavachSpacetimeURL")) ?? URL(string: "http://127.0.0.1:3000")!,
             databaseName: str("KavachSpacetimeDB").isEmpty ? "kavach" : str("KavachSpacetimeDB"),
             agentURL: URL(string: str("KavachAgentURL")) ?? URL(string: "http://127.0.0.1:8088")!,
-            hotlineNumber: str("KavachHotlineNumber"),
+            agentLineNumber: str("KavachAgentLineNumber"),
             appGroup: str("KavachAppGroup").isEmpty ? defaultAppGroup : str("KavachAppGroup")
         )
     }

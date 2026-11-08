@@ -30,6 +30,11 @@
     "evidence_count": {
       "type": "integer",
       "minimum": 0
+    },
+    "check_id": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "message_check row id (for POST /app/feedback); absent on fallback"
     }
   },
   "required": [

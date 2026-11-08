@@ -8,24 +8,36 @@
 
 /* Begin PBXBuildFile section */
 		01D3CE023E121109A6538576 /* CallDirectoryExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = CDBBAC248CA8A26511CE0A15 /* CallDirectoryExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		08292844396C3967EC6BF4D3 /* CallReport.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD695C9CB061EB6E2AA1B284 /* CallReport.swift */; };
+		092AD0B8AA6E686E0B369B09 /* ForwardToKavach.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B19D7494CDC68A47EEE665E /* ForwardToKavach.swift */; };
+		09577718813A7759FA8200C9 /* SignInTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8BFA4205CC9704AFF3D5E71A /* SignInTests.swift */; };
 		09C9309D1A8E4BC7E71FCDE9 /* ShareExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 075A7124F758BFB07E8C83D8 /* ShareExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		0FEA8F23B455C5B069A82AC3 /* KavachKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 88F97D81F2CDBD139792F34C /* KavachKit.framework */; };
+		1106D9547DAAA505E0DFA527 /* ReportsAndFollowUpTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7656A93E269062DCC4F28542 /* ReportsAndFollowUpTests.swift */; };
+		11B3A3154A96552B73CF313B /* SignIn.swift in Sources */ = {isa = PBXBuildFile; fileRef = 093F314B2202A443A4D73D5C /* SignIn.swift */; };
 		1618D62D951E117BACEDEAA1 /* AppModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 448845C282599DAF45C609F9 /* AppModel.swift */; };
 		18DC7B8FDF1B176303F7C880 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A672A4EC355592F1A167BAA /* Theme.swift */; };
+		1CE5D744B16AD8093A4A357C /* SettingToggleRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB93F83D0CD64EC74C081315 /* SettingToggleRow.swift */; };
 		1F1F1A7C836AD2CCDCEFC740 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2FA993223393B8ACBFF53886 /* OnboardingView.swift */; };
 		23658481704A86282462FFF7 /* InterviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 708FD6CDB4A67CE7605CF0D0 /* InterviewView.swift */; };
 		28CE65FE3A0F1325E67A6084 /* APIIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79DF7E4020BE9EF743F178F4 /* APIIntegrationTests.swift */; };
+		2B8A637D29714FBCBDA1D7AF /* NetworkDashboard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8822E387AA3ED31EA4C8C09B /* NetworkDashboard.swift */; };
 		2FFEEB0DFA9AF0738C342CB3 /* DisplayPreferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58013880A15868C719C0A565 /* DisplayPreferences.swift */; };
 		3055F70A832ED1604DD44425 /* DecodingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 21978E5EE2DD6E78F8BB7A21 /* DecodingTests.swift */; };
 		379A8DEBB88DADA1D5503BA7 /* ShareViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F885A31314B91772AE216F4 /* ShareViewController.swift */; };
 		38181AF5B502E7A52E3EECCB /* AppConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9F8EA154989794799AD4DA6 /* AppConfig.swift */; };
+		3A3EE5D05F20341A35A78811 /* Reports.swift in Sources */ = {isa = PBXBuildFile; fileRef = 989CF584122231AA8F30A994 /* Reports.swift */; };
 		3A505701E740970CE5F6F7C0 /* recovery_library.yaml in Resources */ = {isa = PBXBuildFile; fileRef = FF257F82ABC989184573F3E7 /* recovery_library.yaml */; };
+		3C5412D01CD4B2FADE4AC9F9 /* CallFollowUpCenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5CA265682A8E7DF357C47A8D /* CallFollowUpCenter.swift */; };
 		3D2B898F4CEAD304D8B115CF /* MessageFilterExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = BC21CD7C936D9A3E26086884 /* MessageFilterExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		44B9C216EB135A84373771F0 /* KavachKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 88F97D81F2CDBD139792F34C /* KavachKit.framework */; };
 		491BA3C8AABBE243D85EDE6B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1021DD8F37CE2AC8CD12FD2F /* Assets.xcassets */; };
 		4B39E26F3071E53D390265D1 /* SharedStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A0426C419DECC4AB973A7AE /* SharedStore.swift */; };
+		4E71E1DA61AE7A4C713F4642 /* CallFollowUp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8830F2C036367155A1FAFAB9 /* CallFollowUp.swift */; };
+		51A5D0E6B26450C808F41EA7 /* VerifyRelativeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 733B464C4696002F1CF568E9 /* VerifyRelativeView.swift */; };
 		58FF48B073979BE74395EB0D /* ActNowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB266BC71C6D4E1D5DE93688 /* ActNowView.swift */; };
 		5B6CF7A1E08DA45D65479031 /* KavachIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDB09A4C4CEA779D3FEEFA48 /* KavachIntents.swift */; };
+		5E0C5E9807760B0F6D3DDDC7 /* ForwardByTextButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 026C43FDFB0F795C61EEB94D /* ForwardByTextButton.swift */; };
 		5E2D86D7381D98E6DC08773D /* KavachApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE233D1D1A2CACE0C8835E15 /* KavachApp.swift */; };
 		60134B21EDFE48D87005EC0F /* KavachKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 88F97D81F2CDBD139792F34C /* KavachKit.framework */; };
 		609CA2681C28ABD18A777E0F /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7A52A06AE37CB1C0C5E538A /* Models.swift */; };
@@ -33,7 +45,9 @@
 		6E4CAA7CF807BF4F10378A79 /* FamilyView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7DAA991A3541A344BD4B707 /* FamilyView.swift */; };
 		70B6B35B1F8FE1AAD8A6E7F8 /* InterviewAndPrefsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39DC1015797D718FDBCE449C /* InterviewAndPrefsTests.swift */; };
 		718089972E86DB5AB415C99E /* InterviewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA2A1828425F16345BA4A83F /* InterviewModel.swift */; };
+		71928A30A9AEE16EFE35BA0E /* RevampTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7093278CA9B0BB96D0A50B33 /* RevampTests.swift */; };
 		751BAF0C98810466D3AA9689 /* KavachKit.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 88F97D81F2CDBD139792F34C /* KavachKit.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		7C6DCA53315CF6AA1016BAEE /* FamilyContacts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A47B7802AC6A3DF571E7496 /* FamilyContacts.swift */; };
 		832A6735EDEEA2C1F8A95496 /* CallWatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 238EFDDA26A383C4D3C7348F /* CallWatcher.swift */; };
 		876085335773C40A46AAAE77 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEB9E70AE12268DC5470B3B5 /* SettingsView.swift */; };
 		8A2B0454423F56F329515819 /* KavachKit.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 88F97D81F2CDBD139792F34C /* KavachKit.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -44,20 +58,33 @@
 		957E8B8002230BCF5808FBE5 /* VerdictViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A52DDC810569588DD57E8F9 /* VerdictViews.swift */; };
 		A1FA85C1134A9D4E3AE043E1 /* Speaker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D0E603DF9E149B5572C8B11 /* Speaker.swift */; };
 		A4A16B9C16EF4B7D527E1003 /* CallCompanionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73F34E522FA1B6520AE12CBA /* CallCompanionView.swift */; };
+		A8D1C09168BE1B7E188B74CB /* NetworkGraphAndSectionsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7FDD6365196201AB80CFD245 /* NetworkGraphAndSectionsTests.swift */; };
+		AA52A115A2E674EAC45CBE04 /* Components.swift in Sources */ = {isa = PBXBuildFile; fileRef = F49F364E1C347042CFFA4FA0 /* Components.swift */; };
 		AB85B5F88CB574A4B41AD2DD /* ReportExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 6642536F33A7215145BADE03 /* ReportExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		AC9D5E18CE720EC847204F30 /* PushRegistrar.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFD41C14121547AD36B113CA /* PushRegistrar.swift */; };
 		AD18A19EEDBCBB0C7B7FA0DD /* InterviewFlowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E7E4997BCFC4B20AD82FFF7 /* InterviewFlowView.swift */; };
+		ADCA7754700609E3D47EB86E /* ReportsViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18718649A0A4212F99D67BDE /* ReportsViews.swift */; };
 		AEFF9C4137C2AA905FB6E7E7 /* KavachAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 77A765E4B10A4AFB10DE3B17 /* KavachAPI.swift */; };
 		AF3E8194F826D5276219C9DF /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4D0F8F594347D69B4F20AA7 /* HomeView.swift */; };
 		AF47D954A9F938BB3C76C890 /* SpacetimeClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3E590A4D919DB10824A4E84A /* SpacetimeClient.swift */; };
 		B22E62961E92DE36A28D6522 /* AgentClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7EB6E5A69151DB107A959801 /* AgentClient.swift */; };
+		B2FD7A9B8F8E13B60E575326 /* ReportCallView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 725F38B7C7994EE8B78D52BA /* ReportCallView.swift */; };
+		B3570A8E33EFDB818F159EA7 /* AgentContact.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC3067C562356FB1DAF9F0CD /* AgentContact.swift */; };
 		B994B9C40CFDADCD7F18B2BD /* JSONValue.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5649340C92E40198031DA9E /* JSONValue.swift */; };
 		BC032704538E6E39AD1215C2 /* CheckMessageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF2D602773E5D6AFE94D3AB7 /* CheckMessageView.swift */; };
 		BCF1F77AFD3CF64195752E6D /* ReportViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4FF200682E212477C30AC65 /* ReportViewController.swift */; };
+		C2EFE90F6AC5038B756229BA /* PersonSettingsState.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7BC7DA76D9A75A23406DB92 /* PersonSettingsState.swift */; };
 		D40E5F066BD3C421BBB3795D /* RecoveryLibrary.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8917F8E8C3C5366A82C69BC /* RecoveryLibrary.swift */; };
+		D77F6F766BCF7015080B42C6 /* AgentContactViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = C76D18F7B651087545038F72 /* AgentContactViews.swift */; };
+		DBE502C23E7D52436EA4EB36 /* PhoneNumbers.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4B998BF84C510296BB80333 /* PhoneNumbers.swift */; };
+		E12E4AD146F416EC319ADBA5 /* SettingsAndContactTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D3F4D8A07451878D8382EF5 /* SettingsAndContactTests.swift */; };
 		E221BC48F6B4EC9350E2AD9B /* MessageFilterHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9DE7232D60484AF7F6814725 /* MessageFilterHandler.swift */; };
 		E334165CD08D36919D5827A4 /* CallDirectoryHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 95969519A645C189638F20A7 /* CallDirectoryHandler.swift */; };
+		E3FF329F5FAAD4DE1C8AFBBC /* ContactsUIViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 130E8F992057F53A451934A2 /* ContactsUIViews.swift */; };
+		E5B0300A466FDA39CB1A8A45 /* ContactsBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0AFBBB7AC153EB80DBFC25A /* ContactsBridge.swift */; };
 		F67BD72B2DC8D8708A2D3247 /* KavachKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 88F97D81F2CDBD139792F34C /* KavachKit.framework */; };
+		FC7E566212B388834BAE889B /* NetworkDashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E117AE8D406675549FB6B92F /* NetworkDashboardView.swift */; };
+		FE1D3D01CA97F774A4025C64 /* FamilyReplies.swift in Sources */ = {isa = PBXBuildFile; fileRef = 68473AFDD2F310317FF25159 /* FamilyReplies.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -173,14 +200,20 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		026C43FDFB0F795C61EEB94D /* ForwardByTextButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ForwardByTextButton.swift; sourceTree = "<group>"; };
 		03EEB345B008E805AE8B25BC /* CallDirectoryExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = CallDirectoryExtension.entitlements; sourceTree = "<group>"; };
 		075A7124F758BFB07E8C83D8 /* ShareExtension.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = ShareExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		093F314B2202A443A4D73D5C /* SignIn.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignIn.swift; sourceTree = "<group>"; };
+		0D3F4D8A07451878D8382EF5 /* SettingsAndContactTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsAndContactTests.swift; sourceTree = "<group>"; };
 		0D818125AF6103C6B03A9B5E /* TextRecognizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextRecognizer.swift; sourceTree = "<group>"; };
 		0ECB2F2574724B57D59398FF /* MessageFilterExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = MessageFilterExtension.entitlements; sourceTree = "<group>"; };
 		1021DD8F37CE2AC8CD12FD2F /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		130E8F992057F53A451934A2 /* ContactsUIViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContactsUIViews.swift; sourceTree = "<group>"; };
 		1525AD9EC1D7938815CFF4B2 /* Kavach.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Kavach.entitlements; sourceTree = "<group>"; };
+		18718649A0A4212F99D67BDE /* ReportsViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportsViews.swift; sourceTree = "<group>"; };
 		21978E5EE2DD6E78F8BB7A21 /* DecodingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DecodingTests.swift; sourceTree = "<group>"; };
 		238EFDDA26A383C4D3C7348F /* CallWatcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CallWatcher.swift; sourceTree = "<group>"; };
+		2B19D7494CDC68A47EEE665E /* ForwardToKavach.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ForwardToKavach.swift; sourceTree = "<group>"; };
 		2FA993223393B8ACBFF53886 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
 		349138B1737F803A7AD15D5F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		39DC1015797D718FDBCE449C /* InterviewAndPrefsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InterviewAndPrefsTests.swift; sourceTree = "<group>"; };
@@ -193,26 +226,42 @@
 		58013880A15868C719C0A565 /* DisplayPreferences.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DisplayPreferences.swift; sourceTree = "<group>"; };
 		5A0426C419DECC4AB973A7AE /* SharedStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedStore.swift; sourceTree = "<group>"; };
 		5A672A4EC355592F1A167BAA /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
+		5CA265682A8E7DF357C47A8D /* CallFollowUpCenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CallFollowUpCenter.swift; sourceTree = "<group>"; };
 		6642536F33A7215145BADE03 /* ReportExtension.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = ReportExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		68473AFDD2F310317FF25159 /* FamilyReplies.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FamilyReplies.swift; sourceTree = "<group>"; };
 		6A52DDC810569588DD57E8F9 /* VerdictViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VerdictViews.swift; sourceTree = "<group>"; };
 		708FD6CDB4A67CE7605CF0D0 /* InterviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InterviewView.swift; sourceTree = "<group>"; };
+		7093278CA9B0BB96D0A50B33 /* RevampTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RevampTests.swift; sourceTree = "<group>"; };
+		725F38B7C7994EE8B78D52BA /* ReportCallView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportCallView.swift; sourceTree = "<group>"; };
+		733B464C4696002F1CF568E9 /* VerifyRelativeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VerifyRelativeView.swift; sourceTree = "<group>"; };
 		73F34E522FA1B6520AE12CBA /* CallCompanionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CallCompanionView.swift; sourceTree = "<group>"; };
 		763C4C0C164F690F21CA67AF /* SQLResult.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SQLResult.swift; sourceTree = "<group>"; };
+		7656A93E269062DCC4F28542 /* ReportsAndFollowUpTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportsAndFollowUpTests.swift; sourceTree = "<group>"; };
 		77A765E4B10A4AFB10DE3B17 /* KavachAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KavachAPI.swift; sourceTree = "<group>"; };
 		79DF7E4020BE9EF743F178F4 /* APIIntegrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIIntegrationTests.swift; sourceTree = "<group>"; };
 		7EB6E5A69151DB107A959801 /* AgentClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentClient.swift; sourceTree = "<group>"; };
+		7FDD6365196201AB80CFD245 /* NetworkGraphAndSectionsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkGraphAndSectionsTests.swift; sourceTree = "<group>"; };
 		80536E2C94B54C4904EF9732 /* Kavach.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Kavach.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		8822E387AA3ED31EA4C8C09B /* NetworkDashboard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkDashboard.swift; sourceTree = "<group>"; };
+		8830F2C036367155A1FAFAB9 /* CallFollowUp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CallFollowUp.swift; sourceTree = "<group>"; };
 		88F97D81F2CDBD139792F34C /* KavachKit.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = KavachKit.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		8A47B7802AC6A3DF571E7496 /* FamilyContacts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FamilyContacts.swift; sourceTree = "<group>"; };
+		8BFA4205CC9704AFF3D5E71A /* SignInTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignInTests.swift; sourceTree = "<group>"; };
 		8E7E4997BCFC4B20AD82FFF7 /* InterviewFlowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InterviewFlowView.swift; sourceTree = "<group>"; };
 		9560F13E6116A6E445CF8072 /* Kavach.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Kavach.xcconfig; sourceTree = "<group>"; };
 		95969519A645C189638F20A7 /* CallDirectoryHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CallDirectoryHandler.swift; sourceTree = "<group>"; };
+		989CF584122231AA8F30A994 /* Reports.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Reports.swift; sourceTree = "<group>"; };
 		9DE7232D60484AF7F6814725 /* MessageFilterHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageFilterHandler.swift; sourceTree = "<group>"; };
+		A0AFBBB7AC153EB80DBFC25A /* ContactsBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContactsBridge.swift; sourceTree = "<group>"; };
+		A4B998BF84C510296BB80333 /* PhoneNumbers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneNumbers.swift; sourceTree = "<group>"; };
 		A5649340C92E40198031DA9E /* JSONValue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSONValue.swift; sourceTree = "<group>"; };
 		A8917F8E8C3C5366A82C69BC /* RecoveryLibrary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecoveryLibrary.swift; sourceTree = "<group>"; };
 		B7DAA991A3541A344BD4B707 /* FamilyView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FamilyView.swift; sourceTree = "<group>"; };
+		BB93F83D0CD64EC74C081315 /* SettingToggleRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingToggleRow.swift; sourceTree = "<group>"; };
 		BC21CD7C936D9A3E26086884 /* MessageFilterExtension.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = MessageFilterExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		BE2017144735B96A289C3062 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		BEB9E70AE12268DC5470B3B5 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		C76D18F7B651087545038F72 /* AgentContactViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentContactViews.swift; sourceTree = "<group>"; };
 		CDB09A4C4CEA779D3FEEFA48 /* KavachIntents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KavachIntents.swift; sourceTree = "<group>"; };
 		CDBBAC248CA8A26511CE0A15 /* CallDirectoryExtension.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = CallDirectoryExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		CFA64CE95461CB55871DF44F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
@@ -220,14 +269,19 @@
 		D4FF200682E212477C30AC65 /* ReportViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportViewController.swift; sourceTree = "<group>"; };
 		D7A52A06AE37CB1C0C5E538A /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
 		D9F8EA154989794799AD4DA6 /* AppConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConfig.swift; sourceTree = "<group>"; };
+		DC3067C562356FB1DAF9F0CD /* AgentContact.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentContact.swift; sourceTree = "<group>"; };
+		E117AE8D406675549FB6B92F /* NetworkDashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkDashboardView.swift; sourceTree = "<group>"; };
+		E7BC7DA76D9A75A23406DB92 /* PersonSettingsState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersonSettingsState.swift; sourceTree = "<group>"; };
 		EA2A1828425F16345BA4A83F /* InterviewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InterviewModel.swift; sourceTree = "<group>"; };
 		EE233D1D1A2CACE0C8835E15 /* KavachApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KavachApp.swift; sourceTree = "<group>"; };
 		EFD41C14121547AD36B113CA /* PushRegistrar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PushRegistrar.swift; sourceTree = "<group>"; };
 		F0F79E453E94474FDB4D7C36 /* KavachTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = KavachTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		F19517F2BC189D48E33DD9C1 /* IdentityLookupUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IdentityLookupUI.framework; path = System/Library/Frameworks/IdentityLookupUI.framework; sourceTree = SDKROOT; };
+		F49F364E1C347042CFFA4FA0 /* Components.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Components.swift; sourceTree = "<group>"; };
 		F4BF5FA944FEB71708E7B572 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		F4D0F8F594347D69B4F20AA7 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
 		FB266BC71C6D4E1D5DE93688 /* ActNowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActNowView.swift; sourceTree = "<group>"; };
+		FD695C9CB061EB6E2AA1B284 /* CallReport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CallReport.swift; sourceTree = "<group>"; };
 		FF257F82ABC989184573F3E7 /* recovery_library.yaml */ = {isa = PBXFileReference; lastKnownFileType = text.yaml; path = recovery_library.yaml; sourceTree = "<group>"; };
 		FF2D602773E5D6AFE94D3AB7 /* CheckMessageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CheckMessageView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -310,7 +364,10 @@
 		233CAA187FB02470D4EF33E8 /* Models */ = {
 			isa = PBXGroup;
 			children = (
+				68473AFDD2F310317FF25159 /* FamilyReplies.swift */,
 				D7A52A06AE37CB1C0C5E538A /* Models.swift */,
+				8822E387AA3ED31EA4C8C09B /* NetworkDashboard.swift */,
+				989CF584122231AA8F30A994 /* Reports.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -358,7 +415,9 @@
 			isa = PBXGroup;
 			children = (
 				448845C282599DAF45C609F9 /* AppModel.swift */,
+				5CA265682A8E7DF357C47A8D /* CallFollowUpCenter.swift */,
 				238EFDDA26A383C4D3C7348F /* CallWatcher.swift */,
+				A0AFBBB7AC153EB80DBFC25A /* ContactsBridge.swift */,
 				EFD41C14121547AD36B113CA /* PushRegistrar.swift */,
 			);
 			path = Services;
@@ -368,13 +427,20 @@
 			isa = PBXGroup;
 			children = (
 				FB266BC71C6D4E1D5DE93688 /* ActNowView.swift */,
+				C76D18F7B651087545038F72 /* AgentContactViews.swift */,
 				73F34E522FA1B6520AE12CBA /* CallCompanionView.swift */,
 				FF2D602773E5D6AFE94D3AB7 /* CheckMessageView.swift */,
+				130E8F992057F53A451934A2 /* ContactsUIViews.swift */,
 				B7DAA991A3541A344BD4B707 /* FamilyView.swift */,
+				026C43FDFB0F795C61EEB94D /* ForwardByTextButton.swift */,
 				F4D0F8F594347D69B4F20AA7 /* HomeView.swift */,
 				8E7E4997BCFC4B20AD82FFF7 /* InterviewFlowView.swift */,
+				E117AE8D406675549FB6B92F /* NetworkDashboardView.swift */,
 				2FA993223393B8ACBFF53886 /* OnboardingView.swift */,
+				725F38B7C7994EE8B78D52BA /* ReportCallView.swift */,
+				18718649A0A4212F99D67BDE /* ReportsViews.swift */,
 				BEB9E70AE12268DC5470B3B5 /* SettingsView.swift */,
+				733B464C4696002F1CF568E9 /* VerifyRelativeView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -382,6 +448,8 @@
 		5F37809457BB5DB147BAD130 /* UI */ = {
 			isa = PBXGroup;
 			children = (
+				F49F364E1C347042CFFA4FA0 /* Components.swift */,
+				BB93F83D0CD64EC74C081315 /* SettingToggleRow.swift */,
 				5A672A4EC355592F1A167BAA /* Theme.swift */,
 				6A52DDC810569588DD57E8F9 /* VerdictViews.swift */,
 			);
@@ -425,6 +493,12 @@
 		A9F05C5877FCB7A0D9678835 /* Services */ = {
 			isa = PBXGroup;
 			children = (
+				DC3067C562356FB1DAF9F0CD /* AgentContact.swift */,
+				8830F2C036367155A1FAFAB9 /* CallFollowUp.swift */,
+				FD695C9CB061EB6E2AA1B284 /* CallReport.swift */,
+				8A47B7802AC6A3DF571E7496 /* FamilyContacts.swift */,
+				2B19D7494CDC68A47EEE665E /* ForwardToKavach.swift */,
+				A4B998BF84C510296BB80333 /* PhoneNumbers.swift */,
 				A8917F8E8C3C5366A82C69BC /* RecoveryLibrary.swift */,
 				3D0E603DF9E149B5572C8B11 /* Speaker.swift */,
 				0D818125AF6103C6B03A9B5E /* TextRecognizer.swift */,
@@ -455,6 +529,7 @@
 			children = (
 				D9F8EA154989794799AD4DA6 /* AppConfig.swift */,
 				58013880A15868C719C0A565 /* DisplayPreferences.swift */,
+				E7BC7DA76D9A75A23406DB92 /* PersonSettingsState.swift */,
 				5A0426C419DECC4AB973A7AE /* SharedStore.swift */,
 			);
 			path = Store;
@@ -474,6 +549,11 @@
 				79DF7E4020BE9EF743F178F4 /* APIIntegrationTests.swift */,
 				21978E5EE2DD6E78F8BB7A21 /* DecodingTests.swift */,
 				39DC1015797D718FDBCE449C /* InterviewAndPrefsTests.swift */,
+				7FDD6365196201AB80CFD245 /* NetworkGraphAndSectionsTests.swift */,
+				7656A93E269062DCC4F28542 /* ReportsAndFollowUpTests.swift */,
+				7093278CA9B0BB96D0A50B33 /* RevampTests.swift */,
+				0D3F4D8A07451878D8382EF5 /* SettingsAndContactTests.swift */,
+				8BFA4205CC9704AFF3D5E71A /* SignInTests.swift */,
 			);
 			path = KavachTests;
 			sourceTree = "<group>";
@@ -502,6 +582,7 @@
 				7EB6E5A69151DB107A959801 /* AgentClient.swift */,
 				A5649340C92E40198031DA9E /* JSONValue.swift */,
 				77A765E4B10A4AFB10DE3B17 /* KavachAPI.swift */,
+				093F314B2202A443A4D73D5C /* SignIn.swift */,
 				3E590A4D919DB10824A4E84A /* SpacetimeClient.swift */,
 				763C4C0C164F690F21CA67AF /* SQLResult.swift */,
 			);
@@ -758,18 +839,27 @@
 			buildActionMask = 2147483647;
 			files = (
 				58FF48B073979BE74395EB0D /* ActNowView.swift in Sources */,
+				D77F6F766BCF7015080B42C6 /* AgentContactViews.swift in Sources */,
 				1618D62D951E117BACEDEAA1 /* AppModel.swift in Sources */,
 				A4A16B9C16EF4B7D527E1003 /* CallCompanionView.swift in Sources */,
+				3C5412D01CD4B2FADE4AC9F9 /* CallFollowUpCenter.swift in Sources */,
 				832A6735EDEEA2C1F8A95496 /* CallWatcher.swift in Sources */,
 				BC032704538E6E39AD1215C2 /* CheckMessageView.swift in Sources */,
+				E5B0300A466FDA39CB1A8A45 /* ContactsBridge.swift in Sources */,
+				E3FF329F5FAAD4DE1C8AFBBC /* ContactsUIViews.swift in Sources */,
 				6E4CAA7CF807BF4F10378A79 /* FamilyView.swift in Sources */,
+				5E0C5E9807760B0F6D3DDDC7 /* ForwardByTextButton.swift in Sources */,
 				AF3E8194F826D5276219C9DF /* HomeView.swift in Sources */,
 				AD18A19EEDBCBB0C7B7FA0DD /* InterviewFlowView.swift in Sources */,
 				5E2D86D7381D98E6DC08773D /* KavachApp.swift in Sources */,
 				5B6CF7A1E08DA45D65479031 /* KavachIntents.swift in Sources */,
+				FC7E566212B388834BAE889B /* NetworkDashboardView.swift in Sources */,
 				1F1F1A7C836AD2CCDCEFC740 /* OnboardingView.swift in Sources */,
 				AC9D5E18CE720EC847204F30 /* PushRegistrar.swift in Sources */,
+				B2FD7A9B8F8E13B60E575326 /* ReportCallView.swift in Sources */,
+				ADCA7754700609E3D47EB86E /* ReportsViews.swift in Sources */,
 				876085335773C40A46AAAE77 /* SettingsView.swift in Sources */,
+				51A5D0E6B26450C808F41EA7 /* VerifyRelativeView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -780,6 +870,11 @@
 				28CE65FE3A0F1325E67A6084 /* APIIntegrationTests.swift in Sources */,
 				3055F70A832ED1604DD44425 /* DecodingTests.swift in Sources */,
 				70B6B35B1F8FE1AAD8A6E7F8 /* InterviewAndPrefsTests.swift in Sources */,
+				A8D1C09168BE1B7E188B74CB /* NetworkGraphAndSectionsTests.swift in Sources */,
+				1106D9547DAAA505E0DFA527 /* ReportsAndFollowUpTests.swift in Sources */,
+				71928A30A9AEE16EFE35BA0E /* RevampTests.swift in Sources */,
+				E12E4AD146F416EC319ADBA5 /* SettingsAndContactTests.swift in Sources */,
+				09577718813A7759FA8200C9 /* SignInTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -812,16 +907,29 @@
 			buildActionMask = 2147483647;
 			files = (
 				B22E62961E92DE36A28D6522 /* AgentClient.swift in Sources */,
+				B3570A8E33EFDB818F159EA7 /* AgentContact.swift in Sources */,
 				38181AF5B502E7A52E3EECCB /* AppConfig.swift in Sources */,
+				4E71E1DA61AE7A4C713F4642 /* CallFollowUp.swift in Sources */,
+				08292844396C3967EC6BF4D3 /* CallReport.swift in Sources */,
+				AA52A115A2E674EAC45CBE04 /* Components.swift in Sources */,
 				2FFEEB0DFA9AF0738C342CB3 /* DisplayPreferences.swift in Sources */,
+				7C6DCA53315CF6AA1016BAEE /* FamilyContacts.swift in Sources */,
+				FE1D3D01CA97F774A4025C64 /* FamilyReplies.swift in Sources */,
+				092AD0B8AA6E686E0B369B09 /* ForwardToKavach.swift in Sources */,
 				718089972E86DB5AB415C99E /* InterviewModel.swift in Sources */,
 				23658481704A86282462FFF7 /* InterviewView.swift in Sources */,
 				B994B9C40CFDADCD7F18B2BD /* JSONValue.swift in Sources */,
 				AEFF9C4137C2AA905FB6E7E7 /* KavachAPI.swift in Sources */,
 				609CA2681C28ABD18A777E0F /* Models.swift in Sources */,
+				2B8A637D29714FBCBDA1D7AF /* NetworkDashboard.swift in Sources */,
+				C2EFE90F6AC5038B756229BA /* PersonSettingsState.swift in Sources */,
+				DBE502C23E7D52436EA4EB36 /* PhoneNumbers.swift in Sources */,
 				D40E5F066BD3C421BBB3795D /* RecoveryLibrary.swift in Sources */,
+				3A3EE5D05F20341A35A78811 /* Reports.swift in Sources */,
 				61BBA981985D7EAA71862044 /* SQLResult.swift in Sources */,
+				1CE5D744B16AD8093A4A357C /* SettingToggleRow.swift in Sources */,
 				4B39E26F3071E53D390265D1 /* SharedStore.swift in Sources */,
+				11B3A3154A96552B73CF313B /* SignIn.swift in Sources */,
 				AF47D954A9F938BB3C76C890 /* SpacetimeClient.swift in Sources */,
 				A1FA85C1134A9D4E3AE043E1 /* Speaker.swift in Sources */,
 				91213C81ADDB77D74E45C3A9 /* TextRecognizer.swift in Sources */,

@@ -64,6 +64,7 @@ class Settings:
     use_nat: bool = field(default_factory=lambda: _bool(os.environ.get("KAVACH_USE_NAT"), True))
     task_poller: bool = field(default_factory=lambda: _bool(os.environ.get("AGENT_TASK_POLLER"), True))
     use_guardrails: bool = field(default_factory=lambda: _bool(os.environ.get("KAVACH_USE_GUARDRAILS"), True))
+    outcome_watcher: bool = field(default_factory=lambda: _bool(os.environ.get("KAVACH_OUTCOME_WATCHER"), True))
 
     @property
     def llm_enabled(self) -> bool:

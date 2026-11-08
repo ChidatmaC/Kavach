@@ -38,6 +38,10 @@
     },
     "image_base64": {
       "type": "string"
+    },
+    "teach_wrapper": {
+      "type": "boolean",
+      "description": "Append the once-a-day tip about starting a forward with \"Forwarded message:\" to the reply"
     }
   },
   "required": [

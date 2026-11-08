@@ -15,6 +15,8 @@ This document is the build specification for the ScamShield Mesh hackathon proje
 - Feature-packed but stable: every Core feature works; Stretch features are added only after Core passes its acceptance checks.
 - An app for everyone, with an optional Accessibility Mode for older or less confident users.
 
+> **Build note (Nov 8): removed.** The AI scam hotline and practice scams were dropped from the build; see `docs/CONTRACTS.md` section 7.
+
 **Non-goals:**
 
 - Reading anyone's existing iMessage, WhatsApp or SMS history.
@@ -74,6 +76,8 @@ Five deployable components, connected only through SpacetimeDB and one HTTP API 
 | `photon-worker` | TypeScript, Photon Spectrum | Inbound and outbound texts | Photon; SpacetimeDB client; agent service |
 | `voice` service | Python, Pipecat | The hotline | Telephony provider; agent service; SpacetimeDB client |
 | `ios` app | Swift, SwiftUI | Six screens and four extensions | SpacetimeDB (client SDK or HTTP API) and the agent service |
+
+> **Build note (Nov 8): removed.** The `voice` service (hotline) was deleted; four components remain.
 
 **Inbound text flow:**
 
@@ -299,6 +303,8 @@ drill {
 briefing { id, person_id, week_start, summary_text, created_at }
 ```
 
+> **Build note (Nov 8): removed.** `drill` and `person.practice_consent` are gone, and `entry_point` no longer accepts `hotline`. The module added `alert_request` (family replies); see `docs/CONTRACTS.md` section 7.
+
 **Constants:** `LABEL_THRESHOLD = 3` independent reporters; `VERIFY_DEADLINE = 5 min`; `FAMILY_ACK_DEADLINE = 10 min`; `HIGH_CHECKIN_DELAY = 1 h`; `CRITICAL_WATCH_DAYS = 30`; `HIGH_WATCH_DAYS = 14`.
 
 **Access rules:**
@@ -346,6 +352,8 @@ Reducers validate input and reject anything invalid; they never call the network
 | `drill_send` | `drill.send_at` | Procedure calls the practice workflow, which queues the practice text |
 | `purge_inbound` | Daily | Deletes `inbound_message.body` older than 7 days |
 
+> **Build note (Nov 8): removed.** `schedule_drill`/`record_drill_outcome` and `drill_send` are gone. Unanswered family alerts now warn the person and name who to call instead of the hotline (`alert_request`, `docs/CONTRACTS.md` section 7).
+
 **Procedures (outbound HTTP):**
 
 - `call_agent(workflow, payload)` posts to `AGENT_SERVICE_URL/run/{workflow}` with `AGENT_SERVICE_TOKEN`.
@@ -390,6 +398,8 @@ The `agents` service hosts every workflow on NeMo Agent Toolkit and exposes `POS
 | `trusted_sender` (Stretch) | Flagged message from a contact who is an app user | Start a verification and push "Did you send this?" to their app | `{verification_id}` |
 | `briefing` | Person, week | Summarize incidents and checks, add one habit and nearby campaigns | `{summary_text, spoken_text}` |
 | `practice` (Stretch) | Drill id | Pick a template, write a harmless practice text, queue it | `{body}` |
+
+> **Build note (Nov 8): removed.** No `practice` workflow, and no hotline turns for `router`. Router gained `advise` and `command` (`POST /run/command`).
 
 ## 7a. Community-informed detection (D14, D15)
 
@@ -520,6 +530,8 @@ When the level is set or rises, the reducer runs the matching sequence.
 
 ## 10. Voice hotline
 
+> **Build note (Nov 8): removed.** The voice hotline is not part of the build (the `voice/` service was deleted). This section is kept for reference only.
+
 Anyone can call the hotline number. It answers only inbound calls and never places outbound automated calls, which keeps it clear of consent rules for AI voice calls.
 
 **Pipeline (Pipecat):** telephony number, speech to text, the `router` and `interview` workflows, then text to speech, using voice activity detection so callers can interrupt.
@@ -590,6 +602,7 @@ These requirements apply to every component.
 - **Consent for family sharing:** a contact receives alerts only after accepting an invite, and the protected person can pause or remove anyone at any time.
 - **Practice scams:** only when `practice_consent` is true, sent by text, never asking for anything real, and revealed immediately when replied to or after 24 hours.
 - **No automated outbound voice calls:** the hotline only answers calls.
+  - Build note (Nov 8): removed. Practice scams and the hotline are not built; Kavach places no voice calls at all.
 - **SMS opt-out:** honor `stop` on every channel immediately.
 - **Data minimization:** store redacted summaries, not raw messages or audio; purge inbound bodies after 7 days; never log codes, card numbers or full message text.
 - **What family alerts can include:** the incident summary only, never the person's message contents or unrelated activity.
@@ -647,6 +660,7 @@ The demo uses two iPhones: **Phone A** belongs to the protected person, "Grandpa
 4. Joe hangs up. The interview opens; he answers that he shared personal details. Severity is set to High.
 5. The explained alert lands in Tommy's iMessage and on the SMS contact's phone.
 6. Call the hotline on speaker and describe a gift card request. The voice agent gives a verdict out loud.
+   - Build note (Nov 8): removed. Skip this step; the hotline is not built.
 7. Forward the fake toll text to the ScamShield contact and show the verdict reply.
 8. Stretch: a message "from Tommy's number" asks Joe for money; Phone B gets the Trusted Sender push; Tommy taps No.
 9. Show the weekly briefing, then turn on Accessibility Mode to show the same app adapting.
@@ -686,6 +700,7 @@ Build in this order. Don't start a milestone until the previous one's checks pas
 - [ ] Each level runs its sequence from section 8, including scheduled jobs with demo timers.
 - [ ] "Verify Tommy" confirms, denies and expires correctly.
 - [ ] The hotline completes an interview by voice and posts the family alert.
+  - Build note (Nov 8): removed (no hotline).
 
 **Milestone 4: iPhone app**
 
@@ -700,5 +715,6 @@ Build in this order. Don't start a milestone until the previous one's checks pas
 - [ ] Weekly briefing generates and delivers in text and spoken form.
 - [ ] Stretch: Trusted Sender Check push with Face ID approval on Phone B.
 - [ ] Stretch: practice scam sends, and replies record the outcome.
+  - Build note (Nov 8): removed (no practice scams).
 - [ ] Stretch: Message Filter extension and WhatsApp channel.
 - [ ] The full demo script in section 14 runs twice in a row after `demo_reset`.

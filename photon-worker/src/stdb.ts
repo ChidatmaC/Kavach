@@ -58,6 +58,18 @@ export interface IncidentRow {
   created_at: number;
 }
 
+export interface AlertRequestRow {
+  id: number;
+  person_id: number;
+  incident_id: number;
+  verification_id: number;
+  kind: string; // help | alert | verify
+  recipient_contact_ids: number[];
+  status: string; // pending | acknowledged | unanswered
+  acked_by_contact_id: number;
+  created_at: number;
+}
+
 /** Timestamps arrive as [micros]; unwrap them, leave everything else alone. */
 function unwrap(v: unknown): unknown {
   if (Array.isArray(v) && v.length === 1 && typeof v[0] === 'number') return v[0];
@@ -145,6 +157,15 @@ export class Stdb {
 
   pendingVerifications(): Promise<VerificationRow[]> {
     return this.sql<VerificationRow>(`SELECT * FROM svc_verification WHERE status = 'pending'`);
+  }
+
+  /** Pending family requests. A one-element id list comes back unwrapped like a timestamp; re-wrap it. */
+  async pendingAlertRequests(): Promise<AlertRequestRow[]> {
+    const rows = await this.sql<AlertRequestRow>(`SELECT * FROM svc_alert_request WHERE status = 'pending'`);
+    return rows.map(r => {
+      const ids = r.recipient_contact_ids as unknown;
+      return { ...r, recipient_contact_ids: (Array.isArray(ids) ? ids : [ids]).map(Number) };
+    });
   }
 
   incidentsOfPerson(personId: number): Promise<IncidentRow[]> {

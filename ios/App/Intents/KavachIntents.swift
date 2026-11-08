@@ -1,5 +1,6 @@
 import AppIntents
 import KavachKit
+import UIKit
 
 /// "Open Call Companion" — assign to the Action Button or Back Tap (via Shortcuts).
 struct OpenCallCompanionIntent: AppIntent {
@@ -50,6 +51,32 @@ struct NeedHelpIntent: AppIntent {
     }
 }
 
+/// "Forward to Kavach": takes text (Shortcuts, or the share sheet via a shortcut) and opens Messages
+/// to the agent with it wrapped as "Forwarded message: …", so the agent scam-checks it.
+struct ForwardToKavachIntent: AppIntent {
+    static let title: LocalizedStringResource = "Forward to Kavach"
+    static let description = IntentDescription("Opens Messages with the text ready to send to the agent, marked as a message you received.")
+    static let supportedModes: IntentModes = .foreground
+
+    @Parameter(title: "Message", description: "The message you received", requestValueDialog: "What does the message say?")
+    var text: String
+
+    @Parameter(title: "From", description: "Who sent it (name or number), if you know")
+    var from: String?
+
+    @MainActor
+    func perform() async throws -> some IntentResult & ProvidesDialog {
+        let number = AppModel.shared.agentNumber
+        let wrapped = ForwardToKavach.wrap(text, from: from)
+        if let url = ForwardToKavach.messagesURL(number: number, message: text, from: from),
+           await UIApplication.shared.open(url) {
+            return .result(dialog: "Messages is open. Tap send.")
+        }
+        UIPasteboard.general.string = wrapped
+        return .result(dialog: "Copied. Paste it in Messages to \(AgentContact.formatted(number)).")
+    }
+}
+
 /// Siri phrases. `.applicationName` is the bundle display name, which comes from APP_DISPLAY_NAME,
 /// so renaming the product renames every phrase.
 struct KavachShortcuts: AppShortcutsProvider {
@@ -81,6 +108,15 @@ struct KavachShortcuts: AppShortcutsProvider {
             ],
             shortTitle: "I Need Help",
             systemImageName: "hand.raised.fill"
+        )
+        AppShortcut(
+            intent: ForwardToKavachIntent(),
+            phrases: [
+                "Forward to \(.applicationName)",
+                "Forward this to \(.applicationName)",
+            ],
+            shortTitle: "Forward to Kavach",
+            systemImageName: "arrowshape.turn.up.right"
         )
     }
 }

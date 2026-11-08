@@ -17,7 +17,8 @@ final class APIIntegrationTests: XCTestCase {
 
     private var api: KavachAPI { KavachAPI(db: db, agents: AgentClient(baseURL: URL(string: "http://127.0.0.1:9")!), token: token) }
 
-    private func randomPhone() -> String { "+1555" + String(format: "%07d", Int.random(in: 1_000_000...9_999_999)) }
+    /// Demo range: signs in with the demo code 000000 (DEMO_MODE=true on kavach-ios).
+    private func randomPhone() -> String { "+1555555" + String(format: "%04d", Int.random(in: 1_000...9_999)) }
 
     func testRegisterAndReadMyPerson() async throws {
         let phone = randomPhone()
@@ -119,5 +120,32 @@ final class APIIntegrationTests: XCTestCase {
         XCTAssertTrue(contacts.isEmpty)
         XCTAssertTrue(briefings.isEmpty)
         XCTAssertTrue(pending.isEmpty)
+    }
+
+    /// Recents report replay against the real module: twice → one incident, answers saved once, severity set.
+    func testCallReportReplayAgainstModule() async throws {
+        try await api.registerPerson(phone: randomPhone(), name: "Replay Test")
+        let mePerson = try await api.myPerson()
+        let me = try XCTUnwrap(mePerson)
+        let store = CallReportStore(fileURL: FileManager.default.temporaryDirectory.appendingPathComponent("r-\(UUID().uuidString).json"))
+        let report = CallReport(token: token, callerE164: "+15555550199",
+                                answers: ["q_identity": "My bank", "q_ask": "yes", "q_shared": "nothing", "q_secrecy": "yes", "q_help": "no"],
+                                reportedAt: Date())
+        store.save(report)
+        let first = await CallReportReplayer.replay(store: store, backend: api, token: token, personId: me.id)
+        XCTAssertEqual(first.replayed, [report.requestKey], "\(first)")
+        store.save(report)
+        let second = await CallReportReplayer.replay(store: store, backend: api, token: token, personId: me.id)
+        XCTAssertEqual(second.replayed, [report.requestKey])
+        let incidents = try await api.myIncidents().filter { $0.requestKey == report.requestKey }
+        XCTAssertEqual(incidents.count, 1)
+        XCTAssertEqual(incidents.first?.entryPoint, "report_swipe")
+        XCTAssertEqual(incidents.first?.answers["q_ask"], "yes")
+        XCTAssertNotEqual(incidents.first?.severityLevel, .unrated)
+        let again = try await api.openIncident(requestKey: report.requestKey, personId: me.id, entryPoint: "report_swipe",
+                                               callerE164: "+15555550199")
+        XCTAssertEqual(again.id, incidents.first?.id, "open_incident is idempotent by request_key")
+        let requests = try await api.myAlertRequests()
+        XCTAssertTrue(requests.isEmpty, "no family yet, so no reply requests")
     }
 }

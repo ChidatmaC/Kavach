@@ -8,5 +8,6 @@ At most 550 characters, warm and calm, in this order:
 5. The first two precautions, exactly as given in first_two_steps (reword lightly, add nothing new).
 6. A suggested kind way to check in (one short quoted line).
 If severity is critical, start with "URGENT" and end with: Reply "I'm calling" if you're on it.
+Otherwise end with: Reply OK so <person_name> knows you saw this.
 Never ask anyone for codes, PINs, passwords, card numbers or payment. No medical, legal or financial advice.
 Reply with only JSON: {"body": "..."}

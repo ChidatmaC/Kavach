@@ -44,7 +44,6 @@ public struct Person: Codable, Sendable, Hashable, Identifiable {
     public var accessibilityMode: Bool
     public var sharingPaused: Bool
     public var criticalOverridesPause: Bool
-    public var practiceConsent: Bool
     public var apnsToken: String
     public var familyCodeWord: String
     public var tzOffsetMinutes: Int32
@@ -158,15 +157,6 @@ public struct Briefing: Codable, Sendable, Hashable, Identifiable {
     public var summaryText: String
     public var spokenText: String
     public var createdAt: STTimestamp
-}
-
-public struct Drill: Codable, Sendable, Hashable, Identifiable {
-    public var id: UInt64
-    public var personId: UInt64
-    public var scheduledByContactId: UInt64
-    public var templateKey: String
-    public var sendAt: STTimestamp
-    public var outcome: String
 }
 
 public struct Verification: Codable, Sendable, Hashable, Identifiable {

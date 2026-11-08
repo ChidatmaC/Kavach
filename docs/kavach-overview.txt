@@ -1,0 +1,97 @@
+KAVACH — PRODUCT AND SYSTEM OVERVIEW (for brainstorming)
+=========================================================
+Snapshot: Nov 8, 2026 (hackathon MVP, HackUTD). Repo: github.com/ChidatmaC/Kavach
+
+WHAT IT IS
+Kavach is a scam-protection service for older or less confident people and their families. It turns
+every scam someone encounters into a live warning that protects their family, through:
+  - an AI agent you text over iMessage/SMS (forward a suspicious message, ask questions, give commands),
+  - alerts that reach chosen family members, who are asked to reply,
+  - an iPhone app for checking messages, getting help during a call, and following up.
+Detection is community-informed: every check searches scam reports from other users first, then an
+NVIDIA Nemotron model classifies with that evidence. Reports stay private; users only see verdicts.
+
+WHO USES IT
+  - Protected person (e.g. "Grandpa Joe"): texts the agent, uses the app, gets verdicts and step-by-step help.
+  - Family members (e.g. grandson Tommy, daughter Maria): receive alerts by iMessage/SMS, confirm
+    "was it really you?" requests, reply so the person knows they saw it.
+
+CORE FEATURES (working)
+  1. Message checks: forward or paste a text, link or screenshot -> verdict "Looks safe" / "Suspicious"
+     / "Likely scam" with a one-line reason and tips. Typing indicator + instant "checking now" reply,
+     then the answer in ~5-9 s.
+  2. Advice chat: ask questions about dealings with others ("my nephew wants gift cards, should I?"),
+     with follow-ups remembered for ~2 hours.
+  3. Red-flag rules the AI can't override: gift-card asks, code requests, remote-access apps, and money
+     requests with impersonation/urgency/secrecy/emergency stories are never "safe".
+  4. Community floor: numbers/links reported by 3+ people are always "Likely scam"; close matches to
+     reported scam campaigns are at least "Suspicious". Confirmed scams feed back into the shared data.
+  5. Incident interview (5 questions: who they claimed to be, what they asked for, what was shared,
+     secrecy/rush, want help now) -> rule-based severity Low/Medium/High/Critical (never set by AI).
+     High/Critical: recovery checklist from a vetted library, family alert, check-ins, watch periods.
+  6. Family alerts that require a reply: "asked for help during a call", High/Critical scam alerts, and
+     "was it really you?" verifications. No reply -> reminder to family + warning to the person; second
+     miss -> marked unanswered and the person is told who to call. Any family reply ("OK") counts.
+  7. Verify a relative: "verify Tommy" texts Tommy's saved number; YES/NO/no answer updates everyone.
+  8. iMessage commands (natural language via Nemotron): report a number/link, add/remove/list family,
+     status this week, family code word, weekly briefing, pause/resume family alerts, stop, help,
+     "that was wrong/right" feedback.
+  9. iPhone app: Home (status + 3 big actions: Check a message, I'm on a call, I need help),
+     Call Companion (full-screen safety cards, code word, verify, end & report), Interview, Act now
+     (recovery checklist), Family (add from Contacts, pause alerts, code word, reply status),
+     Settings (optional Accessibility Mode: big buttons, verdicts read aloud), weekly network dashboard.
+     Extensions: Call Directory (caller ID label "Likely scam: N reports"), report a call from
+     Recents, Share sheet check, Message Filter (stretch). Siri/App Intents/Action Button shortcuts.
+ 10. Training log: every AI decision + user/family feedback is logged (redacted) to improve Nemotron:
+     confirmed examples become live few-shot examples and an exportable fine-tuning dataset.
+Removed on purpose: practice/simulated scam texts and the AI voice phone hotline.
+
+ARCHITECTURE
+  iPhone app (SwiftUI) ----HTTP----> SpacetimeDB module  <---- photon-worker (TypeScript)  <-> Photon (iMessage/SMS)
+                                         ^   (all state + rules)          |
+                                         |                                 v
+                            agents service (Python, NeMo Agent Toolkit) --> NVIDIA NIM (Nemotron models)
+  - SpacetimeDB (TypeScript module): single source of truth. Tables for people, contacts, checks,
+    incidents, recovery steps, community reports/evidence, campaigns, outbox, verifications, alert
+    requests, briefings. Reducers enforce severity rules, community floor, family-alert permissions
+    (consent, pause, emergency override), timers. Per-user views for the app; service-only views for
+    backend; public caller labels.
+  - agents (Python/FastAPI + NeMo Agent Toolkit + NeMo Guardrails): workflows router, scam_check,
+    advise, command, interview, family_alert, verify_relative, briefing. Models: Nemotron 3.5
+    Lightning (fast routing/classification), Nemotron 3.5 Super VL (writing + screenshots),
+    Nemotron 3.5 Embed (similarity search). Max 6 tool calls per run, 20 s budget, rule-based fallbacks
+    when the model is unavailable. Writes only through database reducers.
+  - photon-worker (Node/TypeScript, Photon Spectrum SDK): the only process that sends/receives
+    texts. Polls the outbox, retries, SMS fallback, family group threads (needs a dedicated Photon
+    line), read receipts, typing indicator, family-reply acknowledgements.
+  - All outgoing messages go through the outbox table; agents never send directly.
+  - Scheduled work (alerts, check-ins, briefings) is queued as tasks in the database that the agent
+    service polls (SpacetimeDB procedures can't call local services).
+
+PRIVACY AND SAFETY RULES
+  - Never stores raw messages long-term (codes, card and account numbers redacted; inbound bodies
+    purged after 7 days). No call audio, no reading the user's messages: users forward what worries them.
+  - Family sees incident summaries only, after accepting an invite; the person can pause or remove anyone.
+  - The agent only handles scams/safety, never asks for codes/payment, gives only vetted recovery steps.
+  - Community reports are internal evidence; users never see other people's reports.
+  - iOS limits: third-party apps can't read SMS/iMessage history or call audio; Kavach works with
+    forwarding, caller ID labels, Recents reporting, share sheet and shortcuts.
+
+CURRENT STATE
+  - Runs locally on a Mac (SpacetimeDB local, agent service, worker) with Cloudflare tunnels so a real
+    iPhone can reach it; Photon shared iMessage line +1 (415) 610-6180. Live NVIDIA NIM models.
+  - Tests: database smoke (33 checks), agents unit + integration (live models), worker 115, iOS 37+.
+  - Not yet: dedicated Photon line (needed for family group chats), APNs push key, hosting (Maincloud),
+    SMS phone-number verification at sign-up, Android/web.
+
+STACK SUMMARY
+  SpacetimeDB 2.14 (TypeScript module) | Python 3.12, FastAPI, NVIDIA NeMo Agent Toolkit 1.9,
+  NeMo Guardrails 0.24, NVIDIA NIM | Node 22, TypeScript, Photon Spectrum (spectrum-ts) |
+  Swift 6, SwiftUI, iOS 26, CallKit, IdentityLookup, App Intents, Contacts, XcodeGen
+
+OPEN QUESTIONS FOR BRAINSTORMING
+  - Which other platforms make sense (Android: real SMS filtering/call screening is possible there;
+    WhatsApp Business via Photon; web dashboard for family; smart speakers; email forwarding; banks
+    and carriers as partners)?
+  - How family members without the app should participate.
+  - Hosting and scale beyond a hackathon demo.

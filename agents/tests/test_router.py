@@ -60,3 +60,22 @@ def test_router_off_topic_and_commands_without_db():
     assert out["intent"] == "out_of_scope" and "scams" in out["args"]["reply"]
     out = asyncio.run(run_router(r, {"text": "verify Tommy", "person_id": 1}))
     assert out == {"intent": "verify_relative", "args": {"person_id": 1, "relative_name": "Tommy"}}
+
+
+def test_router_routes_obvious_commands_to_command_with_parsed_args():
+    from kavach.workflows.base import make_run
+    from kavach.workflows.router import run_router
+
+    class NoDb:
+        db = "none"
+
+    r = make_run("router", NoDb())
+    out = asyncio.run(run_router(r, {"text": "report +1 555 555 0144", "person_id": 1, "from_e164": "+15555550101",
+                                     "channel": "imessage"}))
+    assert out == {"intent": "command", "args": {
+        "person_id": 1, "text": "report +1 555 555 0144", "reply_to_e164": "+15555550101", "reply_channel": "imessage",
+        "args": {"action": "report", "phone": "+15555550144"}}}
+    out = asyncio.run(run_router(r, {"text": "who is in my family", "person_id": 1, "from_e164": "+15555550101"}))
+    assert out["intent"] == "command" and out["args"]["args"] == {"action": "list_family"}
+    # voice mode never routes to commands
+    assert heuristic_intent("can you report that number that just called me")[0] == "command"

@@ -7,7 +7,7 @@ import sys
 import time
 
 _ALLOWED = {
-    "workflow", "incident_id", "person_id", "drill_id", "verification_id", "latency_ms", "outcome",
+    "workflow", "incident_id", "person_id", "action", "label", "decision_id", "verification_id", "latency_ms", "outcome",
     "tool_calls", "model", "path", "status", "error", "count", "verdict", "model_verdict", "stored_verdict",
     "evidence_count", "similarity_floor", "method", "rows", "refused", "intent", "source", "task_id", "enabled",
 }

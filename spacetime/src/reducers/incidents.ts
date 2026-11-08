@@ -2,17 +2,17 @@
 import { SenderError, t } from 'spacetimedb/server';
 import spacetimedb from '../tables';
 import {
-  ZERO_TS, appName, e164, familyGroupKey, familyRecipients, oneOf, queueMessage, redact,
-  requireIncidentAccess, requirePersonAccess, requireService, normalizeValue, findReport, queueAgent,
+  ZERO_TS, appName, at, e164, timers, familyGroupKey, familyRecipients, oneOf, queueMessage, redact,
+  acknowledgeRequests, requireIncidentAccess, requirePersonAccess, requireService, normalizeValue, findReport, queueAgent,
 } from '../lib';
 import { EXTRA_KEYS, QUESTION_IDS, SHARED_ITEMS, applySeverity, rank, type Answers } from '../severity';
 
-const ENTRY_POINTS = ['report_swipe', 'companion', 'hotline', 'imessage', 'app'] as const;
+const ENTRY_POINTS = ['report_swipe', 'companion', 'imessage', 'app'] as const;
 
 /**
  * Opens an incident. request_key is a caller-generated unique string (UUID) so the caller
  * can find the new row's id with `SELECT ... WHERE request_key = ...` (reducers return nothing).
- * person_id = 0 is allowed for services only (unregistered hotline callers).
+ * person_id = 0 is allowed for services only (e.g. an unregistered texter).
  */
 export const open_incident = spacetimedb.reducer(
   { request_key: t.string(), person_id: t.u64(), entry_point: t.string(), caller_e164: t.string() },
@@ -30,6 +30,11 @@ export const open_incident = spacetimedb.reducer(
       severity: '', status: 'open', family_ack_by: 0n, campaign_id: report?.campaign_id ?? 0n,
       summary_redacted: '', created_at: ctx.timestamp, resolved_at: ZERO_TS,
     });
+    if (p) {
+      ctx.db.questionnaireReminderJob.insert({
+        scheduled_id: 0n, scheduled_at: at(ctx, timers(ctx).questionnaireReminder), incident_id: inc.id, attempt: 1,
+      });
+    }
     // Demo step 2: opening Call Companion tells the family "X asked for help during a call".
     if (p && a.entry_point === 'companion') {
       for (const c of familyRecipients(ctx, p, '')) {
@@ -98,11 +103,11 @@ export const save_answer = spacetimedb.reducer(
   }
 );
 
-/** Agents/voice: attach tactics and campaign found by community search (never severity). */
+/** Agents: attach tactics and campaign found by community search (never severity). */
 export const set_incident_context = spacetimedb.reducer(
   { incident_id: t.u64(), tactics: t.array(t.string()), campaign_id: t.u64() },
   (ctx, { incident_id, tactics, campaign_id }) => {
-    requireService(ctx, 'agents', 'voice');
+    requireService(ctx, 'agents');
     const inc = ctx.db.incident.id.find(incident_id);
     if (!inc) throw new SenderError('unknown incident');
     const clean = tactics.map(x => x.toLowerCase().replace(/[^a-z_]/g, '').slice(0, 32)).filter(Boolean).slice(0, 8);
@@ -146,6 +151,7 @@ export const family_ack = spacetimedb.reducer(
     const inc = ctx.db.incident.id.find(incident_id);
     const c = ctx.db.contact.id.find(contact_id);
     if (!inc || !c || c.person_id !== inc.person_id) throw new SenderError('unknown incident or contact');
+    acknowledgeRequests(ctx, c, { incidentId: inc.id });
     if (inc.family_ack_by !== 0n) return;
     ctx.db.incident.id.update({ ...inc, family_ack_by: contact_id });
     const p = ctx.db.person.id.find(inc.person_id)!;
@@ -168,5 +174,19 @@ export const tell_my_family = spacetimedb.reducer(
     if (!person) throw new SenderError('incident has no person');
     if (rank(incident.severity) < rank('low')) throw new SenderError('finish the interview first');
     queueAgent(ctx, 'family_alert', { incident_id: incident.id, priority: 'normal', on_demand: true });
+  }
+);
+
+/**
+ * Photon: a family member replied to a help request or scam alert ("OK", "got it", "on it", or any
+ * reply in that thread). Resolves their pending help/alert requests and tells the protected person.
+ */
+export const acknowledge_family_alert = spacetimedb.reducer(
+  { contact_id: t.u64() },
+  (ctx, { contact_id }) => {
+    requireService(ctx, 'photon', 'agents');
+    const c = ctx.db.contact.id.find(contact_id);
+    if (!c) throw new SenderError('unknown contact');
+    acknowledgeRequests(ctx, c, { kinds: ['help', 'alert'] });
   }
 );

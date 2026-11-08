@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "command output",
+  "type": "object",
+  "properties": {
+    "action": {
+      "enum": [
+        "report",
+        "add_family",
+        "remove_family",
+        "list_family",
+        "status",
+        "set_code_word",
+        "get_code_word",
+        "briefing",
+        "feedback",
+        "help"
+      ]
+    },
+    "ok": {
+      "type": "boolean",
+      "description": "false when nothing was done (asked a follow-up question, not found, refused)"
+    },
+    "reply": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 600,
+      "description": "The text queued to the person"
+    },
+    "data": {
+      "type": "object"
+    }
+  },
+  "required": [
+    "action",
+    "ok",
+    "reply"
+  ],
+  "additionalProperties": false
+}

@@ -13,6 +13,9 @@ public struct CheckResult: Codable, Sendable, Equatable {
     public var highlights: [String]
     /// True when the agent service could not be reached and this is the spec 13 fallback.
     public var isFallback: Bool
+    /// The stored `message_check` row, when the service returns it (used for feedback).
+    public var checkId: UInt64?
+    public var requestKey: String?
 
     public init(verdict: Verdict, reason: String, campaignId: UInt64 = 0, tips: [String] = [],
                 evidenceCount: Int = 0, highlights: [String] = [], isFallback: Bool = false) {
@@ -20,7 +23,7 @@ public struct CheckResult: Codable, Sendable, Equatable {
         self.evidenceCount = evidenceCount; self.highlights = highlights; self.isFallback = isFallback
     }
 
-    enum CodingKeys: String, CodingKey { case verdict, reason, campaignId, tips, evidenceCount, highlights, isFallback }
+    enum CodingKeys: String, CodingKey { case verdict, reason, campaignId, tips, evidenceCount, highlights, isFallback, checkId, requestKey }
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -31,6 +34,8 @@ public struct CheckResult: Codable, Sendable, Equatable {
         evidenceCount = (try? c.decodeIfPresent(Int.self, forKey: .evidenceCount)) ?? 0
         highlights = (try? c.decodeIfPresent([String].self, forKey: .highlights)) ?? []
         isFallback = (try? c.decodeIfPresent(Bool.self, forKey: .isFallback)) ?? false
+        checkId = try? c.decodeIfPresent(UInt64.self, forKey: .checkId)
+        requestKey = try? c.decodeIfPresent(String.self, forKey: .requestKey)
     }
 
     /// Spec section 13 fallback reply.
@@ -91,6 +96,11 @@ public struct AgentClient: Sendable {
         return try Self.decoder.decode(VerifyResult.self, from: data)
     }
 
+    /// `POST /app/feedback` with the app token. Never throws (training signal only).
+    public func feedback(_ fb: VerdictFeedback, checkId: UInt64?, requestKey: String?, token: String) async -> Bool {
+        (try? await post("app/feedback", body: fb.body(checkId: checkId, requestKey: requestKey), token: token)) != nil
+    }
+
     public func health() async -> Bool {
         var req = URLRequest(url: baseURL.appendingPathComponent("health"))
         req.timeoutInterval = 3
@@ -114,5 +124,40 @@ public struct AgentClient: Sendable {
             throw KavachError.http(status: status, message: String(decoding: data, as: UTF8.self))
         }
         return data
+    }
+}
+
+/// "Was this right?" answer for a verdict, encoded for `/app/feedback`
+/// (`{check_id?, request_key?, correct, label?}`).
+public struct VerdictFeedback: Sendable, Equatable {
+    public enum Choice: Sendable, Equatable { case right, wasScam, wasSafe }
+    public let verdict: Verdict
+    public let choice: Choice
+
+    public init(verdict: Verdict, choice: Choice) { self.verdict = verdict; self.choice = choice }
+
+    /// Whether the verdict was right.
+    public var correct: Bool {
+        switch choice {
+        case .right: true
+        case .wasScam: verdict == .likelyScam
+        case .wasSafe: verdict == .safe
+        }
+    }
+
+    /// The label the person gave (the true class).
+    public var label: Verdict {
+        switch choice {
+        case .right: verdict
+        case .wasScam: .likelyScam
+        case .wasSafe: .safe
+        }
+    }
+
+    public func body(checkId: UInt64?, requestKey: String?) -> [String: JSONValue] {
+        var b: [String: JSONValue] = ["correct": .bool(correct), "label": .string(label.rawValue)]
+        if let checkId, checkId != 0 { b["check_id"] = .uint(checkId) }
+        if let requestKey, !requestKey.isEmpty { b["request_key"] = .string(requestKey) }
+        return b
     }
 }

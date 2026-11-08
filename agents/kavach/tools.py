@@ -17,12 +17,15 @@ from .stdb import ReducerError, Stdb
 REDUCER_ALLOWLIST: dict[str, set[str]] = {
     "router": {"open_incident", "enqueue_outbox", "ensure_person"},
     "scam_check": {"save_message_check", "enqueue_outbox"},
+    "advise": {"save_message_check", "enqueue_outbox"},
     "interview": {"save_answer", "set_incident_context", "enqueue_outbox"},
     "family_alert": {"enqueue_outbox"},
     "verify_relative": {"start_verification", "enqueue_outbox"},
     "trusted_sender": {"start_verification", "enqueue_outbox"},
     "briefing": {"save_briefing"},
-    "practice": {"enqueue_outbox"},
+    # iMessage commands (report, family list, code word, briefing...). The module enforces person access.
+    "command": {"report_number", "upsert_contact", "remove_contact", "update_settings", "request_briefing",
+                "open_incident", "enqueue_outbox"},
 }
 
 

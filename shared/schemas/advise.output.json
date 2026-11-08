@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "advise output",
+  "type": "object",
+  "properties": {
+    "verdict": {
+      "type": "string",
+      "enum": [
+        "safe",
+        "suspicious",
+        "likely_scam"
+      ]
+    },
+    "answer": {
+      "type": "string",
+      "maxLength": 360
+    },
+    "next_steps": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "maxLength": 160
+      },
+      "maxItems": 3
+    },
+    "evidence_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "already_shared": {
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "verdict",
+    "answer",
+    "next_steps",
+    "evidence_count",
+    "already_shared"
+  ],
+  "additionalProperties": false
+}

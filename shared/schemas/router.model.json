@@ -5,15 +5,33 @@
     "intent": {
       "enum": [
         "scam_check",
+        "advise",
+        "command",
         "verify_relative",
         "interview",
         "help",
-        "out_of_scope"
+        "out_of_scope",
+        "ambiguous"
       ]
     },
     "relative_name": {
       "type": "string",
       "maxLength": 60
+    },
+    "action": {
+      "enum": [
+        "report",
+        "add_family",
+        "remove_family",
+        "list_family",
+        "status",
+        "set_code_word",
+        "get_code_word",
+        "briefing",
+        "feedback",
+        "help",
+        ""
+      ]
     }
   },
   "required": [

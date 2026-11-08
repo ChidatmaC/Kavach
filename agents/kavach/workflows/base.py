@@ -105,6 +105,19 @@ TACTIC_WORDS = {
     "new_number": "claiming a new phone number", "recovery_offer": "offering to recover lost money",
     "upfront_fee": "asking for an upfront fee", "job_offer": "an unrealistic job offer", "prize": "a fake prize",
     "remote_access": "asking to install a remote-access app", "money_request": "asking for money",
+    "org_impersonation": "claiming to be a bank, company or agency",
+    "family_emergency": "a family emergency story",
+    "legal_threat": "threatening arrest or legal trouble",
+}
+
+# Plain reasons used when a red flag (signals.risk_floor) sets the verdict.
+RISK_REASONS = {
+    "gift_cards": "Nobody legitimate asks to be paid in gift cards. That is a scam sign every time.",
+    "code": "Anyone asking for a security code is trying to get into your accounts.",
+    "remote_access": "Asking you to install an app so they can see your screen is how scammers take over devices.",
+    "money_pressure": "It asks for money while pressuring you or claiming to be someone trusted. Real banks, agencies and family can wait while you check.",
+    "recovery_fee": "Real agencies never charge a fee to return lost money.",
+    "money_or_impersonation": "It asks for money or claims to be someone you trust. Check with them on a number you already know before doing anything.",
 }
 
 

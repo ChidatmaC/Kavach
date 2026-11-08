@@ -8,6 +8,12 @@ public struct SharedStore: Sendable {
         case spacetimeURLOverride, agentURLOverride, databaseOverride
         case personId, personName, accessibilityMode, spokenVerdicts, largerText
         case labelsVersion, apnsToken
+        /// "saved" or "dismissed": the Save-to-Contacts step was handled (see `AgentContactPrompt`).
+        case agentContactPrompt
+        /// The person opted in to Contacts access (photos, name sync, suggestions).
+        case contactsIntegration
+        /// JSON: family contact id → Contacts link (see `ContactLink`).
+        case contactLinks
     }
 
     public let appGroup: String
@@ -28,6 +34,19 @@ public struct SharedStore: Sendable {
     public var containerURL: URL {
         if let u = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: appGroup) { return u }
         return FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
+    }
+
+    // MARK: Contacts links (family member ↔ Contacts card, kept on the phone only)
+
+    public func contactLinks() -> [UInt64: ContactLink] {
+        guard let data = defaults.data(forKey: Key.contactLinks.rawValue),
+              let raw = try? JSONDecoder().decode([String: ContactLink].self, from: data) else { return [:] }
+        return Dictionary(uniqueKeysWithValues: raw.compactMap { k, v in UInt64(k).map { ($0, v) } })
+    }
+
+    public func saveContactLinks(_ links: [UInt64: ContactLink]) {
+        let raw = Dictionary(uniqueKeysWithValues: links.map { (String($0.key), $0.value) })
+        defaults.set(try? JSONEncoder().encode(raw), forKey: Key.contactLinks.rawValue)
     }
 
     // MARK: Caller labels (Call Directory feed)
@@ -103,4 +122,11 @@ public struct SharedStore: Sendable {
         if let group { q[kSecAttrAccessGroup as String] = group }
         return q
     }
+}
+
+/// Which Contacts card a family member came from, and the Contacts name last seen (name sync baseline).
+public struct ContactLink: Codable, Sendable, Equatable {
+    public var identifier: String
+    public var baselineName: String?
+    public init(identifier: String, baselineName: String?) { self.identifier = identifier; self.baselineName = baselineName }
 }

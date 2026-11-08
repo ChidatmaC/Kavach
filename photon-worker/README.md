@@ -5,8 +5,8 @@ SpacetimeDB and the agent service, and delivers every `outbox` row.
 
 ```
 inbound text --> record_inbound_message --> local command? --> reducers + reply via enqueue_outbox
-                                          \-> family-thread reply? --> relay rows to other members
-                                          \-> POST /run/router --> scam_check | verify_relative | interview | ...
+                                          \-> family reply? --> acknowledge_family_alert (+ relay free text)
+                                          \-> POST /run/router --> scam_check | advise | command | verify_relative | ...
 svc_outbox (queued, polled every 500 ms) --> sending --> Photon / console --> sent | retry | SMS | failed
                                                    \-> push rows --> agent service POST /push
 ```
@@ -77,11 +77,21 @@ npx tsx scripts/service_tokens.ts >/dev/null
    `stop` / `start` (anyone -> `opt_out_number`), `help`, `join <name>` (invited contact ->
    `set_contact_consent accepted`). A command that doesn't apply to the sender falls through.
 4. Images skip the router: `/run/scam_check` with `image_base64` and `source: "screenshot"`.
-5. A free-text reply from an accepted contact we texted within the window (family alert, relay,
-   verification, check-in) is relayed to the other accepted contacts as `relay` rows, `"<Name>: text"`.
-   In a group thread nothing is relayed (everyone saw it).
+5. Family replies (docs/CONTRACTS.md section 7). Any reply from an accepted family contact listed on a
+   pending `help`/`alert` request in `svc_alert_request` calls `acknowledge_family_alert {contact_id}`
+   for each such contact row; the module then texts the person "<Name> saw your ... and replied."
+   - Short acknowledgements (`ok`, `okay`, `got it`, `seen`, `thanks`, `will call`, `on my way`, an
+     emoji like 👍; `isShortAck` in `src/commands.ts`) stop there: no relay, no scam check, and the
+     family member gets "Thanks, we've let <Name> know you saw it." (`"on it"` with no open
+     High/Critical incident for `family_ack` lands here too.)
+   - Free text from a contact we texted within the window (family alert, relay, verification,
+     check-in) is also relayed to the other accepted contacts as `relay` rows, `"<Name>: text"`.
+   - In a group thread nothing is relayed (everyone saw it), but the reply still acknowledges.
 6. Everything else: `ensure_person` for unknown texters, `POST /run/router`, then dispatch on intent.
-   `scam_check` passes `reply_to_e164` so the agent queues the verdict. If the router fails, the
+   `scam_check`, `advise` and `command` (`POST /run/command {person_id, text, reply_to_e164,
+   reply_channel, args}`) pass `reply_to_e164` so the agent queues the answer; each has a fallback
+   reply if the call fails. Every agent-routed text first gets an instant urgent "Got it. Checking this
+   now…" acknowledgement. If the router fails, the
    text is sent to `scam_check`; if that fails, the spec's fallback reply is queued.
    Opted-out numbers are ignored except for `start`/`stop`.
 

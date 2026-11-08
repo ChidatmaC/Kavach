@@ -1,7 +1,7 @@
 # Kavach
 
 Kavach turns every scam report into a live warning that protects the reporter's family: an AI agent you
-can text or call, alerts that reach every chosen family contact, and an iPhone app for checking things and
+can text, alerts that reach every chosen family contact, and an iPhone app for checking things and
 following up. Detection is a community-informed search over shared scam reports combined with Nemotron
 analysis (spec section 7a); the reports themselves stay internal.
 
@@ -13,7 +13,6 @@ analysis (spec section 7a); the reports themselves stay internal.
 | `spacetime/` | SpacetimeDB 2.14 TypeScript module | All state, reducers, rule-based severity, community verdict floor, schedules, agent task queue, access views |
 | `agents/` | Python, NeMo Agent Toolkit 1.9, NeMo Guardrails 0.24, NIM | All workflows; `search_community`; `/run/*`, `/app/*`, `/push`; polls `agent_task` |
 | `photon-worker/` | TypeScript, `spectrum-ts` | iMessage/SMS in and out; text commands; outbox delivery with retries, SMS fallback, family groups |
-| `voice/` | Python, Pipecat 1.15 (Twilio, Deepgram, Cartesia) | The inbound scam hotline |
 | `ios/` | SwiftUI, iOS 26, XcodeGen | Six screens + interview, four extensions, App Intents, push |
 
 ## Run locally
@@ -24,11 +23,11 @@ Full instructions for a fresh Mac are in [`SETUP.md`](SETUP.md). The short versi
 spacetime start                         # separate terminal
 cp .env.example .env                    # set SERVICE_CLAIM_KEY, AGENT_SERVICE_TOKEN, NIM_API_KEY
 npm install && (cd spacetime && npm install) && (cd photon-worker && npm install)
-(cd agents && uv sync) && (cd voice && uv sync)
+(cd agents && uv sync)
 npm run publish:local:clean && npm run tokens && npm run demo:reset
 npm run start:local                     # agent service + iMessage worker (console)
 scripts/text.sh +15555550101 "verify Tommy"
-cd ios && xcodegen generate && open Kavach.xcodeproj   # then ⌘R, sign up as Joe +15555550101
+cd ios && xcodegen generate && open Kavach.xcodeproj   # then ⌘R, sign in as Joe +15555550101, code 000000
 ```
 
 Without `NIM_API_KEY`, every workflow runs on deterministic fallbacks (heuristics plus community search
@@ -40,17 +39,16 @@ with lexical similarity), which is enough to rehearse the whole demo.
 | --- | --- |
 | Module smoke (`npm run smoke`) | 28/28 |
 | agents unit / integration | 88 passed (1 skipped) / 14 passed |
-| photon-worker | 88 passed, typecheck clean |
-| voice | 39 passed |
+| photon-worker | 115 passed, typecheck clean |
 | iOS | simulator build succeeds; 27 XCTests passed (live against SpacetimeDB) |
 
 Verified across components on one database: forwarded toll text → "Likely scam" reply; "verify Tommy" → Tommy
-replies "not me" → Joe warned and family told; hotline gift-card call → Critical, spoken verdict and steps,
+replies "not me" → Joe warned and family told; a family member's "ok" to a help request → Joe told they saw it;
 explained family alerts via the agent task queue; template alerts after 20 s when the agent service is down.
 
 ## Not yet verified (needs credentials or devices)
 
 - Real NIM calls (model ids, embeddings): no `NIM_API_KEY` was available.
-- A real Photon line (iMessage groups, SMS fallback), a real phone call through Twilio/Deepgram/Cartesia, APNs.
+- A real Photon line (iMessage groups, SMS fallback), APNs.
 - On-device: Call Directory labels, the Report extension in Recents on iOS 26, Action Button, CallKit end-of-call, Face ID push actions.
-- Phone numbers are not SMS-verified at registration (MVP).
+- Delivery of real sign-in codes over Photon (the module queues them; demo numbers use `000000`).

@@ -10,13 +10,14 @@ curl -s -m 2 http://127.0.0.1:3000/v1/ping >/dev/null || { echo "SpacetimeDB is 
 mkdir -p .run
 scripts/stop_local.sh >/dev/null 2>&1 || true
 
-(cd agents && nohup uv run uvicorn server:app --host 0.0.0.0 --port 8088 > ../.run/agents.log 2>&1 &)
+# exec + detached stdio, so no wrapper shell lingers holding this script's output open
+(cd agents && exec nohup uv run uvicorn server:app --host 0.0.0.0 --port 8088 > ../.run/agents.log 2>&1 < /dev/null) &
 
 # photon-worker's console gateway reads typed messages from stdin; feed it from a named pipe
 rm -f .run/photon.in && mkfifo .run/photon.in
 nohup sh -c 'exec 3<>.run/photon.in; sleep 2147483647' >/dev/null 2>&1 &
 echo $! > .run/fifo_holder.pid
-(cd photon-worker && nohup npx tsx src/main.ts < ../.run/photon.in > ../.run/photon.log 2>&1 &)
+(cd photon-worker && exec nohup npx tsx src/main.ts < ../.run/photon.in > ../.run/photon.log 2>&1) &
 
 printf 'Waiting for services'
 for i in $(seq 1 30); do

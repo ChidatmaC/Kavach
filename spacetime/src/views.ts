@@ -4,9 +4,11 @@
 //  - svc_*       : full rows, only for identities in service_account
 import { t, type InferSchema, type ViewCtx as SdkViewCtx } from 'spacetimedb/server';
 import spacetimedb, {
-  agentTask, briefing, campaign, communityReport, contact, drill, inboundMessage, incident, messageCheck, outbox,
+  agentTask, alertRequest, briefing, campaign, communityReport, contact, inboundMessage, incident, messageCheck, outbox,
   person, recoveryStep, reportEvidence, verification,
 } from './tables';
+
+import { SIGN_IN } from './signin';
 
 type ViewCtx = SdkViewCtx<InferSchema<typeof spacetimedb>>;
 
@@ -54,10 +56,6 @@ export const my_briefings = spacetimedb.view({ name: 'my_briefings', public: tru
   return p ? [...ctx.db.briefing.person_id.filter(p.id)] : [];
 });
 
-export const my_drills = spacetimedb.view({ name: 'my_drills', public: true }, t.array(drill.rowType), ctx => {
-  const p = me(ctx);
-  return p ? [...ctx.db.drill.person_id.filter(p.id)] : [];
-});
 
 /** Trusted Sender Check: pending verifications this app user (the relative) must answer. */
 export const my_pending_verifications = spacetimedb.view(
@@ -68,6 +66,32 @@ export const my_pending_verifications = spacetimedb.view(
     return [...ctx.db.verification.iter()].filter(v => v.status === 'pending' && myContactRows.includes(v.contact_id));
   }
 );
+
+/** Family replies to this person's help requests, alerts and verifications (pending / acknowledged / unanswered). */
+export const my_alert_requests = spacetimedb.view({ name: 'my_alert_requests', public: true }, t.array(alertRequest.rowType), ctx => {
+  const p = me(ctx);
+  return p ? [...ctx.db.alertRequest.person_id.filter(p.id)] : [];
+});
+
+/**
+ * The caller's pending phone sign-in, if any. Deliberately omits code_hash and salt: no view, not even
+ * a svc_* one, exposes the code or anything derived from it.
+ */
+const SignInStatus = t.row('SignInStatusRow', {
+  phone_e164: t.string(),
+  attempts_left: t.u8(),
+  last_error: t.string(), // "" | wrong_code | too_many_attempts
+  expires_at: t.timestamp(),
+  created_at: t.timestamp(),
+});
+export const my_sign_in = spacetimedb.view({ name: 'my_sign_in', public: true }, t.array(SignInStatus), ctx =>
+  [...ctx.db.signInChallenge.requester_hex.filter(ctx.sender.toHexString())].map(c => ({
+    phone_e164: c.phone_e164,
+    attempts_left: Math.max(0, SIGN_IN.maxAttempts - c.attempts),
+    last_error: c.last_error,
+    expires_at: c.expires_at,
+    created_at: c.created_at,
+  })));
 
 // --- public -------------------------------------------------------------------
 
@@ -102,8 +126,6 @@ export const svc_inbound_message = spacetimedb.view({ name: 'svc_inbound_message
   ctx => (isService(ctx) ? [...ctx.db.inboundMessage.iter()] : []));
 export const svc_verification = spacetimedb.view({ name: 'svc_verification', public: true }, t.array(verification.rowType),
   ctx => (isService(ctx) ? [...ctx.db.verification.iter()] : []));
-export const svc_drill = spacetimedb.view({ name: 'svc_drill', public: true }, t.array(drill.rowType),
-  ctx => (isService(ctx) ? [...ctx.db.drill.iter()] : []));
 export const svc_briefing = spacetimedb.view({ name: 'svc_briefing', public: true }, t.array(briefing.rowType),
   ctx => (isService(ctx) ? [...ctx.db.briefing.iter()] : []));
 export const svc_opt_out = spacetimedb.view(
@@ -112,6 +134,9 @@ export const svc_opt_out = spacetimedb.view(
 
 export const svc_agent_task = spacetimedb.view({ name: 'svc_agent_task', public: true }, t.array(agentTask.rowType),
   ctx => (isService(ctx) ? [...ctx.db.agentTask.iter()] : []));
+
+export const svc_alert_request = spacetimedb.view({ name: 'svc_alert_request', public: true }, t.array(alertRequest.rowType),
+  ctx => (isService(ctx) ? [...ctx.db.alertRequest.iter()] : []));
 
 // campaign is a public table; no view needed.
 void campaign;

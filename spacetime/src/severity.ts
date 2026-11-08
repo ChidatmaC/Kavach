@@ -129,7 +129,6 @@ function runLevel(ctx: Ctx, inc: IncidentRow) {
       insertRecoverySteps(ctx, inc, true);
       if (p) {
         queueAgent(ctx, 'family_alert', { incident_id: inc.id, priority: 'urgent' });
-        ctx.db.familyAckJob.insert({ scheduled_id: 0n, scheduled_at: at(ctx, t.familyAckDeadline), incident_id: inc.id });
       }
       countCaller(ctx, inc);
       if (p) {
@@ -169,16 +168,6 @@ function runLevel(ctx: Ctx, inc: IncidentRow) {
         messagePerson(ctx, p, 'reply',
           `${app}: Likely scam, and you did the right thing by not sharing anything. Tip: real companies never rush you or ask you to keep a call secret. Reply "block" to report this number.`,
           'normal', inc.id);
-        if (inc.campaign_id && p.practice_consent) {
-          const since = ctx.timestamp.microsSinceUnixEpoch - t.weekWindow;
-          const sameCampaign = [...ctx.db.incident.person_id.filter(p.id)].filter(i =>
-            i.campaign_id === inc.campaign_id && i.severity === 'medium' && i.created_at.microsSinceUnixEpoch >= since);
-          if (sameCampaign.length >= 3) {
-            messagePerson(ctx, p, 'system',
-              `${app}: You've seen this trick three times this week. Want a safe practice text on it so it's easy to spot? Ask your family to schedule one in the ${app} app.`,
-              'normal', inc.id);
-          }
-        }
       }
       countCaller(ctx, inc);
       break;

@@ -271,6 +271,21 @@ async def run_interview(run: Run, p: dict[str, Any]) -> dict[str, Any]:
                            "evidence_count": len(search.evidence), "campaign_id": int(inc.get("campaign_id") or search.campaign_id or 0),
                            "alert_sent": bool(st["alert_sent"])}
     run.fields.update(verdict=verdict, evidence_count=len(search.evidence))
+    if utterance:
+        from .. import training
+        from ..community import max_verdict as _max
+
+        heuristic = call_verdict(search, "")[0]
+        training.log_decision(
+            workflow="interview", person_id=person_id, text=utterance, tactics=tactics, evidence=search.evidence,
+            model_verdict=heuristic, final_verdict=verdict, reason=reason, method="heuristic+severity",
+            floors={"community": search.floor, "similarity": search.similarity_floor or "",
+                    "exact": search.exact_floor or "", "severity": severity,
+                    "severity_floor": "likely_scam" if severity in ("high", "critical")
+                    else "suspicious" if severity == "medium" else ""},
+            sender_e164=inc.get("caller_e164") or "", claimed_identity=inc.get("claimed_identity") or "",
+            incident_id=incident_id, extra={"mode": mode, "raised": _max(heuristic, verdict) != heuristic})
+        training.label_incident(incident_id, severity, person_id)
 
     if checkin:
         nxt, text = "q_shared", CHECKIN_QUESTION
