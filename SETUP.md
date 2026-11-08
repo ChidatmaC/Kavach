@@ -1,7 +1,7 @@
 # Setting up Kavach on a new Mac
 
 This gets the full stack running locally: SpacetimeDB, the agent service (Nemotron via NVIDIA NIM), the
-iMessage/SMS worker in console mode, and the iPhone app in the Simulator.
+iMessage/SMS worker (console mode first, then the real Photon iMessage line), and the iPhone app.
 It takes about 20 minutes, most of it installs.
 
 Versions this was built and tested with are in brackets.
@@ -43,6 +43,7 @@ Edit `.env` and set these (everything else can stay as is):
 | `SERVICE_CLAIM_KEY` | any random string, e.g. output of `openssl rand -hex 24` |
 | `AGENT_SERVICE_TOKEN` | another random string, e.g. `openssl rand -hex 24` |
 | `NIM_API_KEY` | an NVIDIA API key (`nvapi-...`) from [build.nvidia.com](https://build.nvidia.com). Optional: without it every workflow uses rule-based fallbacks |
+| `PHOTON_PROJECT_ID`, `PHOTON_API_KEY` | only for the real iMessage line (step 6): the Spectrum project id and project secret from [app.photon.codes](https://app.photon.codes). Leave `MESSAGING_GATEWAY=console` until then |
 
 The model ids in `.env.example` (`MODEL_FAST`, `MODEL_WRITER`, `MODEL_EMBED`, `MODEL_VISION`) were
 checked against one NVIDIA account. Model availability differs per account, so check yours:
@@ -76,11 +77,19 @@ Then, from the repo root:
 ```sh
 npm run publish:local:clean   # publish the module as database `kavach`
 npm run tokens                # one SpacetimeDB identity per service -> .spacetime-tokens.json
+npm run smoke                 # expect "All checks passed" (58 checks); run it while the services are stopped
 npm run demo:reset            # load shared/seed/demo.json (Joe, Tommy, Maria, campaigns, reports)
-npm run smoke                 # expect "All checks passed" (28 checks)
 ```
 
-`npm run smoke` wipes and re-seeds the database, so run `npm run demo:reset` again afterwards if you like.
+Pick the demo data you want:
+
+| Command | Loads |
+| --- | --- |
+| `npm run demo:reset` | `shared/seed/demo.json`: demo people Joe, Tommy and Maria with family links, campaigns and reports. Keeps existing app sign-ins. |
+| `npm run demo:scam-calls` | `shared/seed/scam_calls.json`: **erases all users and scam data**, then loads 8 phone-scam campaigns, 11 scam caller numbers (the top one is +1 346-481-9285 with 75 reports) and call scripts. No users: sign in from the app. |
+| `npm run dev:wipe` | Like `demo:reset`, but also removes app sign-ins so numbers can be registered again. |
+
+`npm run smoke` wipes and re-seeds the database, so reload the demo data you want afterwards.
 
 ## 5. Start the services
 
@@ -88,10 +97,19 @@ npm run smoke                 # expect "All checks passed" (28 checks)
 npm run start:local
 ```
 
-This starts the agent service on `:8088` and the iMessage worker (console mode) on `:8090`, logging to
-`.run/agents.log` and `.run/photon.log`. Stop them with `npm run stop:local`.
+This starts the agent service on `:8088` and the iMessage worker on `:8090` (console or Photon, from
+`MESSAGING_GATEWAY` in `.env`), logging to `.run/agents.log` and `.run/photon.log`. Stop them with
+`npm run stop:local`.
 
-Text the agent as any number and see its replies:
+Check that everything is up:
+
+```sh
+curl -s http://127.0.0.1:3000/v1/ping && echo spacetimedb ok
+curl -s http://127.0.0.1:8088/health/details   # agent: engine, guardrails, llm, task_poller
+curl -s http://127.0.0.1:8090/health           # worker: gateway, last poll, sent/failed
+```
+
+In console mode, text the agent as any number and see its replies:
 
 ```sh
 scripts/text.sh +15555550101 "TxTag: unpaid toll \$6.80, pay now https://txtag-pay.top/inv/1"
@@ -99,8 +117,24 @@ scripts/text.sh +15555550101 "verify Tommy"
 scripts/text.sh +15555550102 "not me"          # Tommy answers the verification
 ```
 
-Demo people: **Joe** `+15555550101` (protected person), **Tommy** `+15555550102` (grandson, iMessage,
-emergency contact), **Maria** `+15555550103` (daughter, SMS). Family code word: "blue pancake".
+Demo people (from `demo:reset`): **Joe** `+15555550101` (protected person), **Tommy** `+15555550102`
+(grandson, iMessage, emergency contact), **Maria** `+15555550103` (daughter, SMS). Family code word:
+"blue pancake".
+
+Things to try by text: forward a message (start it with `Forwarded message:` and optionally a
+`From: <number>` line), ask a question ("my nephew wants gift cards, should I?"), `report +1 346 481 9285`,
+`add Maria 214-555-0100 daughter`, `who is in my family`, `status`, `verify Tommy`, `pause` / `resume`,
+`wrong` (feedback on the last answer), `help`.
+
+### The real iMessage line (Photon)
+
+1. In `.env` set `MESSAGING_GATEWAY=photon`, `PHOTON_PROJECT_ID` and `PHOTON_API_KEY` (the project secret).
+2. `npm run stop:local && npm run start:local`. `.run/photon.log` should show `photon.started`.
+3. Text the project's number from any iPhone. On Photon's shared line the number is shown in the Photon
+   dashboard (ours is +1 415-610-6180). Replies come back in the same thread.
+
+Only one worker should run against a Photon project at a time: if a teammate's worker is connected,
+messages may go to theirs. Group threads for family alerts need a dedicated Photon line.
 
 ## 6. Run the iPhone app
 
@@ -121,9 +155,10 @@ Ways to feed the app a "message" (the app can't read real SMS; see the spec's pl
 - Share text from Notes in the Simulator to **Kavach** (Share extension).
 - Test a push banner:
   ```sh
-  printf '{"Simulator Target Bundle":"com.kavach.app","aps":{"alert":{"title":"Kavach","body":"Tommy says it was NOT them. This is a scam."}}}' > /tmp/kavach.apns
-  xcrun simctl push booted com.kavach.app /tmp/kavach.apns
+  printf '{"Simulator Target Bundle":"com.hack.kavach.app","aps":{"alert":{"title":"Kavach","body":"Tommy says it was NOT them. This is a scam."}}}' > /tmp/kavach.apns
+  xcrun simctl push booted com.hack.kavach.app /tmp/kavach.apns
   ```
+  The banner shows only after the app has been allowed to send notifications (tap **Allow** when it asks).
 
 ## 7. Run the tests
 
@@ -158,6 +193,9 @@ your team can't use them, change the prefix everywhere in `ios/` (project.yml, e
   in two terminals. Use the two `https://….trycloudflare.com` addresses they print as `SPACETIME_URL` and
   `AGENT_SERVICE_URL`. The addresses change every time the tunnels restart, and anyone with them can
   reach your dev backend while they run.
+  Quick tunnels also expire on their own (the log says `Tunnel not found` and the app can't connect):
+  restart them, put the new addresses in `Local.xcconfig`, and rebuild the app, because the addresses are
+  built in (including the Recents report endpoint).
 - **Same Wi-Fi:** start SpacetimeDB with `spacetime start --listen-addr 0.0.0.0:3000` and use
   `http:/$()/<Mac IP>:3000` / `:8088` (`ipconfig getifaddr en0`). Fails on hotspots and on campus or venue
   Wi-Fi that blocks device-to-device traffic.
@@ -182,3 +220,7 @@ device.
 | `Address already in use` on 8088/8090 | `npm run stop:local`, then start again. |
 | Publish fails with a schema error | `npm run publish:local:clean` (drops local data), then `npm run tokens && npm run demo:reset`. |
 | App shows no data | Make sure you signed in as `+15555550101` and `npm run start:local` is running. |
+| iPhone app can't connect ("Could not connect" / timeouts) | Tunnels expired or the Mac changed networks: restart the tunnels, update `ios/Config/Local.xcconfig`, rebuild. |
+| No reply in iMessage | `curl -s http://127.0.0.1:8090/health` should show `"gateway":"photon"`; check `.run/photon.log`, and that no other worker is connected to the same Photon project. |
+| `number already registered` when signing up | Sign in again with the code flow, or `npm run dev:wipe` to clear all sign-ins. |
+| Builds fail with "No space left on device" | Free disk space (Xcode simulators and DerivedData are the usual culprits). |

@@ -11,7 +11,13 @@
     "stop:local": "scripts/stop_local.sh",
     "smoke": "tsx scripts/smoke_spacetime.ts",
     "publish:local": "set -a && . ./.env && set +a && cd spacetime && spacetime publish kavach -s local -y",
-    "publish:local:clean": "set -a && . ./.env && set +a && cd spacetime && spacetime publish kavach -s local -y --delete-data=always"
+    "publish:local:clean": "set -a && . ./.env && set +a && cd spacetime && spacetime publish kavach -s local -y --delete-data=always",
+    "demo:scam-calls": "tsx scripts/seed_scam_calls.ts"
   },
-  "devDependencies": { "tsx": "^4.19.2", "dotenv": "^16.4.5", "@types/node": "^22.10.0", "typescript": "~5.6.2" }
+  "devDependencies": {
+    "tsx": "^4.19.2",
+    "dotenv": "^16.4.5",
+    "@types/node": "^22.10.0",
+    "typescript": "~5.6.2"
+  }
 }

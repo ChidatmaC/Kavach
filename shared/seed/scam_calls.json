@@ -1,0 +1,46 @@
+{
+  "description": "Scam-call demo data: phone scam campaigns, reported scam caller numbers, and call-script evidence. No users. Numbers other than +13464819285 are fictional 555-01xx numbers.",
+  "campaigns": [
+    { "slug": "irs_arrest", "title": "IRS back-taxes arrest threats", "tactic_summary": "Caller claims to be the IRS or police, says you owe back taxes and will be arrested today unless you pay by gift card or wire.", "sample_text": "This is Officer Daniels with the IRS. You owe $4,820 in back taxes and there is a warrant for your arrest. Pay today with gift cards or wire transfer or we will send deputies.", "weekly_reports": 960 },
+    { "slug": "ssa_suspended", "title": "Social Security number suspended", "tactic_summary": "Robocall or caller says your Social Security number is suspended for suspicious activity and asks you to confirm it or move money to a safe account.", "sample_text": "Your Social Security number has been suspended due to suspicious activity. Press 1 to speak to an agent. Confirm your number and move your savings to a protected account.", "weekly_reports": 1240 },
+    { "slug": "bank_fraud_dept", "title": "Fake bank fraud department calls", "tactic_summary": "Caller says they are your bank's fraud team, reports a suspicious charge, and asks for the code just texted to you or to move money to a safe account.", "sample_text": "This is the Chase fraud department. We blocked a $940 charge on your card. To cancel it, read me the six digit code we just sent and confirm your PIN.", "weekly_reports": 1580 },
+    { "slug": "carrier_sim_swap", "title": "Fake phone carrier calls", "tactic_summary": "Caller claims to be your phone carrier, says someone is moving your number, and asks for the verification code or account PIN.", "sample_text": "This is T-Mobile security. Someone is trying to transfer your phone number. Read me the verification code we just texted so we can stop it.", "weekly_reports": 410 },
+    { "slug": "tech_support", "title": "Tech support remote access calls", "tactic_summary": "Caller claims to be Microsoft, Apple or your internet provider, says your computer is infected, and asks you to install a remote-access app and pay for a fix.", "sample_text": "This is Microsoft technical support. Your computer is sending us virus alerts. Please install AnyDesk so we can fix it, and there is a $299 service fee.", "weekly_reports": 720 },
+    { "slug": "medicare_benefits", "title": "Medicare and health benefits calls", "tactic_summary": "Caller offers a new Medicare card, free medical equipment or a benefits refund and asks for your Medicare or Social Security number.", "sample_text": "Hi, I'm calling from Medicare about your new card and a refund you're owed. I just need to verify your Medicare number and date of birth.", "weekly_reports": 530 },
+    { "slug": "utility_shutoff", "title": "Utility shutoff threats", "tactic_summary": "Caller claims to be the electric or gas company and says power will be cut off within the hour unless you pay now by prepaid card or app.", "sample_text": "This is the electric company disconnection department. Your power will be shut off in 45 minutes for an unpaid balance. Pay $386 now with a prepaid card to stop it.", "weekly_reports": 380 },
+    { "slug": "grandchild_emergency", "title": "Grandchild emergency calls", "tactic_summary": "Someone pretends to be a grandchild or their lawyer, says they were arrested or in an accident, asks for bail money or gift cards, and begs you not to tell anyone.", "sample_text": "Grandma it's me, I was in a car accident and I'm in jail. Please don't tell mom. My lawyer will call you about the bail money, it has to be cash or gift cards.", "weekly_reports": 290 }
+  ],
+  "scam_callers": [
+    { "value": "+13464819285", "campaign_slug": "bank_fraud_dept", "reporter_count": 75 },
+    { "value": "+12025550147", "campaign_slug": "irs_arrest", "reporter_count": 41 },
+    { "value": "+18885550132", "campaign_slug": "ssa_suspended", "reporter_count": 58 },
+    { "value": "+14155550109", "campaign_slug": "bank_fraud_dept", "reporter_count": 23 },
+    { "value": "+12145550186", "campaign_slug": "carrier_sim_swap", "reporter_count": 12 },
+    { "value": "+18005550161", "campaign_slug": "tech_support", "reporter_count": 34 },
+    { "value": "+13125550118", "campaign_slug": "medicare_benefits", "reporter_count": 9 },
+    { "value": "+17135550174", "campaign_slug": "utility_shutoff", "reporter_count": 16 },
+    { "value": "+15125550193", "campaign_slug": "grandchild_emergency", "reporter_count": 7 },
+    { "value": "+16465550125", "campaign_slug": "irs_arrest", "reporter_count": 2 },
+    { "value": "+19725550157", "campaign_slug": "tech_support", "reporter_count": 1 }
+  ],
+  "phrases": [
+    { "value": "read me the code", "campaign_slug": "bank_fraud_dept", "reporter_count": 62 },
+    { "value": "warrant for your arrest", "campaign_slug": "irs_arrest", "reporter_count": 37 },
+    { "value": "your social security number has been suspended", "campaign_slug": "ssa_suspended", "reporter_count": 44 },
+    { "value": "install anydesk", "campaign_slug": "tech_support", "reporter_count": 19 },
+    { "value": "don't tell mom", "campaign_slug": "grandchild_emergency", "reporter_count": 11 }
+  ],
+  "call_evidence": [
+    { "sender_e164": "+13464819285", "campaign_slug": "bank_fraud_dept", "claimed_identity": "Chase fraud department", "tactics": ["impersonation", "code_request", "urgency"], "verdict": "likely_scam", "text_redacted": "Caller said he was from the bank's fraud team, said a large charge was blocked on my card, and asked me to read back the code they just texted and confirm my PIN." },
+    { "sender_e164": "+13464819285", "campaign_slug": "bank_fraud_dept", "claimed_identity": "bank security", "tactics": ["impersonation", "money_request", "urgency"], "verdict": "likely_scam", "text_redacted": "They said my account was compromised and I had to move my savings to a safe account they would set up today, and not to talk to the branch." },
+    { "sender_e164": "+12025550147", "campaign_slug": "irs_arrest", "claimed_identity": "IRS officer", "tactics": ["org_impersonation", "legal_threat", "gift_card_request", "urgency"], "verdict": "likely_scam", "text_redacted": "Man said he was an IRS officer, I owed back taxes and there was a warrant for my arrest. He said to buy gift cards and read him the numbers to avoid jail." },
+    { "sender_e164": "+18885550132", "campaign_slug": "ssa_suspended", "claimed_identity": "Social Security Administration", "tactics": ["org_impersonation", "urgency"], "verdict": "likely_scam", "text_redacted": "Recorded message said my Social Security number was suspended for suspicious activity and to press 1. The agent asked me to confirm my full number." },
+    { "sender_e164": "+14155550109", "campaign_slug": "bank_fraud_dept", "claimed_identity": "Wells Fargo fraud team", "tactics": ["impersonation", "code_request"], "verdict": "likely_scam", "text_redacted": "Caller said they were Wells Fargo fraud and needed the verification code from my texts to cancel a Zelle payment I didn't make." },
+    { "sender_e164": "+12145550186", "campaign_slug": "carrier_sim_swap", "claimed_identity": "phone company security", "tactics": ["impersonation", "code_request", "urgency"], "verdict": "likely_scam", "text_redacted": "They said they were my phone company and someone was moving my number to a new phone. They wanted the code they just texted me to stop it." },
+    { "sender_e164": "+18005550161", "campaign_slug": "tech_support", "claimed_identity": "Microsoft support", "tactics": ["org_impersonation", "remote_access", "upfront_fee"], "verdict": "likely_scam", "text_redacted": "Caller said my computer had a virus and Microsoft detected it. Asked me to install a remote app so they could fix it and pay a service fee." },
+    { "sender_e164": "+13125550118", "campaign_slug": "medicare_benefits", "claimed_identity": "Medicare", "tactics": ["org_impersonation"], "verdict": "likely_scam", "text_redacted": "Woman said she was from Medicare with a new card and a refund for me, and needed my Medicare number and date of birth to send it." },
+    { "sender_e164": "+17135550174", "campaign_slug": "utility_shutoff", "claimed_identity": "electric company", "tactics": ["org_impersonation", "urgency", "fee_threat"], "verdict": "likely_scam", "text_redacted": "They said my power would be shut off within the hour for an unpaid bill unless I paid right away with a prepaid card from the store." },
+    { "sender_e164": "+15125550193", "campaign_slug": "grandchild_emergency", "claimed_identity": "grandson", "tactics": ["impersonation", "family_emergency", "secrecy", "gift_card_request"], "verdict": "likely_scam", "text_redacted": "Young man said he was my grandson, was arrested after an accident and needed bail. He begged me not to tell his mother and said a lawyer would call about gift cards." },
+    { "sender_e164": "+16465550125", "campaign_slug": "irs_arrest", "claimed_identity": "Treasury department", "tactics": ["org_impersonation", "legal_threat"], "verdict": "suspicious", "text_redacted": "Voicemail said there was a legal case against me with the Treasury and to call back immediately before officers come to my house." }
+  ]
+}
