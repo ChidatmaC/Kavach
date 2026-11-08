@@ -63,4 +63,20 @@ final class NetworkAlertLinkTests: XCTestCase {
             .init(familyId: 11, threatId: "incident-7", answered: false),
         ])
     }
+
+    func testCallThreatsShowTheCallerNumberAndOpenTheirReport() {
+        var withNumber = incident(8)
+        withNumber.callerE164 = "+13464819285"
+        withNumber.claimedIdentity = "Chase bank"
+        let d = NetworkDashboard(checks: [], incidents: [withNumber, incident(9)], alertRequests: [], contacts: [],
+                                 campaigns: [], briefings: [], now: now)
+        let call = d.threats.first { $0.id == "incident-8" }
+        XCTAssertEqual(call?.number, PhoneNumbers.formatted("+13464819285"))
+        XCTAssertTrue(call?.title.contains(PhoneNumbers.formatted("+13464819285")) ?? false)
+        XCTAssertEqual(call?.claimedIdentity, "Chase bank")
+        XCTAssertEqual(call?.incidentId, 8)
+        let noNumber = d.threats.first { $0.id == "incident-9" }
+        XCTAssertEqual(noNumber?.number, "")
+        XCTAssertEqual(noNumber?.incidentId, 9)
+    }
 }

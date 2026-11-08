@@ -188,8 +188,24 @@ export function queueMessage(ctx: Ctx, a: QueueArgs): boolean {
 }
 
 /** Reply to the protected person on text, plus a push when the app is installed. */
+/** Incidents started in the app get their follow-ups in the app (push), not as iMessage texts. */
+export const APP_ENTRY_POINTS = ['app', 'report_swipe', 'companion'];
+
+export function startedInApp(ctx: Ctx, incidentId: bigint): boolean {
+  if (!incidentId) return false;
+  const inc = ctx.db.incident.id.find(incidentId);
+  return !!inc && APP_ENTRY_POINTS.includes(inc.entry_point);
+}
+
+/**
+ * Reply to the protected person. Text (iMessage, SMS fallback) for conversations that started in
+ * iMessage; push for incidents started in the app, plus a text only when it is urgent (Critical,
+ * family didn't reply) so it can't be missed.
+ */
 export function messagePerson(ctx: Ctx, p: PersonRow, kind: string, body: string, priority: 'urgent' | 'normal', incidentId = 0n) {
-  queueMessage(ctx, { to_e164: p.phone_e164, channel: 'imessage', kind, body, priority, related_incident_id: incidentId });
+  if (!startedInApp(ctx, incidentId) || priority === 'urgent') {
+    queueMessage(ctx, { to_e164: p.phone_e164, channel: 'imessage', kind, body, priority, related_incident_id: incidentId });
+  }
   if (p.apns_token) {
     queueMessage(ctx, { to_e164: p.phone_e164, channel: 'push', kind, body, priority, related_incident_id: incidentId });
   }

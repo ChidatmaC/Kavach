@@ -530,14 +530,36 @@ struct NetworkNodeDetail: View {
                     StatusPill(t.isSevere ? (t.kind == .call ? "Critical call" : "Likely scam") : "Suspicious",
                                systemImage: t.isSevere ? "xmark.octagon.fill" : "exclamationmark.triangle.fill",
                                tone: t.isSevere ? .danger : .caution)
-                    Text(t.title).font(TypeScale.headline).foregroundStyle(Theme.textPrimary)
-                    Text(t.detail).font(TypeScale.body).foregroundStyle(Theme.textSecondary)
+                    if t.kind == .call {
+                        // The caller's number is the most useful fact: show it large and copyable.
+                        Text(t.number.isEmpty ? "Number not given" : t.number)
+                            .font(TypeScale.title.monospacedDigit()).foregroundStyle(Theme.textPrimary)
+                            .textSelection(.enabled)
+                            .accessibilityLabel(t.number.isEmpty ? "Number not given" : "Caller \(t.number)")
+                        if !t.claimedIdentity.isEmpty {
+                            Text("Said they were: \(t.claimedIdentity)").font(TypeScale.body).foregroundStyle(Theme.textPrimary)
+                        }
+                        Text(t.detail).font(TypeScale.callout).foregroundStyle(Theme.textSecondary)
+                    } else {
+                        Text(t.title).font(TypeScale.headline).foregroundStyle(Theme.textPrimary)
+                        if !t.excerpt.isEmpty {
+                            Text("“\(t.excerpt)”").font(TypeScale.body).foregroundStyle(Theme.textPrimary)
+                                .lineLimit(4).textSelection(.enabled)
+                        }
+                        Text(t.detail).font(TypeScale.callout).foregroundStyle(Theme.textSecondary)
+                    }
                     if let c = dashboard.campaigns.first(where: { $0.id == t.campaignId }) {
                         Label("Part of “\(c.campaign.title)”", systemImage: "link").font(TypeScale.callout)
                             .foregroundStyle(Theme.textSecondary)
                     }
                     if let date = t.date {
                         Text(date, format: .relative(presentation: .named)).font(TypeScale.footnote).foregroundStyle(Theme.textSecondary)
+                    }
+                    if let incidentId = t.incidentId {
+                        NavigationLink { ReportDetailView(incidentId: incidentId) } label: {
+                            Label("Open full report", systemImage: "doc.text.magnifyingglass")
+                        }
+                        .buttonStyle(KavachButtonStyle(.secondary))
                     }
                 }
             }

@@ -16,6 +16,14 @@ How to judge the message itself:
   a claim to be a bank, agency or company, it is likely_scam.
 - Real banks, the IRS, Social Security, police and tech companies never ask for payment, codes or
   passwords by text or phone.
+- Unexpected offers of money, prizes, rewards, giveaways or "easy" returns are likely_scam, especially
+  with a link ("click this link and get a million dollars"). Too good to be true is the scam.
+- A link check of "low" only means the address itself isn't a known lookalike. It never makes a message
+  safe: scammers paste real company names and domains, hide links behind redirects, or bait you to click.
+  Judge what the message asks you to do.
+- sender_context tells you who sent it: a family contact ("known": true) or an unknown number
+  ("known": false). An unknown sender asking you to click, pay, claim or reply is more suspicious. A known
+  contact asking for money, codes or gift cards can still be a hacked account; don't call that safe.
 - Ordinary personal messages with no request for money, codes, links or personal details are safe.
 
 Rules for "reason" (one or two short, plain sentences; the person reads it):

@@ -8,7 +8,7 @@ import { recoveryStepsFor } from './recovery';
 
 export const QUESTION_IDS = ['q_identity', 'q_ask', 'q_shared', 'q_secrecy', 'q_help'] as const;
 /** Extra, optional answer keys: q_engaged ("no" when declined/blocked), q_summary (free text). */
-export const EXTRA_KEYS = ['q_engaged', 'q_summary'] as const;
+export const EXTRA_KEYS = ['q_engaged', 'q_summary', 'q_answered'] as const;
 export const SHARED_ITEMS = [
   'code', 'pin', 'password', 'card', 'gift_card', 'money', 'remote_app', 'personal_details', 'link', 'nothing',
 ] as const;
@@ -22,7 +22,7 @@ export type Answers = Partial<Record<string, string>>;
 export function computeSeverity(answers: Answers, shared: string[]): string {
   if (shared.some(s => CRITICAL_ITEMS.includes(s))) return 'critical';
   if (shared.some(s => HIGH_ITEMS.includes(s)) || answers.q_ask === 'agreed') return 'high';
-  if (answers.q_engaged === 'no') return 'low';
+  if (answers.q_engaged === 'no' || answers.q_answered === 'no') return 'low'; // declined, missed or blocked
   if (answers.q_shared !== undefined) {
     // Shared nothing. They engaged if they were asked for something or pressured.
     const engaged = answers.q_ask === 'yes' || answers.q_secrecy === 'yes' || answers.q_engaged === 'yes';
@@ -145,7 +145,9 @@ function runLevel(ctx: Ctx, inc: IncidentRow) {
     case 'high': {
       if (p) {
         messagePerson(ctx, p, 'reply',
-          `${app}: Be careful. This looks like a scam. You shared ${sharedWords(inc.shared_items)}, which scammers can use to try again or open accounts. Open ${app} for a few simple steps. We'll check in soon.`,
+          inc.shared_items.length
+            ? `${app}: Be careful. This looks like a scam. You shared ${sharedWords(inc.shared_items)}, which scammers can use to try again or open accounts. Open ${app} for a few simple steps. We'll check in soon.`
+            : `${app}: Be careful. This looks like a scam. You agreed to pay or call them back, so they may try again. Don't send anything, and call the company yourself on a number you trust. We'll check in soon.`,
           'normal', inc.id);
       }
       insertRecoverySteps(ctx, inc, false);
@@ -173,8 +175,14 @@ function runLevel(ctx: Ctx, inc: IncidentRow) {
       break;
     }
     case 'low': {
-      if (p) messagePerson(ctx, p, 'reply', `${app}: Nice work. Nothing was shared, so you're safe. We'll count it as a win in your weekly briefing.`, 'normal', inc.id);
-      if (inc.entry_point === 'report_swipe') countCaller(ctx, inc);
+      const missed = JSON.parse(inc.answers_json || '{}').q_answered === 'no';
+      if (p) {
+        messagePerson(ctx, p, 'reply', missed
+          ? `${app}: Good call not picking up. ${inc.caller_e164 ? "We've added this number to the community reports so others are warned. " : ''}If they left a voicemail or texted you, forward it to me and I'll check it.`
+          : `${app}: Nice work. Nothing was shared, so you're safe. We'll count it as a win in your weekly briefing.`, 'normal', inc.id);
+      }
+      // Low still counts reported numbers (spec 8: blocked or reported numbers are community reports).
+      countCaller(ctx, inc);
       break;
     }
   }

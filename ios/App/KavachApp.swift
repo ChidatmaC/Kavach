@@ -17,8 +17,10 @@ struct KavachApp: App {
                     model.startPolling()
                     await model.refreshNotificationStatus()
                     #if DEBUG
-                    if ProcessInfo.processInfo.environment["KAVACH_DEBUG_CALL_FOLLOWUP"] == "1" {
-                        CallFollowUpCenter.shared.debugShowPrompt()
+                    switch ProcessInfo.processInfo.environment["KAVACH_DEBUG_CALL_FOLLOWUP"] {
+                    case "1": CallFollowUpCenter.shared.debugShowPrompt()
+                    case "missed": CallFollowUpCenter.shared.debugShowPrompt(missed: true)
+                    default: break
                     }
                     #endif
                 }

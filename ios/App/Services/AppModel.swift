@@ -72,6 +72,8 @@ final class AppModel {
     var callerLabels: [CallerLabel] = []
     /// An incoming call ended recently and we haven't asked about it yet (Home card).
     var callFollowUpPending = false
+    /// The call behind that card was never connected (missed or declined): gentler wording.
+    var callFollowUpMissed = false
     /// nil until read; Home explains why notifications matter when they're off.
     var notificationStatus: UNAuthorizationStatus?
 
@@ -314,10 +316,16 @@ final class AppModel {
     /// Open reports whose questionnaire isn't finished (Home banner).
     var unfinishedReports: [ReportSummary] { ReportsList.unfinished(incidents) }
 
-    /// Where an interview for this incident starts: the first unanswered question.
+    /// Where an interview for this incident starts: the first unanswered question (call reports with
+    /// no answers start at "Did you answer the call?").
     func interviewStart(for incidentId: UInt64) -> Int {
         guard let inc = incidents.first(where: { $0.id == incidentId }) else { return 0 }
-        return ReportsList.firstUnanswered(inc.answers) ?? 0
+        return ReportsList.firstUnanswered(inc.answers, askAnswered: ReportsList.asksAnswered(inc)) ?? 0
+    }
+
+    /// Whether this incident's interview asks "Did you answer the call?" (reports about a call).
+    func asksAnswered(for incidentId: UInt64) -> Bool {
+        incidents.first(where: { $0.id == incidentId }).map(ReportsList.asksAnswered) ?? false
     }
 
     /// Number to report to the community when a report's interview is finished (reported calls only).

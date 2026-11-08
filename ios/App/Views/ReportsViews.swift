@@ -37,8 +37,8 @@ struct ReportRow: View {
     }
 
     private var resumeHint: String {
-        let q = (report.resumeIndex ?? 0) + 1
-        return "Continues at question \(q) of \(InterviewScript.questions.count)"
+        guard let q = report.resumeQuestion else { return "Shows your report" }
+        return "Continues at: \(q.prompt)"
     }
 
     private var content: some View {
@@ -55,8 +55,8 @@ struct ReportRow: View {
             }
             // One line when it fits; otherwise stacked (FlowLayout under-measured two wrapped pills here).
             ViewThatFits(in: .horizontal) {
-                HStack(spacing: Theme.Space.xs) { SeverityBadge(report.severity); statusPill }
-                VStack(alignment: .leading, spacing: Theme.Space.xs) { SeverityBadge(report.severity); statusPill }
+                HStack(spacing: Theme.Space.xs) { pills }
+                VStack(alignment: .leading, spacing: Theme.Space.xs) { pills }
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -70,11 +70,18 @@ struct ReportRow: View {
         return parts.joined(separator: " · ")
     }
 
+    /// "Missed call · Low" reads status first; otherwise the level leads.
+    @ViewBuilder private var pills: some View {
+        if report.isMissedCall { statusPill; SeverityBadge(report.severity) }
+        else { SeverityBadge(report.severity); statusPill }
+    }
+
     @ViewBuilder private var statusPill: some View {
         switch report.status {
         case .unfinished: StatusPill("Not finished", systemImage: "exclamationmark.circle", tone: .caution)
         case .open: StatusPill("Answered", systemImage: "checkmark", tone: .info)
         case .resolved: StatusPill("Done", systemImage: "checkmark.circle.fill", tone: .success)
+        case .missed: StatusPill("Missed call", systemImage: "phone.down", tone: .success)
         }
     }
 }
@@ -294,9 +301,12 @@ struct ReportCallButton: View {
 
 /// Home: an incoming call just ended ("Was that a scam call?").
 struct CallFollowUpCard: View {
+    @Environment(AppModel.self) private var model
+
     var body: some View {
-        StatusBanner(tone: .info, systemImage: "phone.arrow.down.left",
-                     title: CallFollowUpCopy.title, message: CallFollowUpCopy.body) {
+        let missed = model.callFollowUpMissed
+        StatusBanner(tone: .info, systemImage: missed ? "phone.down" : "phone.arrow.down.left",
+                     title: CallFollowUpCopy.title(missed: missed), message: CallFollowUpCopy.body(missed: missed)) {
             ViewThatFits(in: .horizontal) {
                 HStack(spacing: Theme.Space.s) { buttons }
                 VStack(spacing: Theme.Space.s) { buttons }
@@ -354,8 +364,10 @@ struct UnfinishedReportBanner: View {
     }
 
     private var detail: String {
-        let left = InterviewScript.questions.count - (report.resumeIndex ?? 0)
-        let questions = "\(left) question\(left == 1 ? "" : "s") left"
+        let left = report.questionsLeft
+        let questions = report.resumeQuestion?.id == InterviewScript.answeredQuestion.id
+            ? "Did you answer the call?"
+            : "\(left) question\(left == 1 ? "" : "s") left"
         return report.hasCaller ? "\(questions) · \(report.callerText)" : questions
     }
 }

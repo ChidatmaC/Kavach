@@ -47,7 +47,7 @@ public struct CallReport: Codable, Sendable, Equatable, Identifiable {
 
     /// Answers in contract order, so replay saves them the way the interview did.
     public var orderedAnswers: [(String, String)] {
-        let order = InterviewScript.questions.map(\.id) + ["q_engaged", "q_summary"]
+        let order = InterviewScript.allQuestionIds + ["q_engaged", "q_summary"]
         return answers.sorted { (order.firstIndex(of: $0.key) ?? 99, $0.key) < (order.firstIndex(of: $1.key) ?? 99, $1.key) }
             .map { ($0.key, $0.value) }
     }

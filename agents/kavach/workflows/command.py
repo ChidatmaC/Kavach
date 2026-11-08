@@ -410,7 +410,7 @@ async def run_command(run: Run, p: dict[str, Any]) -> dict[str, Any]:
             from .interview import QUESTIONS
 
             data["incident_id"] = incident_id
-            reply = clamp(f"{reply} Tell me what happened so we can protect you (1 of 5): {QUESTIONS['q_identity']}")
+            reply = clamp(f"{reply} Tell me what happened so we can protect you (1 of 5): {QUESTIONS['q_answered']}")
     if to and not p.get("_no_reply"):
         channel = p.get("reply_channel") or "imessage"
         await run.tools.call("reducer", {"name": "enqueue_outbox", "args": outbox_args(

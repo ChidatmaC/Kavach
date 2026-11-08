@@ -3,6 +3,8 @@ import SwiftUI
 
 /// Runs the shared interview for an incident, then shows the level the module set. Each answer is
 /// saved as it's given (`save_answer`), so a report left halfway resumes at `startIndex` later.
+/// Call reports start with "Did you answer the call?"; "No" ends the interview (the module sets Low)
+/// and shows the missed-call result.
 struct InterviewFlowView: View {
     @Environment(AppModel.self) private var model
     @Environment(\.displayPreferences) private var prefs
@@ -13,11 +15,15 @@ struct InterviewFlowView: View {
     var reportNumber = ""
     var title = "Tell us what happened"
     @State private var finished = Self.debugFinished
+    @State private var missed = Self.debugMissed
     @State private var severity: Severity = .unrated
+    @State private var forwardText = ""
 
     var body: some View {
         Group {
-            if finished {
+            if finished && missed {
+                missedResult
+            } else if finished {
                 result
             } else if startIndex == nil && !model.incidents.contains(where: { $0.id == incidentId }) {
                 // Opened before the first poll (cold launch from a notification): wait for the answers
@@ -27,9 +33,11 @@ struct InterviewFlowView: View {
                     .kavachScreenBackground()
                     .task { await model.refresh() }
             } else {
-                InterviewView(title: title, startIndex: startIndex ?? model.interviewStart(for: incidentId), save: { qid, answer in
+                InterviewView(title: title, askAnswered: model.asksAnswered(for: incidentId),
+                              startIndex: startIndex ?? model.interviewStart(for: incidentId), save: { qid, answer in
                     guard let api = model.api else { throw KavachError.notRegistered }
                     try await api.saveAnswer(incidentId: incidentId, questionId: qid, answer: answer)
+                    missed = InterviewScript.endsInterview(questionId: qid, answer: answer)
                 }, onDone: {
                     finished = true
                     Task {
@@ -107,14 +115,56 @@ struct InterviewFlowView: View {
         .kavachScreenBackground()
         .navigationTitle("Thank you")
         #if DEBUG
-        .task { if ProcessInfo.processInfo.environment["KAVACH_DEBUG_RESULT"] == "1" { await loadSeverity() } }
+        .task { if Self.debugFinished { await loadSeverity() } }
         #endif
         .navigationBarTitleDisplayMode(.inline)
         .navigationBarBackButtonHidden()
     }
 
+    /// "No, I missed it or declined": short and calm. The number still counts as a community report.
+    private var missedResult: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: Theme.Space.l) {
+                VStack(alignment: .leading, spacing: Theme.Space.s) {
+                    SeverityBadge(severity == .unrated ? .low : severity)
+                    Text(MissedCallCopy.headline).font(TypeScale.display).foregroundStyle(Theme.textPrimary)
+                        .accessibilityAddTraits(.isHeader)
+                    Text(missedDetail).font(.title3).foregroundStyle(Theme.textPrimary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                Card {
+                    Text("Got a voicemail or text from them?").font(TypeScale.headline).foregroundStyle(Theme.textPrimary)
+                        .accessibilityAddTraits(.isHeader)
+                    TextField("Paste it here", text: $forwardText, axis: .vertical)
+                        .font(TypeScale.body)
+                        .lineLimit(2...5)
+                        .padding(Theme.Space.s)
+                        .background(Theme.background, in: RoundedRectangle(cornerRadius: Theme.Radius.m, style: .continuous))
+                        .overlay(RoundedRectangle(cornerRadius: Theme.Radius.m, style: .continuous)
+                            .strokeBorder(Theme.borderStrong, lineWidth: 1))
+                        .accessibilityLabel("The voicemail or text they sent")
+                    ForwardByTextButton(message: forwardText, from: reportNumber.isEmpty ? "" : PhoneNumbers.formatted(reportNumber),
+                                        title: "Text it to \(model.config.displayName)")
+                }
+                Button("Done") { model.route = nil }
+                    .buttonStyle(KavachButtonStyle(.primary))
+            }
+            .padding(Theme.Space.m)
+        }
+        .scrollDismissesKeyboard(.interactively)
+        .kavachScreenBackground()
+        .navigationTitle("Thank you")
+        .navigationBarTitleDisplayMode(.inline)
+        .navigationBarBackButtonHidden()
+    }
+
+    private var missedDetail: String {
+        MissedCallCopy.detail(numberGiven: !reportNumber.isEmpty, appName: model.config.displayName)
+    }
+
     private var headline: String {
-        switch severity {
+        if missed { return MissedCallCopy.headline }
+        return switch severity {
         case .critical: "Act now"
         case .high: "Be careful"
         case .medium: "Good job not sharing"
@@ -124,7 +174,8 @@ struct InterviewFlowView: View {
     }
 
     private var detail: String {
-        switch severity {
+        if missed { return missedDetail }
+        return switch severity {
         case .critical: "This is serious, but you can fix a lot of it right now. Your family is being told."
         case .high: "Some of what you shared could be misused. Follow the steps, and your family will hear from us."
         case .medium: "This looks like a scam. You didn't share anything, which is exactly right."
@@ -161,7 +212,16 @@ extension InterviewFlowView {
     /// DEBUG (screenshots): `KAVACH_DEBUG_RESULT=1` opens straight on the result.
     static var debugFinished: Bool {
         #if DEBUG
-        ProcessInfo.processInfo.environment["KAVACH_DEBUG_RESULT"] == "1"
+        ["1", "missed"].contains(ProcessInfo.processInfo.environment["KAVACH_DEBUG_RESULT"])
+        #else
+        false
+        #endif
+    }
+
+    /// DEBUG (screenshots): `KAVACH_DEBUG_RESULT=missed` opens on the missed-call result.
+    static var debugMissed: Bool {
+        #if DEBUG
+        ProcessInfo.processInfo.environment["KAVACH_DEBUG_RESULT"] == "missed"
         #else
         false
         #endif

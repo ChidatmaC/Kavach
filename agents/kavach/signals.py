@@ -168,7 +168,7 @@ def claimed_identity(text: str) -> str:
 TACTIC_PATTERNS: dict[str, re.Pattern[str]] = {
     "urgency": re.compile(r"(?i)\b(urgent|immediately|right away|right now|today|tonight|within \d+ ?(hours?|minutes?)|asap|act now|final notice|last chance|expires?|hurry)\b"),
     "fee_threat": re.compile(r"(?i)\b(late fee|penalt(y|ies)|fine|suspend(ed)?|lock(ed)?|clos(e|ed|ure)|avoid (a|extra|additional)|outstanding|unpaid|overdue|balance due)\b"),
-    "payment_link": re.compile(r"(?i)\b(pay (now|here|today|online|at)|click (here|the link|below)|tap (here|the link)|visit|follow the link|update (your )?(payment|billing))\b"),
+    "payment_link": re.compile(r"(?i)\b(pay (now|here|today|online|at)|(click|tap|press|open|visit|go to|follow)( on)? (here|below|(this|the|my|that) (link|site|website|page|url))|update (your )?(payment|billing))\b"),
     "code_request": re.compile(r"(?i)\b(code|otp|passcode|verification number|pin)\b.{0,40}\b(read|send|tell|give|share|confirm|verify|text)\b|\b(read|send|tell|give|share|confirm)\b.{0,30}\b(code|otp|passcode|pin)\b"),
     "gift_card_request": re.compile(r"(?i)\b(gift ?cards?|itunes|google play|steam card|apple card balance|ebay card)\b"),
     "secrecy": re.compile(r"(?i)\b(don'?t tell|do not tell|keep (this|it) (a )?secret|between us|don'?t let .{1,20} know|not tell (mom|dad|anyone))\b"),
@@ -177,7 +177,8 @@ TACTIC_PATTERNS: dict[str, re.Pattern[str]] = {
     "recovery_offer": re.compile(r"(?i)\b(recover(ed|y)?|refund|reclaim|located the (money|funds)|lost (money|funds)|release (fee|your))\b"),
     "upfront_fee": re.compile(r"(?i)\b(processing fee|release fee|small fee|upfront|deposit|activation fee|transfer fee)\b"),
     "job_offer": re.compile(r"(?i)\b(recruit(er|ing)|remote (job|role|position|work)|part[- ]time|per day|\$\d+ ?(/|a|per) ?(day|hour)|hiring)\b"),
-    "prize": re.compile(r"(?i)\b(you('ve| have)? won|winner|prize|lottery|sweepstakes|claim your (reward|prize))\b"),
+    # Windfalls: prizes, free money, giveaways, "get a million dollars".
+    "prize": re.compile(r"(?i)\b(you('ve| have)? (won|been selected|been chosen)|winner|prize|lottery|sweepstakes|jackpot|giveaway|claim your (reward|prize|money|cash|gift)|free (money|cash|iphone|gift card)|(get|win|receive|earn|make|claim)( a| an| your)? (free )?(million|billion|thousand|hundred|\$\s?[\d,]+k?)( dollars?)?|(million|thousand) dollars|cash reward|easy money|double your money|guaranteed (returns?|profit))\b"),
     "remote_access": re.compile(r"(?i)\b(anydesk|teamviewer|remote access|install (this|the) app|screen ?share)\b"),
     "money_request": re.compile(r"(?i)\b(send (me |us |him |her |them )?(all |some )?(of )?(your |the |my )?(money|cash|funds|savings)|(transfer|move|wire) (the |your |all )?(money|funds|savings)|wire|bail|zelle|venmo|cash ?app|paypal me|bitcoin|crypto|western union|moneygram|need \$?\d+|lend me|loan me|pay (a|the|my) bill|pay (us|me|him|her)|you owe|pay (today|now|immediately|right away|the fine|the fee|back taxes|what you owe))\b"),
     "legal_threat": re.compile(r"(?i)\b(arrest(ed)?|warrant|lawsuit|sue you|deport(ed|ation)?|jail time|suspend(ed)? your (social|ssn|license)|legal action)\b"),
@@ -191,6 +192,9 @@ TACTIC_PATTERNS: dict[str, re.Pattern[str]] = {
 _GIFT_CARD_ASK = re.compile(r"(?i)\b(buy|get|send|purchase|pick up|grab|scratch|read|text|photo|picture|pay (with|in|using))\b.{0,40}\b(gift ?cards?|itunes|google play|apple cards?|steam cards?|ebay cards?)\b|\b(gift ?cards?|itunes|google play|steam cards?)\b.{0,40}\b(numbers?|codes?|pins?|back of)\b")
 _MONEY_PRESSURE = {"org_impersonation", "impersonation", "urgency", "secrecy", "new_number", "family_emergency",
                    "upfront_fee", "fee_threat", "legal_threat"}
+
+
+_HAS_LINK = re.compile(r"(?i)\b(https?://|www\.)|\b[a-z0-9-]+\.(com|net|org|info|top|xyz|io|co|site|online|link|click|shop|me|us|app)\b")
 
 
 def risk_floor(tactics: list[str], text: str) -> tuple[str, str]:
@@ -208,6 +212,8 @@ def risk_floor(tactics: list[str], text: str) -> tuple[str, str]:
         return "likely_scam", "money_pressure"
     if "recovery_offer" in t and "upfront_fee" in t:
         return "likely_scam", "recovery_fee"
+    if "prize" in t and ("payment_link" in t or _HAS_LINK.search(text or "")):
+        return "likely_scam", "prize_link"
     if t & {"money_request", "org_impersonation", "family_emergency", "new_number",
              "upfront_fee", "prize"}:
         return "suspicious", "money_or_impersonation"

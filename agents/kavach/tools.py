@@ -114,7 +114,15 @@ async def _sql(db: Stdb, a: dict) -> list[dict]:
 
 
 async def _search_community(db: Stdb, a: dict) -> community.SearchResult:
-    return await community.search_community(db, a.get("text", ""), a.get("sender_e164", ""), a.get("extra_context", ""))
+    res = await community.search_community(db, a.get("text", ""), a.get("sender_e164", ""), a.get("extra_context", ""))
+    sender, person_id = res.signals.sender_e164, int(a.get("person_id") or 0)
+    if sender and person_id:
+        # Sender context: is this one of the person's family contacts, or an unknown number?
+        rows = await db.sql(f"SELECT * FROM svc_contact WHERE person_id = {person_id}")
+        match = next((c for c in rows or [] if c.get("phone_e164") == sender), None)
+        res.sender_context = ({"known": True, "name": match.get("name"), "relationship": match.get("relationship")}
+                              if match else {"known": False})
+    return res
 
 
 async def _lookup_community(db: Stdb, a: dict) -> dict:

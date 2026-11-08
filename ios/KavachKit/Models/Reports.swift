@@ -32,12 +32,15 @@ public struct ReportSummary: Sendable, Equatable, Identifiable {
         /// Answered; steps may still be open.
         case open
         case resolved
+        /// A call the person didn't answer (`q_answered` = no): finished, Low, number still reported.
+        case missed
 
         public var label: String {
             switch self {
             case .unfinished: "Not finished"
             case .open: "Answered"
             case .resolved: "Done"
+            case .missed: "Missed call"
             }
         }
     }
@@ -51,10 +54,29 @@ public struct ReportSummary: Sendable, Equatable, Identifiable {
     public let date: Date?
     public let severity: Severity
     public let status: Status
-    /// Index of the first unanswered interview question (0…4); nil when every question is answered.
+    /// Whether this report's interview starts with "Did you answer the call?" (call reports).
+    public let asksAnswered: Bool
+    /// Index into `InterviewScript.questions(askAnswered:)` of the first unanswered question; nil when
+    /// the interview is complete (every question answered, or a missed call).
     public let resumeIndex: Int?
 
     public var isUnfinished: Bool { status == .unfinished }
+    public var isMissedCall: Bool { status == .missed }
+
+    /// The question the interview resumes at, if it isn't complete.
+    public var resumeQuestion: InterviewQuestion? {
+        resumeIndex.map { InterviewScript.questions(askAnswered: asksAnswered)[$0] }
+    }
+
+    /// Core questions still to answer ("Did you answer the call?" isn't counted).
+    public var questionsLeft: Int {
+        guard let q = resumeQuestion else { return 0 }
+        let core = InterviewScript.questions
+        return core.count - (core.firstIndex { $0.id == q.id } ?? 0)
+    }
+
+    /// One line for the reports list: "Missed call · Low", "Answered · High"…
+    public var listLabel: String { "\(status.label) · \(severity.label)" }
 
     public init(_ inc: Incident) {
         id = inc.id
@@ -65,8 +87,10 @@ public struct ReportSummary: Sendable, Equatable, Identifiable {
         date = inc.createdAt.date
         severity = inc.severityLevel
         let answers = inc.answers
-        resumeIndex = ReportsList.firstUnanswered(answers)
-        if inc.isResolved { status = .resolved }
+        asksAnswered = ReportsList.asksAnswered(inc)
+        resumeIndex = ReportsList.firstUnanswered(answers, askAnswered: asksAnswered)
+        if ReportsList.isMissedCall(answers) { status = .missed }
+        else if inc.isResolved { status = .resolved }
         else if answers["q_shared"] == nil { status = .unfinished }
         else { status = .open }
     }
@@ -75,8 +99,12 @@ public struct ReportSummary: Sendable, Equatable, Identifiable {
     public var accessibilityText: String {
         var parts = [hasCaller ? "Call from \(callerText)" : "Call, number not given", source.label]
         if let date { parts.append(date.formatted(date: .abbreviated, time: .shortened)) }
-        parts.append("Level: \(severity.label)")
-        parts.append(status.label)
+        if isMissedCall {
+            parts.append("Missed call. Level: \(severity.label)")
+        } else {
+            parts.append("Level: \(severity.label)")
+            parts.append(status.label)
+        }
         return parts.joined(separator: ". ")
     }
 }
@@ -104,9 +132,29 @@ public enum ReportsList {
         }
     }
 
-    /// First interview question (contract order) without an answer, or nil when all five are answered.
-    public static func firstUnanswered(_ answers: [String: String]) -> Int? {
-        InterviewScript.questions.firstIndex { (answers[$0.id] ?? "").isEmpty }
+    /// Reports about a call (in-app Report a call and Recents, both `report_swipe`) start with
+    /// "Did you answer the call?". Call Companion reports were answered by definition.
+    public static func asksAnswered(_ inc: Incident) -> Bool {
+        inc.entryPoint == ReportDraft.entryPoint
+    }
+
+    /// The person said they didn't answer the call: the interview is complete at Low.
+    public static func isMissedCall(_ answers: [String: String]) -> Bool {
+        answers[InterviewScript.answeredQuestion.id] == "no"
+    }
+
+    /// Index (into `InterviewScript.questions(askAnswered:)`) of the first question to ask, or nil when
+    /// the interview is complete. Call reports with no answers start at "Did you answer the call?";
+    /// a missed call is complete; older call reports that already have core answers but no
+    /// `q_answered` skip it and resume at their first unanswered core question.
+    public static func firstUnanswered(_ answers: [String: String], askAnswered: Bool = false) -> Int? {
+        let has: (String) -> Bool = { !(answers[$0] ?? "").isEmpty }
+        let core = InterviewScript.questions.firstIndex { !has($0.id) }
+        guard askAnswered else { return core }
+        if isMissedCall(answers) { return nil }
+        let anyCore = InterviewScript.questions.contains { has($0.id) }
+        if !has(InterviewScript.answeredQuestion.id) && !anyCore { return 0 }
+        return core.map { $0 + 1 }
     }
 }
 
@@ -183,6 +231,7 @@ public struct ReportAnswerLine: Sendable, Equatable, Identifiable {
 public extension ReportsList {
     /// Short titles for the five questions (summary screen).
     static let answerTitles: [String: String] = [
+        "q_answered": "Did you answer the call",
         "q_identity": "Who they said they were",
         "q_ask": "What they asked for",
         "q_shared": "What you shared",
@@ -193,7 +242,7 @@ public extension ReportsList {
     /// Answered questions in interview order, with wire values turned back into the words the
     /// person chose. Unanswered questions are left out.
     static func answerLines(_ answers: [String: String]) -> [ReportAnswerLine] {
-        InterviewScript.questions.compactMap { q in
+        InterviewScript.questions(askAnswered: true).compactMap { q in
             guard let wire = answers[q.id], !wire.isEmpty else { return nil }
             return ReportAnswerLine(questionId: q.id, title: answerTitles[q.id] ?? q.prompt, answer: answerText(q, wire))
         }
@@ -232,7 +281,7 @@ public struct ReportSection: Sendable, Equatable, Identifiable {
         switch kind {
         case .needsAnswers: "Finish these so we can tell you what to do next."
         case .answered: "We have your answers. Some steps may still be open."
-        case .done: "Closed reports."
+        case .done: "Closed reports, and calls you didn't pick up."
         }
     }
 
@@ -247,7 +296,7 @@ public struct ReportSection: Sendable, Equatable, Identifiable {
     public static func make(_ reports: [ReportSummary]) -> [ReportSection] {
         let sorted = reports.sorted { ($0.date ?? .distantPast) > ($1.date ?? .distantPast) }
         let byKind: [Kind: [ReportSummary]] = Dictionary(grouping: sorted) { r in
-            switch r.status { case .unfinished: .needsAnswers; case .open: .answered; case .resolved: .done }
+            switch r.status { case .unfinished: .needsAnswers; case .open: .answered; case .resolved, .missed: .done }
         }
         return Kind.allCases.compactMap { k in
             guard let items = byKind[k], !items.isEmpty else { return nil }

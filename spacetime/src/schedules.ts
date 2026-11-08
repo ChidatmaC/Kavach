@@ -3,7 +3,7 @@ import { ScheduleAt } from 'spacetimedb';
 import spacetimedb, {
   agentJob, agentTaskTimeoutJob, alertDeadlineJob, briefingTick, questionnaireReminderJob, checkinJob, purgeTick, verificationDeadlineJob,
 } from './tables';
-import { ZERO_TS, at, appName, messagePerson, queueAgent, queueMessage, replyWindow, timers, tsAfter, withReplyPrompt } from './lib';
+import { ZERO_TS, at, appName, messagePerson, startedInApp, queueAgent, queueMessage, replyWindow, timers, tsAfter, withReplyPrompt } from './lib';
 import { AGENT_TASK_BUDGET, failAgentTask } from './task_fallback';
 import { purgeSignIn } from './signin';
 
@@ -162,6 +162,7 @@ export const agent_task_timeout = spacetimedb.reducer(
 
 // Same wording as the agent's text interview, so a reply by text continues the questionnaire.
 const QUESTION_TEXT: Record<string, string> = {
+  q_answered: 'Did you answer the call? Reply yes or no.',
   q_identity: 'Who did they say they were? For example: your bank, your grandson, the IRS, or a company.',
   q_ask: 'Did they ask for money, codes, gift cards or personal details? Reply yes or no, or "agreed" if you agreed to pay or call them back.',
   q_shared: 'Did you share or send anything? Pick any that apply: code, PIN, password, card details, gift card numbers, money, an app install, personal details, tapped a link, or nothing.',
@@ -183,13 +184,16 @@ export const questionnaire_reminder = spacetimedb.reducer(
     const p = ctx.db.person.id.find(inc.person_id);
     if (!p) return;
     const answers = JSON.parse(inc.answers_json || '{}') as Record<string, string>;
-    const next = QUESTION_ORDER.find(q => answers[q] === undefined) ?? 'q_shared';
-    const n = QUESTION_ORDER.indexOf(next) + 1;
+    // Call reports start with "Did you answer the call?" (a missed call ends the questions).
+    const askAnswered = !!inc.caller_e164 && answers.q_answered === undefined && !QUESTION_ORDER.some(q => answers[q] !== undefined);
+    const next = askAnswered ? 'q_answered' : QUESTION_ORDER.find(q => answers[q] === undefined) ?? 'q_shared';
+    const n = askAnswered ? 1 : QUESTION_ORDER.indexOf(next) + 1;
     const about = inc.caller_e164 ? `the call from ${inc.caller_e164}` : 'what happened';
     const lead = job.attempt === 1
       ? `You started a report about ${about}. Let's finish it, it takes 2 minutes and helps protect you and others.`
       : `Your report about ${about} still isn't finished. Please answer so we can tell you what to do next.`;
-    messagePerson(ctx, p, 'checkin', `${appName(ctx)}: ${lead} Reply here or open ${appName(ctx)} (${n} of 5): ${QUESTION_TEXT[next]}`.slice(0, 600),
+    const where = startedInApp(ctx, inc.id) ? `Open ${appName(ctx)} to finish` : `Reply here or open ${appName(ctx)}`;
+    messagePerson(ctx, p, 'checkin', `${appName(ctx)}: ${lead} ${where} (${n} of 5): ${QUESTION_TEXT[next]}`.slice(0, 600),
       'normal', inc.id);
     if (job.attempt === 1) {
       ctx.db.questionnaireReminderJob.insert({

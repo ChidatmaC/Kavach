@@ -66,8 +66,8 @@ final class CallFollowUpCenter: NSObject, CXCallObserverDelegate {
     }
 
     #if DEBUG
-    func debugShowPrompt() {
-        _ = tracker.observe(.init(uuid: UUID(), isOutgoing: false, hasConnected: true, hasEnded: true), companionOpen: false)
+    func debugShowPrompt(missed: Bool = false) {
+        _ = tracker.observe(.init(uuid: UUID(), isOutgoing: false, hasConnected: !missed, hasEnded: true), companionOpen: false)
         publish()
     }
     #endif
@@ -102,12 +102,14 @@ final class CallFollowUpCenter: NSObject, CXCallObserverDelegate {
     private func publish() {
         let show = tracker.showsPrompt()
         if AppModel.shared.callFollowUpPending != show { AppModel.shared.callFollowUpPending = show }
+        let missed = show && tracker.pendingWasMissed
+        if AppModel.shared.callFollowUpMissed != missed { AppModel.shared.callFollowUpMissed = missed }
     }
 
     private func postNotification() {
         let content = UNMutableNotificationContent()
-        content.title = CallFollowUpCopy.title
-        content.body = CallFollowUpCopy.body
+        content.title = CallFollowUpCopy.title(missed: tracker.pendingWasMissed)
+        content.body = CallFollowUpCopy.body(missed: tracker.pendingWasMissed)
         content.sound = .default
         content.categoryIdentifier = CallFollowUpCopy.category
         content.interruptionLevel = .active

@@ -159,3 +159,25 @@ export const admin_set_report = spacetimedb.reducer(
     });
   }
 );
+
+/**
+ * Removes a number/link/phrase from the community scam register: its report, the votes behind it,
+ * and evidence rows naming it, so it no longer labels calls or raises verdicts. Incidents stay
+ * (they are people's own history).
+ */
+export const admin_delete_report = spacetimedb.reducer(
+  { kind: t.string(), value: t.string() },
+  (ctx, a) => {
+    requireService(ctx, 'admin');
+    oneOf('kind', a.kind, ['number', 'link', 'phrase']);
+    const value = normalizeValue(a.kind, a.value);
+    for (const r of [...ctx.db.communityReport.by_kind_value.filter([a.kind, value])]) {
+      for (const v of [...ctx.db.reportVote.iter()].filter(v => v.report_id === r.id)) ctx.db.reportVote.id.delete(v.id);
+      ctx.db.communityReport.id.delete(r.id);
+    }
+    for (const e of [...ctx.db.reportEvidence.iter()]) {
+      const names = a.kind === 'number' ? e.sender_e164 === value : a.kind === 'link' ? e.links.includes(value) : false;
+      if (names) ctx.db.reportEvidence.id.delete(e.id);
+    }
+  }
+);

@@ -49,6 +49,12 @@ public struct CallFollowUpTracker: Codable, Sendable, Equatable {
     var handled: [UUID: Date] = [:]
     /// When the call we're asking about ended (drives the Home card). nil = nothing to ask.
     public private(set) var pendingPromptAt: Date?
+    /// Whether that call was ever connected (false = missed or declined). Optional so trackers saved
+    /// before this existed still decode; nil reads as answered.
+    public private(set) var pendingConnected: Bool?
+
+    /// The call we're asking about was never connected (missed or declined).
+    public var pendingWasMissed: Bool { pendingConnected == false }
 
     public static let promptWindow: TimeInterval = 30 * 60
 
@@ -61,7 +67,7 @@ public struct CallFollowUpTracker: Codable, Sendable, Equatable {
     }
 
     /// The person answered (Report it / It was fine), or a report was started.
-    public mutating func clearPrompt() { pendingPromptAt = nil }
+    public mutating func clearPrompt() { pendingPromptAt = nil; pendingConnected = nil }
 
     /// A `callChanged` event from the observer while the app is alive.
     public mutating func observe(_ call: Call, companionOpen: Bool, now: Date = Date()) -> Decision {
@@ -77,7 +83,9 @@ public struct CallFollowUpTracker: Codable, Sendable, Equatable {
         // Ended. Use what we saw before; a call first seen as ended was still ringing a moment ago.
         let seen = live.removeValue(forKey: call.uuid)
         let incoming = (seen?.incoming ?? true) && !call.isOutgoing
-        return finish(call.uuid, incoming: incoming, companionOpen: companionOpen, endedAt: now, notify: true)
+        let connected = (seen?.connected ?? false) || call.hasConnected
+        return finish(call.uuid, incoming: incoming, connected: connected, companionOpen: companionOpen,
+                      endedAt: now, notify: true)
     }
 
     /// The app became active: calls we were tracking that are no longer live ended while suspended.
@@ -92,7 +100,8 @@ public struct CallFollowUpTracker: Codable, Sendable, Equatable {
                 handled[uuid] = now
                 continue
             }
-            let d = finish(uuid, incoming: seen.incoming, companionOpen: companionOpen, endedAt: now, notify: false)
+            let d = finish(uuid, incoming: seen.incoming, connected: seen.connected, companionOpen: companionOpen,
+                           endedAt: now, notify: false)
             if d != .none { decision = d }
         }
         // Calls still going on: refresh "last seen" so a long call isn't mistaken for an old one.
@@ -105,11 +114,13 @@ public struct CallFollowUpTracker: Codable, Sendable, Equatable {
         for k in live.keys { live[k]?.lastSeen = now }
     }
 
-    private mutating func finish(_ uuid: UUID, incoming: Bool, companionOpen: Bool, endedAt: Date, notify: Bool) -> Decision {
+    private mutating func finish(_ uuid: UUID, incoming: Bool, connected: Bool, companionOpen: Bool, endedAt: Date,
+                                 notify: Bool) -> Decision {
         guard incoming, handled[uuid] == nil else { return .none }
         handled[uuid] = endedAt
         if companionOpen { return .companionHandles }
         pendingPromptAt = endedAt
+        pendingConnected = connected
         return notify ? .notify : .prompt
     }
 
@@ -117,7 +128,7 @@ public struct CallFollowUpTracker: Codable, Sendable, Equatable {
     private mutating func prune(now: Date) {
         handled = handled.filter { now.timeIntervalSince($0.value) < 86_400 }
         live = live.filter { now.timeIntervalSince($0.value.lastSeen) < 12 * 3600 }
-        if let at = pendingPromptAt, now.timeIntervalSince(at) > Self.promptWindow { pendingPromptAt = nil }
+        if let at = pendingPromptAt, now.timeIntervalSince(at) > Self.promptWindow { clearPrompt() }
     }
 
     // MARK: Persistence (app-only UserDefaults)
@@ -140,6 +151,12 @@ public enum CallFollowUpCopy {
     public static let fineAction = "CALL_FOLLOWUP_FINE"
     public static let title = "Was that a scam call?"
     public static let body = "Report it in 2 minutes to protect you and your family."
+    /// A call that was never connected (missed or declined).
+    public static let missedTitle = "Missed a call from an unknown number?"
+    public static let missedBody = "If it looked like a scam, report it so others are warned."
+
+    public static func title(missed: Bool) -> String { missed ? missedTitle : title }
+    public static func body(missed: Bool) -> String { missed ? missedBody : body }
     public static let reportLabel = "Report it"
     public static let fineLabel = "It was fine"
 }

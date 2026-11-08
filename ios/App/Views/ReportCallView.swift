@@ -4,8 +4,9 @@ import SwiftUI
 /// Report a call, step 1 of 2: the caller's number (iOS never tells apps who called). Shows what the
 /// community knows about the number, then opens the incident (`open_incident`, entry `report_swipe`,
 /// deterministic request key) so it exists even if the person stops halfway, and runs the shared
-/// interview (step 2), saving each answer as it goes. The last answer files the number
-/// (`report_number`) and shows the module's result.
+/// interview (step 2: "Did you answer the call?", then the 5 questions if they did), saving each answer
+/// as it goes. The last answer (or "No, I missed it") files the number (`report_number`) and shows the
+/// module's result.
 struct ReportCallView: View {
     @Environment(AppModel.self) private var model
     @Environment(\.dismiss) private var dismiss
@@ -53,7 +54,7 @@ struct ReportCallView: View {
                     }
                     .buttonStyle(KavachButtonStyle(.primary))
                     .disabled(e164 == nil || starting)
-                    .accessibilityHint("Then answer 5 short questions")
+                    .accessibilityHint("Then tell us if you answered, and a few short questions")
 
                     Button("I don't know the number") { start(callerE164: "") }
                         .buttonStyle(KavachButtonStyle(.secondary))

@@ -170,7 +170,8 @@ async def run_scam_check(run: Run, p: dict[str, Any], *, queue_reply: bool = Tru
         raise NotFound("unknown person")
     run.fields["person_id"] = person_id
 
-    search: SearchResult = await run.tools.call("search_community", {"text": text, "sender_e164": sender})
+    search: SearchResult = await run.tools.call("search_community", {"text": text, "sender_e164": sender,
+                                                                       "person_id": person_id})
     sig = search.signals
     links = await run.tools.call("check_link", {"urls": sig.urls}) if sig.urls else []
 
@@ -268,6 +269,8 @@ async def classify(run: Run, text: str, search: SearchResult, links: list[dict],
         "links": links,
         "community_evidence": search.evidence_for_model(),
         "community_floor": search.floor,
+        # Who sent it (from a "From:" line, the app, or the texting number): family contact or unknown.
+        "sender_context": search.sender_context or {"known": None, "note": "sender not given"},
     }
     if examples:
         # Past messages whose correct verdict was confirmed (by people or outcomes). Model-only context.

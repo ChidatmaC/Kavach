@@ -208,7 +208,10 @@ final class ReportsListTests: XCTestCase {
         let rows = ReportsList.make([partial, answered, resolved])
         let byId = Dictionary(uniqueKeysWithValues: rows.map { ($0.id, $0) })
         XCTAssertEqual(byId[1]?.status, .unfinished)
-        XCTAssertEqual(byId[1]?.resumeIndex, 2)
+        // Call report: index into [q_answered] + the five questions, so q_shared is 3.
+        XCTAssertEqual(byId[1]?.resumeIndex, 3)
+        XCTAssertEqual(byId[1]?.resumeQuestion?.id, "q_shared")
+        XCTAssertEqual(byId[1]?.questionsLeft, 3)
         XCTAssertEqual(byId[2]?.status, .open)
         XCTAssertEqual(byId[2]?.severity, .low)
         XCTAssertNil(byId[2]?.resumeIndex)
@@ -286,14 +289,22 @@ final class ReportFlowLiveTests: XCTestCase {
         XCTAssertEqual(inc.entryPoint, "report_swipe")
         XCTAssertEqual(inc.callerE164, caller)
 
-        // Quit after two answers: the list shows it unfinished, resuming at question 3.
+        // Before any answer: a call report resumes at "Did you answer the call?".
+        var fresh = try await api.myIncidents()
+        XCTAssertEqual(ReportsList.make(fresh).first { $0.id == inc.id }?.resumeQuestion?.id, "q_answered")
+        try await api.saveAnswer(incidentId: inc.id, questionId: "q_answered", answer: "yes")
+        fresh = try await api.myIncidents()
+        XCTAssertEqual(ReportsList.make(fresh).first { $0.id == inc.id }?.resumeQuestion?.id, "q_identity")
+
+        // Quit after two answers: the list shows it unfinished, resuming at q_shared.
         try await api.saveAnswer(incidentId: inc.id, questionId: "q_identity", answer: "My bank")
         try await api.saveAnswer(incidentId: inc.id, questionId: "q_ask", answer: "yes")
         var mine = try await api.myIncidents()
         XCTAssertEqual(mine.filter { $0.requestKey == draft.requestKey }.count, 1)
         var row = try XCTUnwrap(ReportsList.make(mine).first { $0.id == inc.id })
         XCTAssertEqual(row.status, .unfinished)
-        XCTAssertEqual(row.resumeIndex, 2)
+        XCTAssertEqual(row.resumeIndex, 3)
+        XCTAssertEqual(row.resumeQuestion?.id, "q_shared")
         XCTAssertEqual(row.source, .app)
 
         for (q, a) in [("q_shared", "nothing"), ("q_secrecy", "yes"), ("q_help", "no")] {
@@ -305,5 +316,162 @@ final class ReportFlowLiveTests: XCTestCase {
         XCTAssertEqual(row.status, .open)
         XCTAssertNil(row.resumeIndex)
         XCTAssertNotEqual(row.severity, .unrated, "the module rated it")
+    }
+}
+
+// MARK: Missed or declined calls ("Did you answer the call?")
+
+final class MissedCallTests: XCTestCase {
+    func testCallReportsAskAnsweredFirstOthersDont() {
+        XCTAssertEqual(InterviewScript.questions(askAnswered: true).map(\.id),
+                       ["q_answered", "q_identity", "q_ask", "q_shared", "q_secrecy", "q_help"])
+        XCTAssertEqual(InterviewScript.questions(askAnswered: false).map(\.id),
+                       ["q_identity", "q_ask", "q_shared", "q_secrecy", "q_help"])
+        XCTAssertEqual(InterviewScript.answeredQuestion.prompt, "Did you answer the call?")
+        guard case .single(let opts) = InterviewScript.answeredQuestion.kind else { return XCTFail("single choice") }
+        XCTAssertEqual(opts.map(\.value), ["yes", "no"])
+        XCTAssertEqual(opts.map(\.label), ["Yes, I answered", "No, I missed it or declined"])
+        XCTAssertTrue(ReportsList.asksAnswered(incident(1, entry: "report_swipe")))
+        XCTAssertFalse(ReportsList.asksAnswered(incident(2, entry: "companion")))
+        XCTAssertFalse(ReportsList.asksAnswered(incident(3, entry: "app")))
+    }
+
+    func testNoEndsTheInterviewYesContinues() {
+        XCTAssertTrue(InterviewScript.endsInterview(questionId: "q_answered", answer: "no"))
+        XCTAssertFalse(InterviewScript.endsInterview(questionId: "q_answered", answer: "yes"))
+        XCTAssertFalse(InterviewScript.endsInterview(questionId: "q_ask", answer: "no"))
+        XCTAssertFalse(InterviewScript.endsInterview(questionId: "q_help", answer: "no"))
+    }
+
+    func testProgressCountsOnlyTheFiveQuestions() {
+        XCTAssertEqual(InterviewScript.progressLabel(for: InterviewScript.answeredQuestion), "About the call")
+        XCTAssertEqual(InterviewScript.progressLabel(for: InterviewScript.questions[0]), "Question 1 of 5")
+        XCTAssertTrue(InterviewScript.spoken(InterviewScript.answeredQuestion)
+            .hasPrefix("About the call. Did you answer the call? Yes, I answered. No, I missed it or declined"))
+    }
+
+    func testResumeAccountsForAnswered() {
+        // Call report, nothing answered: start at "Did you answer the call?".
+        XCTAssertEqual(ReportsList.firstUnanswered([:], askAnswered: true), 0)
+        // Answered yes: continue at the first core question (index 1 in the call list).
+        XCTAssertEqual(ReportsList.firstUnanswered(["q_answered": "yes"], askAnswered: true), 1)
+        XCTAssertEqual(ReportsList.firstUnanswered(["q_answered": "yes", "q_identity": "Bank"], askAnswered: true), 2)
+        // Missed: complete, nothing to resume.
+        XCTAssertNil(ReportsList.firstUnanswered(["q_answered": "no"], askAnswered: true))
+        // Older call report with core answers but no q_answered: don't go back to it.
+        XCTAssertEqual(ReportsList.firstUnanswered(["q_identity": "Bank"], askAnswered: true), 2)
+        // Not a call report: unchanged.
+        XCTAssertEqual(ReportsList.firstUnanswered([:], askAnswered: false), 0)
+
+        let fresh = ReportSummary(incident(1, key: "ios-app-report-x"))
+        XCTAssertEqual(fresh.status, .unfinished)
+        XCTAssertEqual(fresh.resumeQuestion?.id, "q_answered")
+        XCTAssertEqual(fresh.questionsLeft, 5)
+        let companion = ReportSummary(incident(2, entry: "companion"))
+        XCTAssertEqual(companion.resumeQuestion?.id, "q_identity")
+    }
+
+    func testMissedCallIsDoneWithLowLabel() {
+        let missed = incident(1, key: "ios-app-report-m", answers: ["q_answered": "no"], severity: "low", status: "in_progress")
+        let row = ReportSummary(missed)
+        XCTAssertEqual(row.status, .missed)
+        XCTAssertTrue(row.isMissedCall)
+        XCTAssertFalse(row.isUnfinished)
+        XCTAssertNil(row.resumeIndex)
+        XCTAssertEqual(row.listLabel, "Missed call · Low")
+        XCTAssertTrue(row.accessibilityText.hasSuffix("Missed call. Level: Low"))
+        XCTAssertEqual(ReportSection.make([row]).map(\.kind), [.done])
+        XCTAssertTrue(ReportsList.unfinished([missed]).isEmpty)
+        let lines = ReportsList.answerLines(["q_answered": "no"])
+        XCTAssertEqual(lines.map(\.answer), ["No, I missed it or declined"])
+        XCTAssertEqual(lines.first?.title, "Did you answer the call")
+    }
+
+    func testMissedResultCopy() {
+        XCTAssertEqual(MissedCallCopy.headline, "Good call not picking up")
+        XCTAssertEqual(MissedCallCopy.detail(numberGiven: true),
+                       "We've added this number to the community reports. If they left a voicemail or texted you, forward it to Kavach.")
+        XCTAssertEqual(MissedCallCopy.detail(numberGiven: false),
+                       "If they left a voicemail or texted you, forward it to Kavach.")
+    }
+
+    func testRecentsReportSendsAnsweredFirst() {
+        let r = CallReport(token: "t", callerE164: "+14155550199", answers: ["q_answered": "no"], reportedAt: Date())
+        XCTAssertEqual((r.userInfo["answers"] as? [String: String])?["q_answered"], "no")
+        let full = CallReport(token: "t", callerE164: "", answers: ["q_ask": "no", "q_answered": "yes", "q_identity": "x"],
+                              reportedAt: Date())
+        XCTAssertEqual(full.orderedAnswers.map(\.0), ["q_answered", "q_identity", "q_ask"])
+    }
+
+    // MARK: Post-call wording
+
+    func testMissedCallNotificationWording() {
+        let t0 = Date(timeIntervalSince1970: 1_800_000_000)
+        var t = CallFollowUpTracker()
+        let id = UUID()
+        _ = t.observe(.init(uuid: id, isOutgoing: false), companionOpen: false, now: t0) // ringing
+        XCTAssertEqual(t.observe(.init(uuid: id, isOutgoing: false, hasEnded: true), companionOpen: false, now: t0 + 20), .notify)
+        XCTAssertTrue(t.pendingWasMissed)
+        XCTAssertEqual(CallFollowUpCopy.title(missed: t.pendingWasMissed), "Missed a call from an unknown number?")
+        XCTAssertEqual(CallFollowUpCopy.body(missed: t.pendingWasMissed), "If it looked like a scam, report it so others are warned.")
+        XCTAssertEqual(CallFollowUpCopy.reportLabel, "Report it")
+        XCTAssertEqual(CallFollowUpCopy.fineLabel, "It was fine")
+        t.clearPrompt()
+        XCTAssertFalse(t.pendingWasMissed)
+
+        // Connected call: the usual wording.
+        let id2 = UUID()
+        _ = t.observe(.init(uuid: id2, isOutgoing: false, hasConnected: true), companionOpen: false, now: t0 + 100)
+        XCTAssertEqual(t.observe(.init(uuid: id2, isOutgoing: false, hasConnected: true, hasEnded: true), companionOpen: false,
+                                 now: t0 + 200), .notify)
+        XCTAssertFalse(t.pendingWasMissed)
+        XCTAssertEqual(CallFollowUpCopy.title(missed: false), "Was that a scam call?")
+    }
+
+    func testMissedCallFoundWhileSuspendedAndOldSavesDecode() throws {
+        let t0 = Date(timeIntervalSince1970: 1_800_000_000)
+        var t = CallFollowUpTracker()
+        let id = UUID()
+        _ = t.observe(.init(uuid: id, isOutgoing: false), companionOpen: false, now: t0)
+        XCTAssertEqual(t.reconcile(current: [], companionOpen: false, now: t0 + 60), .prompt)
+        XCTAssertTrue(t.pendingWasMissed)
+        // Round-trips, and a tracker saved before `pendingConnected` existed still decodes (as answered).
+        let back = try JSONDecoder().decode(CallFollowUpTracker.self, from: JSONEncoder().encode(t))
+        XCTAssertTrue(back.pendingWasMissed)
+        let oldJSON = try JSONEncoder().encode(CallFollowUpTracker()) // optionals are omitted, like an older save
+        XCTAssertFalse(String(decoding: oldJSON, as: UTF8.self).contains("pendingConnected"))
+        let old = try JSONDecoder().decode(CallFollowUpTracker.self, from: oldJSON)
+        XCTAssertFalse(old.pendingWasMissed)
+    }
+}
+
+// MARK: Live: "Did you answer the call?" no → Low (skipped when unreachable)
+
+final class MissedCallLiveTests: XCTestCase {
+    func testAnsweredNoGivesLowAndFinishesTheReport() async throws {
+        let env = ProcessInfo.processInfo.environment
+        let url = URL(string: env["KAVACH_TEST_SPACETIME_URL"] ?? "http://127.0.0.1:3000")!
+        let db = SpacetimeClient(baseURL: url, database: env["KAVACH_TEST_DB"] ?? "kavach-ios")
+        let token: String
+        do { token = try await db.newIdentity().token } catch { throw XCTSkip("SpacetimeDB not reachable at \(url)") }
+        let api = KavachAPI(db: db, agents: AgentClient(baseURL: URL(string: "http://127.0.0.1:9")!), token: token)
+        try await api.registerPerson(phone: "+1555555" + String(format: "%04d", Int.random(in: 1_000...9_999)), name: "Missed Test")
+        let person = try await api.myPerson()
+        let me = try XCTUnwrap(person)
+        let caller = "+1555" + String(format: "%07d", Int.random(in: 1_000_000...9_999_999))
+
+        let draft = ReportDraft(personId: me.id, callerE164: caller)
+        let inc = try await ReportFiling.open(draft, backend: api)
+        try await api.saveAnswer(incidentId: inc.id, questionId: "q_answered", answer: "no")
+        try await ReportFiling.finish(personId: me.id, callerE164: caller, backend: api)
+
+        let mine = try await api.myIncidents()
+        let after = try XCTUnwrap(mine.first { $0.id == inc.id })
+        XCTAssertEqual(after.severityLevel, .low, "q_answered=no sets Low right away")
+        XCTAssertEqual(after.answers["q_answered"], "no")
+        let row = ReportSummary(after)
+        XCTAssertEqual(row.status, .missed)
+        XCTAssertEqual(row.listLabel, "Missed call · Low")
+        XCTAssertNil(row.resumeIndex)
     }
 }

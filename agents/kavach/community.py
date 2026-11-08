@@ -51,6 +51,8 @@ class SearchResult:
     campaign_title: str
     method: str
     best_similarity: float
+    # Who sent it, from the person's family contacts: {"known": bool, "name", "relationship"} or None.
+    sender_context: dict | None = None
 
     @property
     def floor(self) -> str:

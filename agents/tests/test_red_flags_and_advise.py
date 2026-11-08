@@ -63,3 +63,30 @@ def test_reply_leads_with_verdict_and_fits_imessage_limit():
     body = reply_body("Kavach", "likely_scam", "Nobody legitimate asks to be paid in gift cards. " * 5,
                       ["Call your nephew on the number you already have.", "Don't buy the cards."], True)
     assert body.startswith("Kavach: Likely scam.") and len(body) <= 600
+
+
+@pytest.mark.parametrize("text,expected", [
+    ("click on this link and get a million dollars. Claude.com", "likely_scam"),
+    ("Congratulations! You've been selected for a $5,000 cash reward, tap this link to claim", "likely_scam"),
+    ("Free money giveaway, visit www.prizes-now.top", "likely_scam"),
+    ("Win a free iPhone today", "suspicious"),
+])
+def test_windfall_offers_are_never_safe(text, expected):
+    assert floor(text) == expected
+
+
+def test_ordinary_link_shares_are_not_flagged():
+    assert floor("Here's the recipe I told you about: allrecipes.com/lasagna") == "safe"
+    assert floor("Check out this article on claude.com, it's interesting") == "safe"
+
+
+def test_call_reports_start_with_did_you_answer_and_no_ends_it():
+    from kavach.workflows.interview import next_question_id, parse_answered
+    call_inc = {"caller_e164": "+13464819285"}
+    assert next_question_id({}, call_inc) == "q_answered"
+    assert next_question_id({"q_answered": "no"}, call_inc) is None
+    assert next_question_id({"q_answered": "yes"}, call_inc) == "q_identity"
+    assert next_question_id({}, {"caller_e164": ""}) == "q_identity"
+    for t in ("no", "I missed it", "let it go to voicemail", "didn't pick up"):
+        assert parse_answered(t) == "no"
+    assert parse_answered("yes") == "yes"

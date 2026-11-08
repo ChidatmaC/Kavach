@@ -28,7 +28,7 @@ from .command import ACTIONS as COMMAND_ACTIONS
 from .command import looks_like_command, parse_fast as parse_command_fast
 from .forward import (CLARIFY_QUESTION, STATE, _FIRST_PERSON, classify_unwrapped, forward_signals,
                       no_signal_fallback, own_voice, parse_clarify_answer, parse_wrapper, tie_fallback)
-from .interview import QUESTION_IDS, next_question_id, parse_ask, parse_shared, parse_yes_no
+from .interview import QUESTION_IDS, next_question_id, parse_answered, parse_ask, parse_shared, parse_yes_no
 
 INTENTS = ["scam_check", "advise", "command", "verify_relative", "interview", "pause", "resume", "stop", "help",
            "out_of_scope"]  # model intents ("ambiguous" too); the router may also return "clarify"
@@ -81,7 +81,8 @@ def answer_like(text: str, qid: str) -> bool:
         return False  # a forwarded message, not an answer
     if qid == "q_identity":
         return len(t) <= 60 and not re.search(r"https?://|\.\w{2,4}/", t)
-    parser = {"q_ask": parse_ask, "q_shared": parse_shared, "q_secrecy": parse_yes_no, "q_help": parse_yes_no}[qid]
+    parser = {"q_ask": parse_ask, "q_shared": parse_shared, "q_secrecy": parse_yes_no, "q_help": parse_yes_no,
+              "q_answered": parse_answered}[qid]
     return parser(t) is not None
 
 
@@ -220,7 +221,7 @@ async def run_router(run: Run, p: dict[str, Any], dispatcher=None) -> dict[str, 
             active = None  # an old open incident: don't hijack new messages unless we just asked a question
         if active:
             answers = json.loads(active.get("answers_json") or "{}")
-            qid = next_question_id(answers) or "q_shared"
+            qid = next_question_id(answers, active) or "q_shared"
             if answer_like(text, qid) and not (mode == "text" and looks_like_command(text)):
                 intent, extra = "interview", {"incident_id": int(active["id"])}
         if not intent and fast and person_id and training.latest_decision(person_id, max_age_s=FEEDBACK_WINDOW_S):

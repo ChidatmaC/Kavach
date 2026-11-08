@@ -117,6 +117,7 @@ RISK_REASONS = {
     "remote_access": "Asking you to install an app so they can see your screen is how scammers take over devices.",
     "money_pressure": "It asks for money while pressuring you or claiming to be someone trusted. Real banks, agencies and family can wait while you check.",
     "recovery_fee": "Real agencies never charge a fee to return lost money.",
+    "prize_link": "Unexpected offers of money or prizes with a link are a classic scam. Even a real company's name in the link doesn't make the offer real.",
     "money_or_impersonation": "It asks for money or claims to be someone you trust. Check with them on a number you already know before doing anything.",
 }
 

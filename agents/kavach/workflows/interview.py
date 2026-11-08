@@ -19,7 +19,12 @@ from .base import BadRequest, NotFound, Run, outbox_args
 QUESTION_IDS = ["q_identity", "q_ask", "q_shared", "q_secrecy", "q_help"]
 SHARED_ITEMS = ["code", "pin", "password", "card", "gift_card", "money", "remote_app", "personal_details", "link"]
 
+# Asked first when the report is about a call: a missed or declined call ends the questions (Low).
+ANSWERED_QUESTION = "Did you answer the call? Reply yes or no."
+APP_ENTRY_POINTS = {"app", "report_swipe", "companion"}
+
 QUESTIONS = {
+    "q_answered": ANSWERED_QUESTION,
     "q_identity": "Who did they say they were? For example: your bank, your grandson, the IRS, or a company.",
     "q_ask": "Did they ask for money, codes, gift cards or personal details? Reply yes or no, or \"agreed\" if you agreed to pay or call them back.",
     "q_shared": "Did you share or send anything? Pick any that apply: code, PIN, password, card details, gift card numbers, money, an app install, personal details, tapped a link, or nothing.",
@@ -27,6 +32,7 @@ QUESTIONS = {
     "q_help": "Do you want help right now? Reply yes or no.",
 }
 VOICE_QUESTIONS = {
+    "q_answered": "Did you pick up the call?",
     "q_identity": "Who did they say they were?",
     "q_ask": "Did they ask you for money, codes, gift cards or personal details?",
     "q_shared": "Did you share or send anything, like a code, card details, gift cards, money, an app, personal details, or a link you tapped? Please don't tell me the actual numbers.",
@@ -63,6 +69,16 @@ def parse_yes_no(text: str) -> str | None:
     if _YES.search(text):
         return "yes"
     return None
+
+
+_NOT_ANSWERED = re.compile(r"(?i)\b(no|nope|missed|didn'?t|did not|declined|ignored|let it ring|voicemail|hung up before)\b")
+
+
+def parse_answered(text: str) -> str | None:
+    """"Did you answer the call?" -> yes | no ("missed it", "let it go to voicemail" count as no)."""
+    if _NOT_ANSWERED.search(text or ""):
+        return "no"
+    return parse_yes_no(text)
 
 
 def parse_ask(text: str) -> str | None:
@@ -134,8 +150,17 @@ def _answers(inc: dict) -> dict[str, str]:
         return {}
 
 
-def next_question_id(answers: dict[str, str]) -> str | None:
+def next_question_id(answers: dict[str, str], inc: dict | None = None) -> str | None:
+    """Next unanswered question. Call reports start with "Did you answer the call?"; "no" ends it."""
+    if answers.get("q_answered") == "no":
+        return None
+    if inc and inc.get("caller_e164") and "q_answered" not in answers and not any(q in answers for q in QUESTION_IDS):
+        return "q_answered"
     return next((qid for qid in QUESTION_IDS if qid not in answers), None)
+
+
+def question_number(qid: str) -> int:
+    return 1 if qid == "q_answered" else QUESTION_IDS.index(qid) + 1
 
 
 def wrap_up(run: Run, inc: dict, has_family: bool) -> str:
@@ -212,7 +237,7 @@ async def run_interview(run: Run, p: dict[str, Any]) -> dict[str, Any]:
     reask = None
     checkin = bool(p.get("checkin")) and not utterance
     if inc.get("status") != "resolved" and utterance:
-        pending = next_question_id(answers)
+        pending = next_question_id(answers, inc)
         # Only short replies are answers to the pending question; a long description is free speech.
         follow_up = free and "q_summary" in answers and pending is not None and len(utterance.split()) <= 8
         quick = None
@@ -234,11 +259,11 @@ async def run_interview(run: Run, p: dict[str, Any]) -> dict[str, Any]:
             if "q_shared" in extracted:
                 saves.append(("q_shared", extracted["q_shared"]))
         else:
-            qid = p.get("question_id") or next_question_id(answers) or "q_shared"
-            if qid not in QUESTION_IDS:
+            qid = p.get("question_id") or next_question_id(answers, inc) or "q_shared"
+            if qid not in QUESTION_IDS and qid != "q_answered":
                 raise BadRequest("invalid question_id")
             value = {
-                "q_identity": lambda u: redact(u)[:80],
+                "q_identity": lambda u: redact(u)[:80], "q_answered": parse_answered,
                 "q_ask": parse_ask, "q_shared": parse_shared,
                 "q_secrecy": parse_yes_no, "q_help": parse_yes_no,
             }[qid](utterance)
@@ -292,7 +317,7 @@ async def run_interview(run: Run, p: dict[str, Any]) -> dict[str, Any]:
     elif inc.get("status") == "resolved":
         nxt, text = None, ""
     else:
-        nxt = reask or next_question_id(answers)
+        nxt = reask or next_question_id(answers, inc)
         text = QUESTIONS[nxt] if nxt else ""
     done = nxt is None or (severity == "critical" and not checkin)
     out["done"] = done
@@ -307,9 +332,11 @@ async def run_interview(run: Run, p: dict[str, Any]) -> dict[str, Any]:
             person = await run.tools.call("get_person", {"person_id": person_id})
             if person:
                 body = (f"{run.app}: {CHECKIN_QUESTION}" if checkin
-                        else f"{run.app} ({QUESTION_IDS.index(nxt) + 1} of 5): {prefix}{text}")
+                        else f"{run.app} ({question_number(nxt)} of 5): {prefix}{text}")
+                # Reports started in the app get follow-ups in the app (push), not as texts.
+                channel = "push" if inc.get("entry_point") in APP_ENTRY_POINTS else "imessage"
                 await run.tools.call("reducer", {"name": "enqueue_outbox", "args": outbox_args(
-                    person["phone_e164"], "imessage", "checkin" if checkin else "reply", body, "normal", incident_id)})
+                    person["phone_e164"], channel, "checkin" if checkin else "reply", body, "normal", incident_id)})
     elif mode == "voice":
         out["say"] = wrap_up(run, inc, out["alert_sent"])
     return out

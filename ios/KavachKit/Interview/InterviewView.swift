@@ -16,28 +16,38 @@ public struct InterviewView: View {
     @State private var saving = false
     @State private var error: String?
 
-    /// `startIndex` resumes an unfinished questionnaire at its first unanswered question.
-    public init(title: String = "Tell us what happened", startIndex: Int = 0, save: @escaping Save,
-                onDone: @escaping @MainActor () -> Void) {
+    let questions: [InterviewQuestion]
+
+    /// `startIndex` resumes an unfinished questionnaire at its first unanswered question (an index
+    /// into `questions`). `askAnswered` starts call reports with "Did you answer the call?"; a "no"
+    /// there ends the interview (`InterviewScript.endsInterview`).
+    public init(title: String = "Tell us what happened", askAnswered: Bool = false, startIndex: Int = 0,
+                save: @escaping Save, onDone: @escaping @MainActor () -> Void) {
         self.title = title
         self.save = save
         self.onDone = onDone
-        _index = State(initialValue: max(0, min(startIndex, InterviewScript.questions.count - 1)))
+        let qs = InterviewScript.questions(askAnswered: askAnswered)
+        questions = qs
+        _index = State(initialValue: max(0, min(startIndex, qs.count - 1)))
     }
 
-    private var questions: [InterviewQuestion] { InterviewScript.questions }
     private var question: InterviewQuestion { questions[min(index, questions.count - 1)] }
+    /// Progress through the five core questions ("Did you answer the call?" isn't counted).
+    private var coreProgress: Double {
+        let core = InterviewScript.questions
+        return Double((core.firstIndex { $0.id == question.id } ?? -1) + 1) / Double(core.count)
+    }
 
     public var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: Theme.Space.l) {
                 VStack(alignment: .leading, spacing: Theme.Space.xs) {
                     HStack(alignment: .center) {
-                        Text("Question \(index + 1) of \(questions.count)")
+                        Text(InterviewScript.progressLabel(for: question))
                             .font(TypeScale.overline).foregroundStyle(Theme.textSecondary)
                         Spacer()
                         Button {
-                            Speaker.shared.speak(InterviewScript.spoken(question, index: index))
+                            Speaker.shared.speak(InterviewScript.spoken(question))
                         } label: {
                             Image(systemName: "speaker.wave.2")
                                 .font(.title3.weight(.semibold))
@@ -47,7 +57,7 @@ public struct InterviewView: View {
                         }
                         .accessibilityLabel("Read the question aloud")
                     }
-                    ProgressView(value: Double(index + 1), total: Double(questions.count))
+                    ProgressView(value: coreProgress)
                         .tint(Theme.accent)
                         .accessibilityHidden(true)
                 }
@@ -73,7 +83,7 @@ public struct InterviewView: View {
         .navigationBarTitleDisplayMode(.inline)
         .disabled(saving)
         .onChange(of: index, initial: true) { _, _ in
-            if prefs.autoSpeak { Speaker.shared.speak(InterviewScript.spoken(question, index: index)) }
+            if prefs.autoSpeak { Speaker.shared.speak(InterviewScript.spoken(question)) }
         }
     }
 
@@ -139,7 +149,11 @@ public struct InterviewView: View {
                 try await save(qid, answer)
                 text = ""
                 multi = []
-                if index + 1 < questions.count { index += 1 } else { onDone() }
+                if InterviewScript.endsInterview(questionId: qid, answer: answer) || index + 1 >= questions.count {
+                    onDone()
+                } else {
+                    index += 1
+                }
             } catch {
                 self.error = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
             }

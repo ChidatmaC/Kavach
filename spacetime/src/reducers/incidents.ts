@@ -88,6 +88,7 @@ export const save_answer = spacetimedb.reducer(
       case 'q_secrecy':
       case 'q_help':
       case 'q_engaged':
+      case 'q_answered':
         answers[question_id] = oneOf(question_id, raw.toLowerCase(), ['yes', 'no']);
         break;
       case 'q_summary':

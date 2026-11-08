@@ -47,6 +47,14 @@ public struct NetworkDashboard: Sendable, Equatable {
         public let campaignId: UInt64
         /// Danger only for "Likely scam" or Critical.
         public let isSevere: Bool
+        /// Calls: the caller's number, formatted ("" when not given). Messages: "".
+        public var number: String = ""
+        /// Messages: the (redacted) text that was checked. Calls: "".
+        public var excerpt: String = ""
+        /// Calls: who they claimed to be, if answered.
+        public var claimedIdentity: String = ""
+        /// Calls: the incident behind this node, for "Open full report".
+        public var incidentId: UInt64? = nil
     }
 
     public struct CampaignNode: Sendable, Equatable, Identifiable {
@@ -111,13 +119,17 @@ public struct NetworkDashboard: Sendable, Equatable {
             ThreatNode(id: "check-\(c.id)", kind: .message,
                        title: c.verdictKind == .likelyScam ? "Scam message" : "Suspicious message",
                        detail: c.reason, date: c.createdAt.date, campaignId: c.campaignId,
-                       isSevere: c.verdictKind == .likelyScam)
+                       isSevere: c.verdictKind == .likelyScam, excerpt: c.contentRedacted)
         }
         t += weekIncidents.map { i in
             ThreatNode(id: "incident-\(i.id)", kind: .call,
-                       title: i.entryPoint == "companion" ? "Call (you asked for help)" : "Reported call",
-                       detail: i.claimedIdentity.isEmpty ? "Level: \(i.severityLevel.label)" : "Said they were: \(i.claimedIdentity)",
-                       date: i.createdAt.date, campaignId: i.campaignId, isSevere: i.severityLevel == .critical)
+                       title: i.callerE164.isEmpty
+                           ? (i.entryPoint == "companion" ? "Call (you asked for help)" : "Reported call")
+                           : "Call from \(PhoneNumbers.formatted(i.callerE164))",
+                       detail: "Level: \(i.severityLevel.label)",
+                       date: i.createdAt.date, campaignId: i.campaignId, isSevere: i.severityLevel == .critical,
+                       number: i.callerE164.isEmpty ? "" : PhoneNumbers.formatted(i.callerE164),
+                       claimedIdentity: i.claimedIdentity, incidentId: i.id)
         }
         threats = Array(t.sorted { ($0.date ?? .distantPast) > ($1.date ?? .distantPast) }.prefix(maxThreats))
 

@@ -10,12 +10,14 @@ struct ForwardByTextButton: View {
     @Environment(\.openURL) private var openURL
     let message: String
     var from: String = ""
+    /// Button title; nil = "Send to <app> by text".
+    var title: String? = nil
     @State private var copied = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: Theme.Space.xs) {
             Button(action: send) {
-                Label("Send to \(model.config.displayName) by text", systemImage: "arrowshape.turn.up.right")
+                Label(title ?? "Send to \(model.config.displayName) by text", systemImage: "arrowshape.turn.up.right")
             }
             .buttonStyle(KavachButtonStyle(.secondary))
             .disabled(message.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)

@@ -34,6 +34,7 @@ ADVISE_RISK_REASONS = {
     "remote_access": "Don't install anything they ask for. Letting someone see your screen is how scammers take over devices.",
     "money_pressure": "This has the signs of a scam: money plus pressure, secrecy or someone claiming to be trusted. Real banks, agencies and family can wait while you check.",
     "recovery_fee": "Real agencies never charge a fee to return lost money.",
+    "prize_link": "Please don't click it. Surprise offers of money or prizes with a link are a classic scam, even when the link shows a real company's name.",
     "money_or_impersonation": "Be careful before sending money. Even when it seems to come from someone you know, accounts get hacked and voices get faked, so check with them on a number you already know first.",
 }
 HISTORY_TURNS = 8

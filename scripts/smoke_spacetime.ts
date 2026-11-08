@@ -113,6 +113,9 @@ const [joe] = await sql(joeApp, 'SELECT * FROM my_person');
 check('app sees its own person', joe?.phone_e164 === '+15555550101', joe);
 check('app sees its contacts', (await sql(joeApp, 'SELECT * FROM my_contacts')).length === 2);
 const joeId = joe.id as number;
+// Joe's app has a push token, so app-started incidents get their follow-ups by push.
+await call(joeApp, 'update_settings', { person_id: joeId, accessibility_mode: false, sharing_paused: false,
+  critical_overrides_pause: true, apns_token: 'smoke-device-token', family_code_word: 'blue pancake', tz_offset_minutes: -360 });
 
 // Companion -> "asked for help" to both contacts
 const before = (await outbox()).length;
@@ -128,7 +131,8 @@ const bAck = (await outbox()).length;
 await call(photon, 'acknowledge_family_alert', { contact_id: tommyC.id });
 const [helpReq2] = (await sql(joeApp, 'SELECT * FROM my_alert_requests')).filter(r => r.id === helpReq.id);
 check('a family reply acknowledges the request', helpReq2.status === 'acknowledged' && helpReq2.acked_by_contact_id === tommyC.id, helpReq2);
-check('Joe is told who saw it', (await outbox()).slice(bAck).some(r => r.to_e164 === '+15555550101' && /Tommy saw your request for help/.test(String(r.body))));
+const sawRows = (await outbox()).slice(bAck).filter(r => r.to_e164 === '+15555550101' && /Tommy saw your request for help/.test(String(r.body)));
+check('Joe is told who saw it, in the app (push), not by text', sawRows.length > 0 && sawRows.every(r => r.channel === 'push'), sawRows);
 
 // Interview -> High
 const [inc] = (await sql(joeApp, 'SELECT * FROM my_incidents')).filter(i => i.request_key === compKey);
@@ -144,7 +148,8 @@ await sleep(300); // scheduled agent job becomes an agent_task
 const wf = await failQueuedTasks();
 check('High queues family_alert and interview check-in work for the agent service', wf.includes('family_alert'), wf);
 const highRows = (await outbox()).slice(b2);
-check('High: "Be careful" reply to Joe', highRows.some(r => r.to_e164 === '+15555550101' && String(r.body).includes('Be careful')), highRows);
+check('High from the app: no iMessage text to Joe (follow-ups stay in the app)',
+  !highRows.some(r => r.to_e164 === '+15555550101' && r.channel === 'imessage' && String(r.body).includes('Be careful')), highRows);
 const fam = highRows.filter(r => r.kind === 'family_alert');
 check('High: template family alert to Tommy (imessage) and Maria (sms)',
   fam.some(r => r.to_e164 === '+15555550102' && r.channel === 'imessage') && fam.some(r => r.to_e164 === '+15555550103' && r.channel === 'sms'), fam);
@@ -167,7 +172,18 @@ const critFam = critRows.filter(r => r.kind === 'family_alert');
 check('Critical while paused reaches only the emergency contact',
   critFam.length >= 1 && critFam.every(r => r.to_e164 === '+15555550102') && critFam.every(r => r.priority === 'urgent'), critFam);
 check('Critical: "Act now" reply', critRows.some(r => String(r.body).includes('Act now')));
-check('Critical: FTC report offer', critRows.some(r => String(r.body).includes('ReportFraud.ftc.gov')));
+check('Critical: FTC report offer (push for an app-started report)', critRows.some(r => r.channel === 'push' && String(r.body).includes('ReportFraud.ftc.gov')));
+check('Critical: "Act now" still texts too, so it cannot be missed', critRows.some(r => r.channel === 'imessage' && String(r.body).includes('Act now')));
+
+// Missed scam call: "Did you answer?" no -> Low, number counted, no more questions
+const mk = randomUUID();
+await call(joeApp, 'open_incident', { request_key: mk, person_id: joeId, entry_point: 'report_swipe', caller_e164: '+15555550166' });
+const [missedInc] = (await sql(joeApp, 'SELECT * FROM my_incidents')).filter(i => i.request_key === mk);
+await call(joeApp, 'save_answer', { incident_id: missedInc.id, question_id: 'q_answered', answer: 'no' });
+const [missedAfter] = (await sql(joeApp, 'SELECT * FROM my_incidents')).filter(i => i.id === missedInc.id);
+check('missed call is Low without the other questions', missedAfter.severity === 'low', missedAfter.severity);
+const missedReport = (await sql(agents, "SELECT * FROM svc_community_report WHERE value = '+15555550166'"))[0];
+check('missed call still counts the number as a community report', Number(missedReport?.reporter_count) >= 1, missedReport);
 const [joeAfter] = await sql(joeApp, 'SELECT * FROM my_person');
 check('Critical sets recovery watch', JSON.stringify(joeAfter.recovery_watch_until) !== JSON.stringify([0]), joeAfter.recovery_watch_until);
 refused = false;

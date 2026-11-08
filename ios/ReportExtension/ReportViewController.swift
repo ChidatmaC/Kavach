@@ -11,7 +11,8 @@ import UIKit
 /// request_key}`); iOS POSTs that to `ILClassificationExtensionNetworkReportDestination`
 /// (`<AGENT_SERVICE_URL>/ios/call-report`). The report is also saved in the App Group so the app
 /// replays it through the normal reducers if the POST never arrived (docs/CONTRACTS.md section 7).
-/// The system Done/Report button is enabled only after every question is answered.
+/// The interview starts with "Did you answer the call?" (`answers.q_answered`); "No" ends it there.
+/// The system Done/Report button is enabled only after the interview is complete.
 final class ReportViewController: ILClassificationUIExtensionViewController {
     private let session = ReportSession()
     private var config = AppConfig.current
@@ -100,6 +101,9 @@ struct ReportRootView: View {
                 } else if session.token == nil {
                     message(icon: "exclamationmark.triangle", tone: .caution, title: "Set up \(config.displayName) first",
                             body: "Open \(config.displayName) once to set it up. You can still tap Report to report this number to Apple.")
+                } else if session.finished && ReportsList.isMissedCall(session.answers) {
+                    message(icon: "checkmark.shield", tone: .success, title: MissedCallCopy.headline,
+                            body: "Tap Report to send it. \(MissedCallCopy.detail(numberGiven: !session.callerE164.isEmpty, appName: config.displayName))")
                 } else if session.finished {
                     message(icon: "checkmark.shield", tone: .success, title: "Thank you",
                             body: "Tap Report to send it. It helps protect others, and \(config.displayName) will show your next steps when you open it.")
@@ -113,7 +117,7 @@ struct ReportRootView: View {
                                 .padding(.horizontal, Theme.Space.m).padding(.top, Theme.Space.s)
                                 .background(Theme.background)
                         }
-                        InterviewView(title: "Report this call", save: { qid, answer in
+                        InterviewView(title: "Report this call", askAnswered: true, save: { qid, answer in
                             session.answers[qid] = answer
                         }, onDone: {
                             session.finish()
