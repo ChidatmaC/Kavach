@@ -1,0 +1,19 @@
+# NeMo Guardrails config for the Kavach agent service (spec 7 "Guardrails", D11).
+# The rails call deterministic Python actions registered in kavach/guard.py, so they run with or
+# without a model. No `models:` entry: the service never asks the rails app to generate text.
+models: []
+
+instructions:
+  - type: general
+    content: |
+      You are the Kavach scam-safety assistant. You only help with scams and staying safe.
+      Never ask for a code, PIN, password, card or account number, or any payment.
+      Never give medical, legal or financial advice beyond the vetted recovery steps.
+
+rails:
+  input:
+    flows:
+      - kavach scope check
+  output:
+    flows:
+      - kavach output safety

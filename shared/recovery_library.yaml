@@ -1,0 +1,63 @@
+# Vetted recovery steps (D10). The LLM may only reword these; it cannot add steps.
+# The SpacetimeDB module mirrors the item -> step mapping in spacetime/src/recovery.ts;
+# agents/tests/test_recovery_consistency.py checks the two stay in sync.
+steps:
+  call_bank_freeze_card:
+    priority: now
+    text: Call the number on the back of your card and ask them to freeze it and reverse any charges.
+  call_bank_stop_transfer:
+    priority: now
+    text: Call your bank's official number now and ask them to stop or recall the payment.
+  contact_carrier_account_lock:
+    priority: now
+    text: Call your phone carrier from another phone and ask for a port-out and SIM lock on your account.
+  change_password_reused:
+    priority: now
+    text: Change the password you shared, and any account that uses the same password.
+  enable_2fa:
+    priority: today
+    text: Turn on two-step sign-in for your email and bank accounts.
+  gift_card_issuer:
+    priority: now
+    text: Call the gift card company's number on the back of the card, tell them it was a scam, and ask them to freeze the balance.
+  keep_receipts:
+    priority: today
+    text: Keep the gift cards, receipts and any messages; you will need them for your report.
+  uninstall_remote_app:
+    priority: now
+    text: Turn off Wi-Fi, delete the remote access app, and restart your device.
+  device_checkup:
+    priority: today
+    text: Ask a trusted person or store to check the device, then change passwords from a different device.
+  credit_freeze:
+    priority: today
+    text: Freeze your credit at Equifax, Experian and TransUnion. It is free and you can unfreeze it any time.
+  watch_statements:
+    priority: this_week
+    text: Check your bank and card statements every day this week for charges you don't recognize.
+  password_change_link:
+    priority: today
+    text: If you typed a password on the page that link opened, change it now from the official app or website.
+  report_ftc:
+    priority: this_week
+    text: Report it at ReportFraud.ftc.gov. We can fill in a summary for you.
+  report_ic3:
+    priority: this_week
+    text: If it happened online, also report it at ic3.gov.
+  tell_family:
+    priority: today
+    text: Let a family member know what happened so they can help you watch for follow-up calls.
+
+# shared item -> step keys (order matters within each priority)
+items:
+  code: [contact_carrier_account_lock, change_password_reused, enable_2fa]
+  pin: [call_bank_freeze_card, change_password_reused]
+  password: [change_password_reused, enable_2fa]
+  card: [call_bank_freeze_card, watch_statements]
+  gift_card: [gift_card_issuer, keep_receipts]
+  money: [call_bank_stop_transfer, keep_receipts, watch_statements]
+  remote_app: [uninstall_remote_app, device_checkup, change_password_reused]
+  personal_details: [credit_freeze, watch_statements]
+  link: [password_change_link, watch_statements]
+# Added to every Critical incident
+critical_always: [tell_family, report_ftc]

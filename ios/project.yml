@@ -1,0 +1,231 @@
+name: Kavach
+options:
+  bundleIdPrefix: com.kavach
+  deploymentTarget:
+    iOS: "26.0"
+  createIntermediateGroups: true
+  generateEmptyDirectories: false
+
+configFiles:
+  Debug: Config/Kavach.xcconfig
+  Release: Config/Kavach.xcconfig
+
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    IPHONEOS_DEPLOYMENT_TARGET: "26.0"
+    TARGETED_DEVICE_FAMILY: "1"
+    MARKETING_VERSION: "0.1.0"
+    CURRENT_PROJECT_VERSION: "1"
+    ENABLE_USER_SCRIPT_SANDBOXING: YES
+    DEVELOPMENT_TEAM: ""
+    CODE_SIGN_STYLE: Automatic
+    GENERATE_INFOPLIST_FILE: NO
+
+# Keys every target's Info.plist carries, so the framework can read config from Bundle.main
+# in the app and in each extension.
+x-kavach-info: &kavachInfo
+  CFBundleDisplayName: $(APP_DISPLAY_NAME)
+  KavachAppDisplayName: $(APP_DISPLAY_NAME)
+  KavachSpacetimeURL: $(SPACETIME_URL)
+  KavachSpacetimeDB: $(SPACETIME_DB_NAME)
+  KavachAgentURL: $(AGENT_SERVICE_URL)
+  KavachHotlineNumber: $(HOTLINE_NUMBER)
+  KavachAppGroup: $(APP_GROUP_ID)
+  AppIdentifierPrefix: $(AppIdentifierPrefix)
+  NSAppTransportSecurity:
+    NSAllowsLocalNetworking: true
+    # Hackathon: the backend runs on a laptop over plain HTTP on the LAN.
+    NSAllowsArbitraryLoads: true
+
+x-group-entitlements: &groupEntitlements
+  com.apple.security.application-groups:
+    - $(APP_GROUP_ID)
+  keychain-access-groups:
+    - $(AppIdentifierPrefix)com.kavach.shared
+
+targets:
+  KavachKit:
+    type: framework
+    platform: iOS
+    sources:
+      - path: KavachKit
+      - path: ../shared/recovery_library.yaml
+        buildPhase: resources
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.kavach.KavachKit
+        APPLICATION_EXTENSION_API_ONLY: YES
+        GENERATE_INFOPLIST_FILE: YES
+        SKIP_INSTALL: YES
+        DEFINES_MODULE: YES
+
+  Kavach:
+    type: application
+    platform: iOS
+    sources:
+      - path: App
+    dependencies:
+      - target: KavachKit
+      - target: CallDirectoryExtension
+      - target: ReportExtension
+      - target: ShareExtension
+      - target: MessageFilterExtension
+    info:
+      path: App/Info.plist
+      properties:
+        <<: *kavachInfo
+        CFBundleName: $(APP_DISPLAY_NAME)
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        UILaunchScreen: {}
+        UIApplicationSupportsIndirectInputEvents: true
+        UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
+        UIBackgroundModes: [remote-notification]
+        NSFaceIDUsageDescription: Confirm it's really you before answering a family check.
+        NSPhotoLibraryUsageDescription: Choose a screenshot of a message to check it.
+        NSSpeechRecognitionUsageDescription: Not used.
+        NSUserActivityTypes: [com.kavach.app.companion]
+        CFBundleURLTypes:
+          - CFBundleURLName: com.kavach.app
+            CFBundleURLSchemes: [kavach]
+    entitlements:
+      path: App/Kavach.entitlements
+      properties:
+        <<: *groupEntitlements
+        aps-environment: development
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.kavach.app
+        PRODUCT_NAME: Kavach
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+        SWIFT_DEFAULT_ACTOR_ISOLATION: MainActor
+        SWIFT_APPROACHABLE_CONCURRENCY: YES
+
+  CallDirectoryExtension:
+    type: app-extension
+    platform: iOS
+    sources: [CallDirectoryExtension]
+    dependencies:
+      - target: KavachKit
+        embed: false
+    info:
+      path: CallDirectoryExtension/Info.plist
+      properties:
+        <<: *kavachInfo
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.callkit.call-directory
+          NSExtensionPrincipalClass: $(PRODUCT_MODULE_NAME).CallDirectoryHandler
+    entitlements:
+      path: CallDirectoryExtension/CallDirectoryExtension.entitlements
+      properties: *groupEntitlements
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.kavach.app.CallDirectory
+        APPLICATION_EXTENSION_API_ONLY: YES
+
+  ReportExtension:
+    type: app-extension
+    platform: iOS
+    sources: [ReportExtension]
+    dependencies:
+      - target: KavachKit
+        embed: false
+      - sdk: IdentityLookupUI.framework
+    info:
+      path: ReportExtension/Info.plist
+      properties:
+        <<: *kavachInfo
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.identitylookup.classification-ui
+          NSExtensionPrincipalClass: $(PRODUCT_MODULE_NAME).ReportViewController
+          NSExtensionAttributes: {}
+    entitlements:
+      path: ReportExtension/ReportExtension.entitlements
+      properties: *groupEntitlements
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.kavach.app.Report
+        APPLICATION_EXTENSION_API_ONLY: YES
+
+  ShareExtension:
+    type: app-extension
+    platform: iOS
+    sources: [ShareExtension]
+    dependencies:
+      - target: KavachKit
+        embed: false
+    info:
+      path: ShareExtension/Info.plist
+      properties:
+        <<: *kavachInfo
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.share-services
+          NSExtensionPrincipalClass: $(PRODUCT_MODULE_NAME).ShareViewController
+          NSExtensionAttributes:
+            NSExtensionActivationRule:
+              NSExtensionActivationSupportsText: true
+              NSExtensionActivationSupportsWebURLWithMaxCount: 1
+              NSExtensionActivationSupportsImageWithMaxCount: 1
+    entitlements:
+      path: ShareExtension/ShareExtension.entitlements
+      properties: *groupEntitlements
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.kavach.app.Share
+        APPLICATION_EXTENSION_API_ONLY: YES
+
+  MessageFilterExtension:
+    type: app-extension
+    platform: iOS
+    sources: [MessageFilterExtension]
+    dependencies:
+      - target: KavachKit
+        embed: false
+    info:
+      path: MessageFilterExtension/Info.plist
+      properties:
+        <<: *kavachInfo
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.identitylookup.message-filter
+          NSExtensionPrincipalClass: $(PRODUCT_MODULE_NAME).MessageFilterHandler
+    entitlements:
+      path: MessageFilterExtension/MessageFilterExtension.entitlements
+      properties: *groupEntitlements
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.kavach.app.MessageFilter
+        APPLICATION_EXTENSION_API_ONLY: YES
+
+  KavachTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources: [Tests/KavachTests]
+    dependencies:
+      - target: KavachKit
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.kavach.KavachTests
+        GENERATE_INFOPLIST_FILE: YES
+
+schemes:
+  Kavach:
+    build:
+      targets:
+        Kavach: all
+        KavachTests: [test]
+    test:
+      targets:
+        - KavachTests
+      environmentVariables:
+        KAVACH_TEST_SPACETIME_URL: http://127.0.0.1:3000
+        KAVACH_TEST_DB: kavach-ios

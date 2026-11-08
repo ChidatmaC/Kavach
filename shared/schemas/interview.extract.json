@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "answers": {
+      "type": "object",
+      "properties": {
+        "q_identity": {
+          "type": "string",
+          "maxLength": 80
+        },
+        "q_ask": {
+          "enum": [
+            "yes",
+            "no",
+            "agreed",
+            ""
+          ]
+        },
+        "q_shared": {
+          "type": "string",
+          "pattern": "^((code|pin|password|card|gift_card|money|remote_app|personal_details|link)(,(code|pin|password|card|gift_card|money|remote_app|personal_details|link))*|nothing|)$"
+        },
+        "q_secrecy": {
+          "enum": [
+            "yes",
+            "no",
+            ""
+          ]
+        },
+        "q_help": {
+          "enum": [
+            "yes",
+            "no",
+            ""
+          ]
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "answers"
+  ],
+  "additionalProperties": true,
+  "title": "MODEL_FAST answer extraction"
+}

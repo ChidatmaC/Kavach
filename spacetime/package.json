@@ -1,0 +1,14 @@
+{
+  "name": "kavach-spacetime",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "spacetime build",
+    "typecheck": "tsc --noEmit -p .",
+    "publish:local": "spacetime publish kavach -s local -y",
+    "publish:local:clean": "spacetime publish kavach -s local -y --delete-data=always"
+  },
+  "dependencies": { "spacetimedb": "2.14.*" },
+  "devDependencies": { "typescript": "~5.6.2" }
+}

@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "relative_name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 60
+    }
+  },
+  "required": [
+    "relative_name"
+  ],
+  "additionalProperties": true,
+  "title": "POST /app/verify"
+}

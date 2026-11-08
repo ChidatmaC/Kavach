@@ -1,0 +1,17 @@
+{
+  "name": "kavach",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "tokens": "tsx scripts/service_tokens.ts",
+    "seed": "tsx scripts/seed.ts",
+    "demo:reset": "tsx scripts/demo_reset.ts",
+    "dev:wipe": "tsx scripts/dev_wipe.ts",
+    "start:local": "scripts/start_local.sh",
+    "stop:local": "scripts/stop_local.sh",
+    "smoke": "tsx scripts/smoke_spacetime.ts",
+    "publish:local": "set -a && . ./.env && set +a && cd spacetime && spacetime publish kavach -s local -y",
+    "publish:local:clean": "set -a && . ./.env && set +a && cd spacetime && spacetime publish kavach -s local -y --delete-data=always"
+  },
+  "devDependencies": { "tsx": "^4.19.2", "dotenv": "^16.4.5", "@types/node": "^22.10.0", "typescript": "~5.6.2" }
+}

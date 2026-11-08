@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "to_e164": {
+      "type": "string"
+    },
+    "title": {
+      "type": "string"
+    },
+    "body": {
+      "type": "string",
+      "maxLength": 600
+    },
+    "category": {
+      "type": "string"
+    },
+    "verification_id": {
+      "type": "integer",
+      "minimum": 0
+    }
+  },
+  "required": [
+    "to_e164",
+    "body"
+  ],
+  "additionalProperties": true,
+  "title": "POST /push",
+  "description": "verification_id is optional (outbox rows have no such column); the service looks up the newest pending trusted_sender verification for the recipient."
+}

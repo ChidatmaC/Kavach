@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "verdict": {
+      "type": "string",
+      "enum": [
+        "safe",
+        "suspicious",
+        "likely_scam"
+      ]
+    },
+    "reason": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 300
+    },
+    "campaign_id": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "tips": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "maxLength": 160
+      },
+      "maxItems": 3
+    },
+    "evidence_count": {
+      "type": "integer",
+      "minimum": 0
+    }
+  },
+  "required": [
+    "verdict",
+    "reason",
+    "campaign_id",
+    "tips",
+    "evidence_count"
+  ],
+  "additionalProperties": false,
+  "title": "scam_check output (also /app/check)"
+}

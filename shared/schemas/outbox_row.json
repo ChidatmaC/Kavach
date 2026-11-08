@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "to_e164": {
+      "type": "string"
+    },
+    "channel": {
+      "enum": [
+        "imessage",
+        "sms",
+        "rcs",
+        "whatsapp",
+        "push"
+      ]
+    },
+    "kind": {
+      "enum": [
+        "reply",
+        "family_alert",
+        "checkin",
+        "verification",
+        "relay",
+        "briefing",
+        "practice",
+        "system"
+      ]
+    },
+    "body": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 1200
+    },
+    "priority": {
+      "enum": [
+        "urgent",
+        "normal"
+      ]
+    },
+    "related_incident_id": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "recipient_contact_id": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "group_key": {
+      "type": "string",
+      "pattern": "^(family:\\d+:\\d+)?$"
+    }
+  },
+  "required": [
+    "to_e164",
+    "channel",
+    "kind",
+    "body",
+    "priority",
+    "related_incident_id",
+    "recipient_contact_id",
+    "group_key"
+  ],
+  "additionalProperties": false,
+  "title": "enqueue_outbox arguments",
+  "description": "Bodies <= 600 chars (briefing <= 1200). Family alerts for one incident share group_key family:<person_id>:<incident_id>."
+}

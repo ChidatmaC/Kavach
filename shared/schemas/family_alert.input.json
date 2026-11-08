@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "incident_id": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "priority": {
+      "enum": [
+        "urgent",
+        "normal"
+      ]
+    },
+    "on_demand": {
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "incident_id"
+  ],
+  "additionalProperties": true,
+  "title": "POST /run/family_alert"
+}

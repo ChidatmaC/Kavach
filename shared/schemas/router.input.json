@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "text": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 8000
+    },
+    "from_e164": {
+      "type": "string"
+    },
+    "channel": {
+      "type": "string"
+    },
+    "person_id": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "mode": {
+      "enum": [
+        "text",
+        "voice"
+      ]
+    },
+    "dispatch": {
+      "type": "boolean",
+      "description": "Also run the chosen workflow and return its result"
+    }
+  },
+  "required": [
+    "text"
+  ],
+  "additionalProperties": true,
+  "title": "POST /run/router"
+}

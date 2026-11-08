@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "next_question": {
+      "type": "string"
+    },
+    "question_id": {
+      "type": "string",
+      "enum": [
+        "q_identity",
+        "q_ask",
+        "q_shared",
+        "q_secrecy",
+        "q_help"
+      ]
+    },
+    "say": {
+      "type": "string"
+    },
+    "done": {
+      "type": "boolean"
+    },
+    "severity": {
+      "type": "string",
+      "enum": [
+        "",
+        "low",
+        "medium",
+        "high",
+        "critical"
+      ]
+    },
+    "verdict": {
+      "type": "string",
+      "enum": [
+        "safe",
+        "suspicious",
+        "likely_scam"
+      ]
+    },
+    "reason": {
+      "type": "string",
+      "maxLength": 300
+    },
+    "evidence_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "campaign_id": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "alert_sent": {
+      "type": "boolean",
+      "description": "Family alerts were queued for this incident"
+    }
+  },
+  "required": [
+    "done",
+    "severity",
+    "verdict",
+    "reason",
+    "evidence_count",
+    "campaign_id",
+    "alert_sent"
+  ],
+  "additionalProperties": false,
+  "title": "interview output",
+  "description": "Text mode: the service itself queues the next question / check-in via enqueue_outbox. App and voice modes only return it."
+}

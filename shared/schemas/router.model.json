@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "intent": {
+      "enum": [
+        "scam_check",
+        "verify_relative",
+        "interview",
+        "help",
+        "out_of_scope"
+      ]
+    },
+    "relative_name": {
+      "type": "string",
+      "maxLength": 60
+    }
+  },
+  "required": [
+    "intent"
+  ],
+  "additionalProperties": true,
+  "title": "MODEL_FAST intent"
+}

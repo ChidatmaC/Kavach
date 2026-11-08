@@ -1,0 +1,39 @@
+{
+  "family_code_word": "blue pancake",
+  "persons": [
+    { "phone_e164": "+15555550101", "display_name": "Joe", "critical_overrides_pause": true, "practice_consent": true, "tz_offset_minutes": -360 },
+    { "phone_e164": "+15555550102", "display_name": "Tommy", "critical_overrides_pause": false, "practice_consent": false, "tz_offset_minutes": -360 }
+  ],
+  "contacts": [
+    { "person_phone": "+15555550101", "name": "Tommy", "phone_e164": "+15555550102", "relationship": "grandson", "channel": "imessage", "is_emergency_contact": true, "is_app_user": true, "consent_status": "accepted" },
+    { "person_phone": "+15555550101", "name": "Maria", "phone_e164": "+15555550103", "relationship": "daughter", "channel": "sms", "is_emergency_contact": false, "is_app_user": false, "consent_status": "accepted" }
+  ],
+  "campaigns": [
+    { "slug": "carrier_fraud", "title": "Fake carrier fraud department calls", "tactic_summary": "Caller claims to be your phone carrier's fraud team and asks for the code just texted to you.", "sample_text": "This is the fraud department at your carrier. We stopped a suspicious SIM swap. Read me the 6 digit code we just sent to verify your identity.", "weekly_reports": 212 },
+    { "slug": "unpaid_toll", "title": "Unpaid toll texts", "tactic_summary": "Text says you owe a small toll fee and links to a fake payment page.", "sample_text": "TxTag: You have an unpaid toll balance of $4.35. Pay now to avoid a $50 late fee: https://txtag-pay.top/invoice", "weekly_reports": 1840 },
+    { "slug": "grandchild_emergency", "title": "Grandchild emergency calls", "tactic_summary": "Someone pretends to be a grandchild in trouble, asks for money or gift cards, and begs you not to tell anyone.", "sample_text": "Grandpa it's me, I got arrested and I need bail money. Please don't tell mom. Can you get gift cards?", "weekly_reports": 96 },
+    { "slug": "remote_job", "title": "Remote job offers", "tactic_summary": "Unsolicited job offer with high pay for simple tasks, later asks for an upfront deposit.", "sample_text": "Hi, I'm a recruiter. We have a remote part-time role paying $300/day liking products online. Reply YES to start.", "weekly_reports": 530 },
+    { "slug": "recovery_fee", "title": "Scam recovery offers", "tactic_summary": "After a scam, someone offers to recover your lost money for an upfront fee.", "sample_text": "We are the Fund Recovery Unit. We located the money you lost. Pay a $199 processing fee to release your refund.", "weekly_reports": 74 }
+  ],
+  "community_reports": [
+    { "kind": "number", "value": "+15555550199", "campaign_slug": "carrier_fraud", "reporter_count": 14 },
+    { "kind": "number", "value": "+15555550188", "campaign_slug": "grandchild_emergency", "reporter_count": 6 },
+    { "kind": "number", "value": "+15555550177", "campaign_slug": "remote_job", "reporter_count": 2 },
+    { "kind": "link", "value": "txtag-pay.top", "campaign_slug": "unpaid_toll", "reporter_count": 31 },
+    { "kind": "link", "value": "usps-redelivery.info", "campaign_slug": null, "reporter_count": 9 },
+    { "kind": "phrase", "value": "read me the code", "campaign_slug": "carrier_fraud", "reporter_count": 40 }
+  ],
+  "report_evidence": [
+    { "source": "seed", "channel": "sms", "sender_e164": "+15555550166", "links": ["txtag-pay.top"], "claimed_identity": "TxTag", "tactics": ["urgency", "fee_threat", "payment_link"], "text_redacted": "TxTag notice: unpaid toll of $3.95. Pay today or a $50 fee applies: https://txtag-pay.top/pay", "verdict": "likely_scam", "campaign_slug": "unpaid_toll" },
+    { "source": "seed", "channel": "sms", "sender_e164": "+15555550165", "links": ["ntta-tollpay.xyz"], "claimed_identity": "NTTA", "tactics": ["urgency", "fee_threat", "payment_link"], "text_redacted": "NTTA: Your account has an outstanding toll. Settle within 24 hours to avoid penalties: ntta-tollpay.xyz", "verdict": "likely_scam", "campaign_slug": "unpaid_toll" },
+    { "source": "call", "channel": "call", "sender_e164": "+15555550199", "links": [], "claimed_identity": "carrier fraud department", "tactics": ["impersonation", "code_request", "urgency"], "text_redacted": "Caller said they were from the carrier fraud team, said someone tried to move my number, and asked me to read back the code they texted.", "verdict": "likely_scam", "campaign_slug": "carrier_fraud" },
+    { "source": "hotline", "channel": "call", "sender_e164": "+15555550188", "links": [], "claimed_identity": "grandson", "tactics": ["impersonation", "secrecy", "gift_card_request", "urgency"], "text_redacted": "Someone said he was my grandson in jail, needed bail, asked for gift cards and said not to tell his parents.", "verdict": "likely_scam", "campaign_slug": "grandchild_emergency" },
+    { "source": "message", "channel": "imessage", "sender_e164": "+15555550144", "links": [], "claimed_identity": "family member", "tactics": ["new_number", "impersonation"], "text_redacted": "Hi mom, this is my new number, my phone broke. Save this one. Can you help me pay a bill today?", "verdict": "likely_scam", "campaign_slug": null },
+    { "source": "message", "channel": "sms", "sender_e164": "+15555550133", "links": [], "claimed_identity": "Fund Recovery Unit", "tactics": ["recovery_offer", "upfront_fee"], "text_redacted": "We recovered funds lost to the scam. A release fee of $250 is required to transfer your refund.", "verdict": "likely_scam", "campaign_slug": "recovery_fee" }
+  ],
+  "demo_messages": [
+    { "key": "toll_text", "text": "TxTag: You have an unpaid toll balance of $6.80. Pay by tonight to avoid a $50 late fee: https://txtag-pay.top/inv/88213", "verdict": "likely_scam", "reason": "This is a fake toll notice. The link goes to a site many people have reported, not the real toll agency.", "campaign_slug": "unpaid_toll", "tips": ["Don't tap the link.", "Check your toll account in the official app or website."] },
+    { "key": "new_number", "text": "Hey Grandpa it's me, I got a new number. My old phone broke. Can you text me back here?", "verdict": "suspicious", "reason": "\"New number, it's me\" texts are a common way scammers pretend to be family. Check with Tommy on his saved number first.", "campaign_slug": "grandchild_emergency", "tips": ["Text 'verify Tommy' to check.", "Ask for the family code word."] },
+    { "key": "recovery_fee", "text": "Fund Recovery Unit: we located the $1,200 you lost. Pay a $199 processing fee today to release your refund.", "verdict": "likely_scam", "reason": "Real agencies never charge a fee to return lost money. This matches a recovery scam many people have reported.", "campaign_slug": "recovery_fee", "tips": ["Don't pay any fee.", "Report it at ReportFraud.ftc.gov."] }
+  ]
+}

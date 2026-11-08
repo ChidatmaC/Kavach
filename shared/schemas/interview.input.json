@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "incident_id": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "mode": {
+      "enum": [
+        "text",
+        "app",
+        "voice"
+      ]
+    },
+    "utterance": {
+      "type": "string",
+      "maxLength": 4000
+    },
+    "checkin": {
+      "type": "boolean"
+    },
+    "question_id": {
+      "type": "string",
+      "enum": [
+        "q_identity",
+        "q_ask",
+        "q_shared",
+        "q_secrecy",
+        "q_help"
+      ]
+    },
+    "free_text": {
+      "type": "boolean",
+      "description": "Treat utterance as a free description (extract all answers) in text mode"
+    }
+  },
+  "required": [
+    "incident_id"
+  ],
+  "additionalProperties": true,
+  "title": "POST /run/interview"
+}

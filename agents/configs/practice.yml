@@ -1,0 +1,46 @@
+# NAT config: practice workflow. Harmless practice scam text (spec 7, Stretch).
+# Loaded and validated by NAT at service start (kavach/engine.py imports the kavach_* types from kavach/nat_plugin.py).
+general:
+  use_uvloop: true
+
+llms:
+  nemotron_fast:   # D4: routing, classification, tool loops
+    _type: nim
+    model_name: ${MODEL_FAST:-nvidia/nemotron-3.5-lightning-30b-a3b}
+    base_url: ${NIM_BASE_URL:-https://integrate.api.nvidia.com/v1}
+    api_key: ${NIM_API_KEY:-}
+    temperature: 0.2
+    max_tokens: 400
+  nemotron_writer: # D4: any text a person reads
+    _type: nim
+    model_name: ${MODEL_WRITER:-nvidia/nemotron-3.5-super-vl-120b-a12b}
+    base_url: ${NIM_BASE_URL:-https://integrate.api.nvidia.com/v1}
+    api_key: ${NIM_API_KEY:-}
+    temperature: 0.3
+    max_tokens: 600
+
+embedders:
+  nim_embed:       # 7a similarity search (used via kavach/similarity.py)
+    _type: nim
+    model_name: ${MODEL_EMBED:-nvidia/nemotron-3.5-embed-1b}
+    base_url: ${NIM_BASE_URL:-https://integrate.api.nvidia.com/v1}
+    api_key: ${NIM_API_KEY:-}
+
+functions:
+  get_person:
+    _type: kavach_tool
+    tool: get_person
+  read:
+    _type: kavach_tool
+    tool: read
+  reducer:
+    _type: kavach_tool
+    tool: reducer
+
+workflow:
+  _type: kavach_practice
+  llm_fast: nemotron_fast
+  llm_writer: nemotron_writer
+  tool_names: [get_person, read, reducer]
+  max_tool_calls: 6
+  timeout_s: 20

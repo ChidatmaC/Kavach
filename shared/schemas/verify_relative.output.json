@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "verification_id": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "messages": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "to_e164": {
+            "type": "string"
+          },
+          "channel": {
+            "type": "string"
+          },
+          "body": {
+            "type": "string",
+            "maxLength": 600
+          }
+        },
+        "required": [
+          "to_e164",
+          "channel",
+          "body"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "verification_id",
+    "messages"
+  ],
+  "additionalProperties": false,
+  "title": "verify_relative output (also /app/verify)",
+  "description": "verification_id 0 when the relative was not found"
+}

@@ -1,0 +1,16 @@
+.env
+node_modules/
+__pycache__/
+.venv/
+*.pyc
+ios/build/
+ios/*.xcodeproj/xcuserdata/
+DerivedData/
+.DS_Store
+spacetime/dist/
+.spacetime-tokens.json
+.run/
+.spacetime-tokens*.json
+.env.*backup
+.pytest_cache/
+*.xcuserstate

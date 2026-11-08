@@ -1,0 +1,1367 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		01D3CE023E121109A6538576 /* CallDirectoryExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = CDBBAC248CA8A26511CE0A15 /* CallDirectoryExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		09C9309D1A8E4BC7E71FCDE9 /* ShareExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 075A7124F758BFB07E8C83D8 /* ShareExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		0FEA8F23B455C5B069A82AC3 /* KavachKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 88F97D81F2CDBD139792F34C /* KavachKit.framework */; };
+		1618D62D951E117BACEDEAA1 /* AppModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 448845C282599DAF45C609F9 /* AppModel.swift */; };
+		18DC7B8FDF1B176303F7C880 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A672A4EC355592F1A167BAA /* Theme.swift */; };
+		1F1F1A7C836AD2CCDCEFC740 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2FA993223393B8ACBFF53886 /* OnboardingView.swift */; };
+		23658481704A86282462FFF7 /* InterviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 708FD6CDB4A67CE7605CF0D0 /* InterviewView.swift */; };
+		28CE65FE3A0F1325E67A6084 /* APIIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79DF7E4020BE9EF743F178F4 /* APIIntegrationTests.swift */; };
+		2FFEEB0DFA9AF0738C342CB3 /* DisplayPreferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58013880A15868C719C0A565 /* DisplayPreferences.swift */; };
+		3055F70A832ED1604DD44425 /* DecodingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 21978E5EE2DD6E78F8BB7A21 /* DecodingTests.swift */; };
+		379A8DEBB88DADA1D5503BA7 /* ShareViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F885A31314B91772AE216F4 /* ShareViewController.swift */; };
+		38181AF5B502E7A52E3EECCB /* AppConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9F8EA154989794799AD4DA6 /* AppConfig.swift */; };
+		3A505701E740970CE5F6F7C0 /* recovery_library.yaml in Resources */ = {isa = PBXBuildFile; fileRef = FF257F82ABC989184573F3E7 /* recovery_library.yaml */; };
+		3D2B898F4CEAD304D8B115CF /* MessageFilterExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = BC21CD7C936D9A3E26086884 /* MessageFilterExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		44B9C216EB135A84373771F0 /* KavachKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 88F97D81F2CDBD139792F34C /* KavachKit.framework */; };
+		491BA3C8AABBE243D85EDE6B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1021DD8F37CE2AC8CD12FD2F /* Assets.xcassets */; };
+		4B39E26F3071E53D390265D1 /* SharedStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A0426C419DECC4AB973A7AE /* SharedStore.swift */; };
+		58FF48B073979BE74395EB0D /* ActNowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB266BC71C6D4E1D5DE93688 /* ActNowView.swift */; };
+		5B6CF7A1E08DA45D65479031 /* KavachIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDB09A4C4CEA779D3FEEFA48 /* KavachIntents.swift */; };
+		5E2D86D7381D98E6DC08773D /* KavachApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE233D1D1A2CACE0C8835E15 /* KavachApp.swift */; };
+		60134B21EDFE48D87005EC0F /* KavachKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 88F97D81F2CDBD139792F34C /* KavachKit.framework */; };
+		609CA2681C28ABD18A777E0F /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7A52A06AE37CB1C0C5E538A /* Models.swift */; };
+		61BBA981985D7EAA71862044 /* SQLResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = 763C4C0C164F690F21CA67AF /* SQLResult.swift */; };
+		6E4CAA7CF807BF4F10378A79 /* FamilyView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7DAA991A3541A344BD4B707 /* FamilyView.swift */; };
+		70B6B35B1F8FE1AAD8A6E7F8 /* InterviewAndPrefsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39DC1015797D718FDBCE449C /* InterviewAndPrefsTests.swift */; };
+		718089972E86DB5AB415C99E /* InterviewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA2A1828425F16345BA4A83F /* InterviewModel.swift */; };
+		751BAF0C98810466D3AA9689 /* KavachKit.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 88F97D81F2CDBD139792F34C /* KavachKit.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		832A6735EDEEA2C1F8A95496 /* CallWatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 238EFDDA26A383C4D3C7348F /* CallWatcher.swift */; };
+		876085335773C40A46AAAE77 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEB9E70AE12268DC5470B3B5 /* SettingsView.swift */; };
+		8A2B0454423F56F329515819 /* KavachKit.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 88F97D81F2CDBD139792F34C /* KavachKit.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		8CB876B52B65D6B5DD8643C0 /* KavachKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 88F97D81F2CDBD139792F34C /* KavachKit.framework */; };
+		8E8B969EDC35775300B5A1EC /* IdentityLookupUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F19517F2BC189D48E33DD9C1 /* IdentityLookupUI.framework */; };
+		8F0DAABD3251DCE3532C657A /* KavachKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 88F97D81F2CDBD139792F34C /* KavachKit.framework */; };
+		91213C81ADDB77D74E45C3A9 /* TextRecognizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D818125AF6103C6B03A9B5E /* TextRecognizer.swift */; };
+		957E8B8002230BCF5808FBE5 /* VerdictViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A52DDC810569588DD57E8F9 /* VerdictViews.swift */; };
+		A1FA85C1134A9D4E3AE043E1 /* Speaker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D0E603DF9E149B5572C8B11 /* Speaker.swift */; };
+		A4A16B9C16EF4B7D527E1003 /* CallCompanionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73F34E522FA1B6520AE12CBA /* CallCompanionView.swift */; };
+		AB85B5F88CB574A4B41AD2DD /* ReportExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 6642536F33A7215145BADE03 /* ReportExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		AC9D5E18CE720EC847204F30 /* PushRegistrar.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFD41C14121547AD36B113CA /* PushRegistrar.swift */; };
+		AD18A19EEDBCBB0C7B7FA0DD /* InterviewFlowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E7E4997BCFC4B20AD82FFF7 /* InterviewFlowView.swift */; };
+		AEFF9C4137C2AA905FB6E7E7 /* KavachAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 77A765E4B10A4AFB10DE3B17 /* KavachAPI.swift */; };
+		AF3E8194F826D5276219C9DF /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4D0F8F594347D69B4F20AA7 /* HomeView.swift */; };
+		AF47D954A9F938BB3C76C890 /* SpacetimeClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3E590A4D919DB10824A4E84A /* SpacetimeClient.swift */; };
+		B22E62961E92DE36A28D6522 /* AgentClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7EB6E5A69151DB107A959801 /* AgentClient.swift */; };
+		B994B9C40CFDADCD7F18B2BD /* JSONValue.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5649340C92E40198031DA9E /* JSONValue.swift */; };
+		BC032704538E6E39AD1215C2 /* CheckMessageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF2D602773E5D6AFE94D3AB7 /* CheckMessageView.swift */; };
+		BCF1F77AFD3CF64195752E6D /* ReportViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4FF200682E212477C30AC65 /* ReportViewController.swift */; };
+		D40E5F066BD3C421BBB3795D /* RecoveryLibrary.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8917F8E8C3C5366A82C69BC /* RecoveryLibrary.swift */; };
+		E221BC48F6B4EC9350E2AD9B /* MessageFilterHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9DE7232D60484AF7F6814725 /* MessageFilterHandler.swift */; };
+		E334165CD08D36919D5827A4 /* CallDirectoryHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 95969519A645C189638F20A7 /* CallDirectoryHandler.swift */; };
+		F67BD72B2DC8D8708A2D3247 /* KavachKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 88F97D81F2CDBD139792F34C /* KavachKit.framework */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		29E7D3CA3FEDE0E624A51165 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = EE6A59BDDE3DFC3DD044FCBE /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 235EFA7FFEDE1D67A9ADEFE2;
+			remoteInfo = KavachKit;
+		};
+		3959C4F03FF2368DC1D44D8E /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = EE6A59BDDE3DFC3DD044FCBE /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = CFBC2F8E507A4D0B664FF3BE;
+			remoteInfo = MessageFilterExtension;
+		};
+		6F7818E8C02981C671EEF5B2 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = EE6A59BDDE3DFC3DD044FCBE /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 235EFA7FFEDE1D67A9ADEFE2;
+			remoteInfo = KavachKit;
+		};
+		8BDDDF2B6B25176A0B1A9935 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = EE6A59BDDE3DFC3DD044FCBE /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 806E936E28710ADB89D3CA7C;
+			remoteInfo = ShareExtension;
+		};
+		C58F5D60CFBD391269D5D57A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = EE6A59BDDE3DFC3DD044FCBE /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 121AAACB6BEE5B28FDA71916;
+			remoteInfo = ReportExtension;
+		};
+		C86392814261FAA402BF2FC4 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = EE6A59BDDE3DFC3DD044FCBE /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 235EFA7FFEDE1D67A9ADEFE2;
+			remoteInfo = KavachKit;
+		};
+		D03E0162BB42EAA02308BC94 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = EE6A59BDDE3DFC3DD044FCBE /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 235EFA7FFEDE1D67A9ADEFE2;
+			remoteInfo = KavachKit;
+		};
+		D5C4333F0145BA284E9EDD5E /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = EE6A59BDDE3DFC3DD044FCBE /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 235EFA7FFEDE1D67A9ADEFE2;
+			remoteInfo = KavachKit;
+		};
+		E0BEB86427E850040C45CF4D /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = EE6A59BDDE3DFC3DD044FCBE /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 5C062110D4AE58A966C5E845;
+			remoteInfo = CallDirectoryExtension;
+		};
+		E25F63CAE20ECC0437456662 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = EE6A59BDDE3DFC3DD044FCBE /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 235EFA7FFEDE1D67A9ADEFE2;
+			remoteInfo = KavachKit;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		16FEAE5095BD02726A58DB5B /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				8A2B0454423F56F329515819 /* KavachKit.framework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		4B7D639095A2850C182870DF /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				751BAF0C98810466D3AA9689 /* KavachKit.framework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D60E9A99E2000286B6582668 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				01D3CE023E121109A6538576 /* CallDirectoryExtension.appex in Embed Foundation Extensions */,
+				AB85B5F88CB574A4B41AD2DD /* ReportExtension.appex in Embed Foundation Extensions */,
+				09C9309D1A8E4BC7E71FCDE9 /* ShareExtension.appex in Embed Foundation Extensions */,
+				3D2B898F4CEAD304D8B115CF /* MessageFilterExtension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		03EEB345B008E805AE8B25BC /* CallDirectoryExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = CallDirectoryExtension.entitlements; sourceTree = "<group>"; };
+		075A7124F758BFB07E8C83D8 /* ShareExtension.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = ShareExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		0D818125AF6103C6B03A9B5E /* TextRecognizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextRecognizer.swift; sourceTree = "<group>"; };
+		0ECB2F2574724B57D59398FF /* MessageFilterExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = MessageFilterExtension.entitlements; sourceTree = "<group>"; };
+		1021DD8F37CE2AC8CD12FD2F /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		1525AD9EC1D7938815CFF4B2 /* Kavach.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Kavach.entitlements; sourceTree = "<group>"; };
+		21978E5EE2DD6E78F8BB7A21 /* DecodingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DecodingTests.swift; sourceTree = "<group>"; };
+		238EFDDA26A383C4D3C7348F /* CallWatcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CallWatcher.swift; sourceTree = "<group>"; };
+		2FA993223393B8ACBFF53886 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
+		349138B1737F803A7AD15D5F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		39DC1015797D718FDBCE449C /* InterviewAndPrefsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InterviewAndPrefsTests.swift; sourceTree = "<group>"; };
+		3D0E603DF9E149B5572C8B11 /* Speaker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Speaker.swift; sourceTree = "<group>"; };
+		3E590A4D919DB10824A4E84A /* SpacetimeClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpacetimeClient.swift; sourceTree = "<group>"; };
+		3F885A31314B91772AE216F4 /* ShareViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareViewController.swift; sourceTree = "<group>"; };
+		448845C282599DAF45C609F9 /* AppModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppModel.swift; sourceTree = "<group>"; };
+		4B84B5AB69F9BE04F58F2784 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		54A8367F4641475D6E8380F3 /* ReportExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ReportExtension.entitlements; sourceTree = "<group>"; };
+		58013880A15868C719C0A565 /* DisplayPreferences.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DisplayPreferences.swift; sourceTree = "<group>"; };
+		5A0426C419DECC4AB973A7AE /* SharedStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedStore.swift; sourceTree = "<group>"; };
+		5A672A4EC355592F1A167BAA /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
+		6642536F33A7215145BADE03 /* ReportExtension.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = ReportExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		6A52DDC810569588DD57E8F9 /* VerdictViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VerdictViews.swift; sourceTree = "<group>"; };
+		708FD6CDB4A67CE7605CF0D0 /* InterviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InterviewView.swift; sourceTree = "<group>"; };
+		73F34E522FA1B6520AE12CBA /* CallCompanionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CallCompanionView.swift; sourceTree = "<group>"; };
+		763C4C0C164F690F21CA67AF /* SQLResult.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SQLResult.swift; sourceTree = "<group>"; };
+		77A765E4B10A4AFB10DE3B17 /* KavachAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KavachAPI.swift; sourceTree = "<group>"; };
+		79DF7E4020BE9EF743F178F4 /* APIIntegrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIIntegrationTests.swift; sourceTree = "<group>"; };
+		7EB6E5A69151DB107A959801 /* AgentClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentClient.swift; sourceTree = "<group>"; };
+		80536E2C94B54C4904EF9732 /* Kavach.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Kavach.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		88F97D81F2CDBD139792F34C /* KavachKit.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = KavachKit.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		8E7E4997BCFC4B20AD82FFF7 /* InterviewFlowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InterviewFlowView.swift; sourceTree = "<group>"; };
+		9560F13E6116A6E445CF8072 /* Kavach.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Kavach.xcconfig; sourceTree = "<group>"; };
+		95969519A645C189638F20A7 /* CallDirectoryHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CallDirectoryHandler.swift; sourceTree = "<group>"; };
+		9DE7232D60484AF7F6814725 /* MessageFilterHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageFilterHandler.swift; sourceTree = "<group>"; };
+		A5649340C92E40198031DA9E /* JSONValue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSONValue.swift; sourceTree = "<group>"; };
+		A8917F8E8C3C5366A82C69BC /* RecoveryLibrary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecoveryLibrary.swift; sourceTree = "<group>"; };
+		B7DAA991A3541A344BD4B707 /* FamilyView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FamilyView.swift; sourceTree = "<group>"; };
+		BC21CD7C936D9A3E26086884 /* MessageFilterExtension.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = MessageFilterExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		BE2017144735B96A289C3062 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		BEB9E70AE12268DC5470B3B5 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		CDB09A4C4CEA779D3FEEFA48 /* KavachIntents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KavachIntents.swift; sourceTree = "<group>"; };
+		CDBBAC248CA8A26511CE0A15 /* CallDirectoryExtension.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = CallDirectoryExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		CFA64CE95461CB55871DF44F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		D4ED90551DB82F7CD46172F6 /* ShareExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ShareExtension.entitlements; sourceTree = "<group>"; };
+		D4FF200682E212477C30AC65 /* ReportViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportViewController.swift; sourceTree = "<group>"; };
+		D7A52A06AE37CB1C0C5E538A /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
+		D9F8EA154989794799AD4DA6 /* AppConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConfig.swift; sourceTree = "<group>"; };
+		EA2A1828425F16345BA4A83F /* InterviewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InterviewModel.swift; sourceTree = "<group>"; };
+		EE233D1D1A2CACE0C8835E15 /* KavachApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KavachApp.swift; sourceTree = "<group>"; };
+		EFD41C14121547AD36B113CA /* PushRegistrar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PushRegistrar.swift; sourceTree = "<group>"; };
+		F0F79E453E94474FDB4D7C36 /* KavachTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = KavachTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		F19517F2BC189D48E33DD9C1 /* IdentityLookupUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IdentityLookupUI.framework; path = System/Library/Frameworks/IdentityLookupUI.framework; sourceTree = SDKROOT; };
+		F4BF5FA944FEB71708E7B572 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		F4D0F8F594347D69B4F20AA7 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
+		FB266BC71C6D4E1D5DE93688 /* ActNowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActNowView.swift; sourceTree = "<group>"; };
+		FF257F82ABC989184573F3E7 /* recovery_library.yaml */ = {isa = PBXFileReference; lastKnownFileType = text.yaml; path = recovery_library.yaml; sourceTree = "<group>"; };
+		FF2D602773E5D6AFE94D3AB7 /* CheckMessageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CheckMessageView.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		139063D2E773B9227AD52405 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				60134B21EDFE48D87005EC0F /* KavachKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		3BDAAD055867E1AABA59A646 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				44B9C216EB135A84373771F0 /* KavachKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		6615F8C2E705B72D99672477 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				8CB876B52B65D6B5DD8643C0 /* KavachKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		9A76051C6BB01F0DC7645F43 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0FEA8F23B455C5B069A82AC3 /* KavachKit.framework in Frameworks */,
+				8E8B969EDC35775300B5A1EC /* IdentityLookupUI.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AAD70D58C9CBF45E73FF7FA1 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				8F0DAABD3251DCE3532C657A /* KavachKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E515B0780351D49385F78443 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F67BD72B2DC8D8708A2D3247 /* KavachKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		1CB457A42481B71BFE8985EB /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				F19517F2BC189D48E33DD9C1 /* IdentityLookupUI.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		1CB9744439BC15A39D5B2F14 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				1021DD8F37CE2AC8CD12FD2F /* Assets.xcassets */,
+				4B84B5AB69F9BE04F58F2784 /* Info.plist */,
+				1525AD9EC1D7938815CFF4B2 /* Kavach.entitlements */,
+				EE233D1D1A2CACE0C8835E15 /* KavachApp.swift */,
+				3487C85973898763395392AB /* Intents */,
+				44A154D77E52C8AB53C115F9 /* Services */,
+				5AB377D7A43D7EBC612693F6 /* Views */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		233CAA187FB02470D4EF33E8 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				D7A52A06AE37CB1C0C5E538A /* Models.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		2650C26DE91942DF262798A8 /* Config */ = {
+			isa = PBXGroup;
+			children = (
+				9560F13E6116A6E445CF8072 /* Kavach.xcconfig */,
+			);
+			path = Config;
+			sourceTree = "<group>";
+		};
+		2D7583BBE7453B7BF7DF8CFF /* KavachKit */ = {
+			isa = PBXGroup;
+			children = (
+				DBB0DAB8E9CC40ECEE066EFA /* Interview */,
+				233CAA187FB02470D4EF33E8 /* Models */,
+				FD8C72E949ADA2614E24482B /* Networking */,
+				A9F05C5877FCB7A0D9678835 /* Services */,
+				B9ED0F0E63834520C6206B23 /* Store */,
+				5F37809457BB5DB147BAD130 /* UI */,
+			);
+			path = KavachKit;
+			sourceTree = "<group>";
+		};
+		3487C85973898763395392AB /* Intents */ = {
+			isa = PBXGroup;
+			children = (
+				CDB09A4C4CEA779D3FEEFA48 /* KavachIntents.swift */,
+			);
+			path = Intents;
+			sourceTree = "<group>";
+		};
+		37B85DE00F1D281E929D815A /* CallDirectoryExtension */ = {
+			isa = PBXGroup;
+			children = (
+				03EEB345B008E805AE8B25BC /* CallDirectoryExtension.entitlements */,
+				95969519A645C189638F20A7 /* CallDirectoryHandler.swift */,
+				BE2017144735B96A289C3062 /* Info.plist */,
+			);
+			path = CallDirectoryExtension;
+			sourceTree = "<group>";
+		};
+		44A154D77E52C8AB53C115F9 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				448845C282599DAF45C609F9 /* AppModel.swift */,
+				238EFDDA26A383C4D3C7348F /* CallWatcher.swift */,
+				EFD41C14121547AD36B113CA /* PushRegistrar.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		5AB377D7A43D7EBC612693F6 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				FB266BC71C6D4E1D5DE93688 /* ActNowView.swift */,
+				73F34E522FA1B6520AE12CBA /* CallCompanionView.swift */,
+				FF2D602773E5D6AFE94D3AB7 /* CheckMessageView.swift */,
+				B7DAA991A3541A344BD4B707 /* FamilyView.swift */,
+				F4D0F8F594347D69B4F20AA7 /* HomeView.swift */,
+				8E7E4997BCFC4B20AD82FFF7 /* InterviewFlowView.swift */,
+				2FA993223393B8ACBFF53886 /* OnboardingView.swift */,
+				BEB9E70AE12268DC5470B3B5 /* SettingsView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		5F37809457BB5DB147BAD130 /* UI */ = {
+			isa = PBXGroup;
+			children = (
+				5A672A4EC355592F1A167BAA /* Theme.swift */,
+				6A52DDC810569588DD57E8F9 /* VerdictViews.swift */,
+			);
+			path = UI;
+			sourceTree = "<group>";
+		};
+		6275F26154967AF4D0A13EF9 /* MessageFilterExtension */ = {
+			isa = PBXGroup;
+			children = (
+				349138B1737F803A7AD15D5F /* Info.plist */,
+				0ECB2F2574724B57D59398FF /* MessageFilterExtension.entitlements */,
+				9DE7232D60484AF7F6814725 /* MessageFilterHandler.swift */,
+			);
+			path = MessageFilterExtension;
+			sourceTree = "<group>";
+		};
+		6E547108D03A7481EA3130C6 /* ReportExtension */ = {
+			isa = PBXGroup;
+			children = (
+				F4BF5FA944FEB71708E7B572 /* Info.plist */,
+				54A8367F4641475D6E8380F3 /* ReportExtension.entitlements */,
+				D4FF200682E212477C30AC65 /* ReportViewController.swift */,
+			);
+			path = ReportExtension;
+			sourceTree = "<group>";
+		};
+		7F818033F512694D7241F45D /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				CDBBAC248CA8A26511CE0A15 /* CallDirectoryExtension.appex */,
+				80536E2C94B54C4904EF9732 /* Kavach.app */,
+				88F97D81F2CDBD139792F34C /* KavachKit.framework */,
+				F0F79E453E94474FDB4D7C36 /* KavachTests.xctest */,
+				BC21CD7C936D9A3E26086884 /* MessageFilterExtension.appex */,
+				6642536F33A7215145BADE03 /* ReportExtension.appex */,
+				075A7124F758BFB07E8C83D8 /* ShareExtension.appex */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		A9F05C5877FCB7A0D9678835 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				A8917F8E8C3C5366A82C69BC /* RecoveryLibrary.swift */,
+				3D0E603DF9E149B5572C8B11 /* Speaker.swift */,
+				0D818125AF6103C6B03A9B5E /* TextRecognizer.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		ABB6C5C530950B9E2F61795D /* ShareExtension */ = {
+			isa = PBXGroup;
+			children = (
+				CFA64CE95461CB55871DF44F /* Info.plist */,
+				D4ED90551DB82F7CD46172F6 /* ShareExtension.entitlements */,
+				3F885A31314B91772AE216F4 /* ShareViewController.swift */,
+			);
+			path = ShareExtension;
+			sourceTree = "<group>";
+		};
+		AC27634DE33702CBE15E1D2B /* shared */ = {
+			isa = PBXGroup;
+			children = (
+				FF257F82ABC989184573F3E7 /* recovery_library.yaml */,
+			);
+			path = shared;
+			sourceTree = "<group>";
+		};
+		B9ED0F0E63834520C6206B23 /* Store */ = {
+			isa = PBXGroup;
+			children = (
+				D9F8EA154989794799AD4DA6 /* AppConfig.swift */,
+				58013880A15868C719C0A565 /* DisplayPreferences.swift */,
+				5A0426C419DECC4AB973A7AE /* SharedStore.swift */,
+			);
+			path = Store;
+			sourceTree = "<group>";
+		};
+		C8A489B08DFE38CF1F6FE3FD /* Tests */ = {
+			isa = PBXGroup;
+			children = (
+				D8F86DED604843E4384C23BB /* KavachTests */,
+			);
+			path = Tests;
+			sourceTree = "<group>";
+		};
+		D8F86DED604843E4384C23BB /* KavachTests */ = {
+			isa = PBXGroup;
+			children = (
+				79DF7E4020BE9EF743F178F4 /* APIIntegrationTests.swift */,
+				21978E5EE2DD6E78F8BB7A21 /* DecodingTests.swift */,
+				39DC1015797D718FDBCE449C /* InterviewAndPrefsTests.swift */,
+			);
+			path = KavachTests;
+			sourceTree = "<group>";
+		};
+		DBB0DAB8E9CC40ECEE066EFA /* Interview */ = {
+			isa = PBXGroup;
+			children = (
+				EA2A1828425F16345BA4A83F /* InterviewModel.swift */,
+				708FD6CDB4A67CE7605CF0D0 /* InterviewView.swift */,
+			);
+			path = Interview;
+			sourceTree = "<group>";
+		};
+		E61E08D8116C24AC3542F4BD /* hackutd2026 */ = {
+			isa = PBXGroup;
+			children = (
+				AC27634DE33702CBE15E1D2B /* shared */,
+			);
+			name = hackutd2026;
+			path = ..;
+			sourceTree = "<group>";
+		};
+		FD8C72E949ADA2614E24482B /* Networking */ = {
+			isa = PBXGroup;
+			children = (
+				7EB6E5A69151DB107A959801 /* AgentClient.swift */,
+				A5649340C92E40198031DA9E /* JSONValue.swift */,
+				77A765E4B10A4AFB10DE3B17 /* KavachAPI.swift */,
+				3E590A4D919DB10824A4E84A /* SpacetimeClient.swift */,
+				763C4C0C164F690F21CA67AF /* SQLResult.swift */,
+			);
+			path = Networking;
+			sourceTree = "<group>";
+		};
+		FDD0B82B0A79683F60A1E5B8 = {
+			isa = PBXGroup;
+			children = (
+				1CB9744439BC15A39D5B2F14 /* App */,
+				37B85DE00F1D281E929D815A /* CallDirectoryExtension */,
+				2650C26DE91942DF262798A8 /* Config */,
+				E61E08D8116C24AC3542F4BD /* hackutd2026 */,
+				2D7583BBE7453B7BF7DF8CFF /* KavachKit */,
+				6275F26154967AF4D0A13EF9 /* MessageFilterExtension */,
+				6E547108D03A7481EA3130C6 /* ReportExtension */,
+				ABB6C5C530950B9E2F61795D /* ShareExtension */,
+				C8A489B08DFE38CF1F6FE3FD /* Tests */,
+				1CB457A42481B71BFE8985EB /* Frameworks */,
+				7F818033F512694D7241F45D /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		121AAACB6BEE5B28FDA71916 /* ReportExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 43AECEE8EFB466E3DE4026B3 /* Build configuration list for PBXNativeTarget "ReportExtension" */;
+			buildPhases = (
+				10DBF1A889E5BA6FE9BDF885 /* Sources */,
+				9A76051C6BB01F0DC7645F43 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				608CFA114B75989E2AF6CDD2 /* PBXTargetDependency */,
+			);
+			name = ReportExtension;
+			packageProductDependencies = (
+			);
+			productName = ReportExtension;
+			productReference = 6642536F33A7215145BADE03 /* ReportExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+		1803C113802066D9CAD2AA7E /* KavachTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = C0395440DECCC6C4D6094078 /* Build configuration list for PBXNativeTarget "KavachTests" */;
+			buildPhases = (
+				19531923556B5F8356839E8F /* Sources */,
+				6615F8C2E705B72D99672477 /* Frameworks */,
+				4B7D639095A2850C182870DF /* Embed Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				4E85FE00F52C071AA3AE7993 /* PBXTargetDependency */,
+			);
+			name = KavachTests;
+			packageProductDependencies = (
+			);
+			productName = KavachTests;
+			productReference = F0F79E453E94474FDB4D7C36 /* KavachTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		235EFA7FFEDE1D67A9ADEFE2 /* KavachKit */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = BC4739504EF659F965F07A48 /* Build configuration list for PBXNativeTarget "KavachKit" */;
+			buildPhases = (
+				E30A182ECFCBAC4041D9A776 /* Sources */,
+				5372BC45EE0366D7939BD450 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = KavachKit;
+			packageProductDependencies = (
+			);
+			productName = KavachKit;
+			productReference = 88F97D81F2CDBD139792F34C /* KavachKit.framework */;
+			productType = "com.apple.product-type.framework";
+		};
+		5C062110D4AE58A966C5E845 /* CallDirectoryExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 420B02A8CEF4B40157D683C8 /* Build configuration list for PBXNativeTarget "CallDirectoryExtension" */;
+			buildPhases = (
+				AA37704703141532085FDE3E /* Sources */,
+				AAD70D58C9CBF45E73FF7FA1 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				F0239DCEA97895E600D9EF98 /* PBXTargetDependency */,
+			);
+			name = CallDirectoryExtension;
+			packageProductDependencies = (
+			);
+			productName = CallDirectoryExtension;
+			productReference = CDBBAC248CA8A26511CE0A15 /* CallDirectoryExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+		65075F434038BCFBC0DED49D /* Kavach */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 4D36516DB6922FC24BA5AA32 /* Build configuration list for PBXNativeTarget "Kavach" */;
+			buildPhases = (
+				118ACB62ED7F1B887A498BA0 /* Sources */,
+				2C917FAB0C09F759EA496866 /* Resources */,
+				139063D2E773B9227AD52405 /* Frameworks */,
+				D60E9A99E2000286B6582668 /* Embed Foundation Extensions */,
+				16FEAE5095BD02726A58DB5B /* Embed Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				93359C15B9DF69C145F2D71C /* PBXTargetDependency */,
+				BA4C821D88EFFD5ADFBFA21C /* PBXTargetDependency */,
+				BD0B9876DEC08BD625BA8A9B /* PBXTargetDependency */,
+				47336309E6B3BC71E3CE91CE /* PBXTargetDependency */,
+				DE01F099F018871A70EF12CA /* PBXTargetDependency */,
+			);
+			name = Kavach;
+			packageProductDependencies = (
+			);
+			productName = Kavach;
+			productReference = 80536E2C94B54C4904EF9732 /* Kavach.app */;
+			productType = "com.apple.product-type.application";
+		};
+		806E936E28710ADB89D3CA7C /* ShareExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 7172C424BE65D3B6F5F82651 /* Build configuration list for PBXNativeTarget "ShareExtension" */;
+			buildPhases = (
+				1CA539BE5E715A993DE69DA1 /* Sources */,
+				E515B0780351D49385F78443 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				9B8A4B6F606A1490E4A5F1CD /* PBXTargetDependency */,
+			);
+			name = ShareExtension;
+			packageProductDependencies = (
+			);
+			productName = ShareExtension;
+			productReference = 075A7124F758BFB07E8C83D8 /* ShareExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+		CFBC2F8E507A4D0B664FF3BE /* MessageFilterExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 5F749FDB04B79020B9124649 /* Build configuration list for PBXNativeTarget "MessageFilterExtension" */;
+			buildPhases = (
+				2DF0F1124D14B73942D6793C /* Sources */,
+				3BDAAD055867E1AABA59A646 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				5140CB139BA6533BE8FF561A /* PBXTargetDependency */,
+			);
+			name = MessageFilterExtension;
+			packageProductDependencies = (
+			);
+			productName = MessageFilterExtension;
+			productReference = BC21CD7C936D9A3E26086884 /* MessageFilterExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		EE6A59BDDE3DFC3DD044FCBE /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					121AAACB6BEE5B28FDA71916 = {
+						DevelopmentTeam = "";
+						ProvisioningStyle = Automatic;
+					};
+					1803C113802066D9CAD2AA7E = {
+						DevelopmentTeam = "";
+						ProvisioningStyle = Automatic;
+					};
+					235EFA7FFEDE1D67A9ADEFE2 = {
+						DevelopmentTeam = "";
+						ProvisioningStyle = Automatic;
+					};
+					5C062110D4AE58A966C5E845 = {
+						DevelopmentTeam = "";
+						ProvisioningStyle = Automatic;
+					};
+					65075F434038BCFBC0DED49D = {
+						DevelopmentTeam = "";
+						ProvisioningStyle = Automatic;
+					};
+					806E936E28710ADB89D3CA7C = {
+						DevelopmentTeam = "";
+						ProvisioningStyle = Automatic;
+					};
+					CFBC2F8E507A4D0B664FF3BE = {
+						DevelopmentTeam = "";
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = CCE6BA54D6440A35EA49E975 /* Build configuration list for PBXProject "Kavach" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = FDD0B82B0A79683F60A1E5B8;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 7F818033F512694D7241F45D /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				235EFA7FFEDE1D67A9ADEFE2 /* KavachKit */,
+				65075F434038BCFBC0DED49D /* Kavach */,
+				5C062110D4AE58A966C5E845 /* CallDirectoryExtension */,
+				121AAACB6BEE5B28FDA71916 /* ReportExtension */,
+				806E936E28710ADB89D3CA7C /* ShareExtension */,
+				CFBC2F8E507A4D0B664FF3BE /* MessageFilterExtension */,
+				1803C113802066D9CAD2AA7E /* KavachTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		2C917FAB0C09F759EA496866 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				491BA3C8AABBE243D85EDE6B /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		5372BC45EE0366D7939BD450 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				3A505701E740970CE5F6F7C0 /* recovery_library.yaml in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		10DBF1A889E5BA6FE9BDF885 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				BCF1F77AFD3CF64195752E6D /* ReportViewController.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		118ACB62ED7F1B887A498BA0 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				58FF48B073979BE74395EB0D /* ActNowView.swift in Sources */,
+				1618D62D951E117BACEDEAA1 /* AppModel.swift in Sources */,
+				A4A16B9C16EF4B7D527E1003 /* CallCompanionView.swift in Sources */,
+				832A6735EDEEA2C1F8A95496 /* CallWatcher.swift in Sources */,
+				BC032704538E6E39AD1215C2 /* CheckMessageView.swift in Sources */,
+				6E4CAA7CF807BF4F10378A79 /* FamilyView.swift in Sources */,
+				AF3E8194F826D5276219C9DF /* HomeView.swift in Sources */,
+				AD18A19EEDBCBB0C7B7FA0DD /* InterviewFlowView.swift in Sources */,
+				5E2D86D7381D98E6DC08773D /* KavachApp.swift in Sources */,
+				5B6CF7A1E08DA45D65479031 /* KavachIntents.swift in Sources */,
+				1F1F1A7C836AD2CCDCEFC740 /* OnboardingView.swift in Sources */,
+				AC9D5E18CE720EC847204F30 /* PushRegistrar.swift in Sources */,
+				876085335773C40A46AAAE77 /* SettingsView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		19531923556B5F8356839E8F /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				28CE65FE3A0F1325E67A6084 /* APIIntegrationTests.swift in Sources */,
+				3055F70A832ED1604DD44425 /* DecodingTests.swift in Sources */,
+				70B6B35B1F8FE1AAD8A6E7F8 /* InterviewAndPrefsTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		1CA539BE5E715A993DE69DA1 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				379A8DEBB88DADA1D5503BA7 /* ShareViewController.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		2DF0F1124D14B73942D6793C /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E221BC48F6B4EC9350E2AD9B /* MessageFilterHandler.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AA37704703141532085FDE3E /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E334165CD08D36919D5827A4 /* CallDirectoryHandler.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E30A182ECFCBAC4041D9A776 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B22E62961E92DE36A28D6522 /* AgentClient.swift in Sources */,
+				38181AF5B502E7A52E3EECCB /* AppConfig.swift in Sources */,
+				2FFEEB0DFA9AF0738C342CB3 /* DisplayPreferences.swift in Sources */,
+				718089972E86DB5AB415C99E /* InterviewModel.swift in Sources */,
+				23658481704A86282462FFF7 /* InterviewView.swift in Sources */,
+				B994B9C40CFDADCD7F18B2BD /* JSONValue.swift in Sources */,
+				AEFF9C4137C2AA905FB6E7E7 /* KavachAPI.swift in Sources */,
+				609CA2681C28ABD18A777E0F /* Models.swift in Sources */,
+				D40E5F066BD3C421BBB3795D /* RecoveryLibrary.swift in Sources */,
+				61BBA981985D7EAA71862044 /* SQLResult.swift in Sources */,
+				4B39E26F3071E53D390265D1 /* SharedStore.swift in Sources */,
+				AF47D954A9F938BB3C76C890 /* SpacetimeClient.swift in Sources */,
+				A1FA85C1134A9D4E3AE043E1 /* Speaker.swift in Sources */,
+				91213C81ADDB77D74E45C3A9 /* TextRecognizer.swift in Sources */,
+				18DC7B8FDF1B176303F7C880 /* Theme.swift in Sources */,
+				957E8B8002230BCF5808FBE5 /* VerdictViews.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		47336309E6B3BC71E3CE91CE /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 806E936E28710ADB89D3CA7C /* ShareExtension */;
+			targetProxy = 8BDDDF2B6B25176A0B1A9935 /* PBXContainerItemProxy */;
+		};
+		4E85FE00F52C071AA3AE7993 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 235EFA7FFEDE1D67A9ADEFE2 /* KavachKit */;
+			targetProxy = D03E0162BB42EAA02308BC94 /* PBXContainerItemProxy */;
+		};
+		5140CB139BA6533BE8FF561A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 235EFA7FFEDE1D67A9ADEFE2 /* KavachKit */;
+			targetProxy = D5C4333F0145BA284E9EDD5E /* PBXContainerItemProxy */;
+		};
+		608CFA114B75989E2AF6CDD2 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 235EFA7FFEDE1D67A9ADEFE2 /* KavachKit */;
+			targetProxy = C86392814261FAA402BF2FC4 /* PBXContainerItemProxy */;
+		};
+		93359C15B9DF69C145F2D71C /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 235EFA7FFEDE1D67A9ADEFE2 /* KavachKit */;
+			targetProxy = 6F7818E8C02981C671EEF5B2 /* PBXContainerItemProxy */;
+		};
+		9B8A4B6F606A1490E4A5F1CD /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 235EFA7FFEDE1D67A9ADEFE2 /* KavachKit */;
+			targetProxy = 29E7D3CA3FEDE0E624A51165 /* PBXContainerItemProxy */;
+		};
+		BA4C821D88EFFD5ADFBFA21C /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 5C062110D4AE58A966C5E845 /* CallDirectoryExtension */;
+			targetProxy = E0BEB86427E850040C45CF4D /* PBXContainerItemProxy */;
+		};
+		BD0B9876DEC08BD625BA8A9B /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 121AAACB6BEE5B28FDA71916 /* ReportExtension */;
+			targetProxy = C58F5D60CFBD391269D5D57A /* PBXContainerItemProxy */;
+		};
+		DE01F099F018871A70EF12CA /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = CFBC2F8E507A4D0B664FF3BE /* MessageFilterExtension */;
+			targetProxy = 3959C4F03FF2368DC1D44D8E /* PBXContainerItemProxy */;
+		};
+		F0239DCEA97895E600D9EF98 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 235EFA7FFEDE1D67A9ADEFE2 /* KavachKit */;
+			targetProxy = E25F63CAE20ECC0437456662 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		08FFF75699D074A949FAF3A6 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = App/Kavach.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				INFOPLIST_FILE = App/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.kavach.app;
+				PRODUCT_NAME = Kavach;
+				SDKROOT = iphoneos;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		0A201F41F9C18CB3D4498D8D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_IDENTITY = "";
+				CURRENT_PROJECT_VERSION = 1;
+				DEFINES_MODULE = YES;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				GENERATE_INFOPLIST_FILE = YES;
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.kavach.KavachKit;
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VERSIONING_SYSTEM = "apple-generic";
+			};
+			name = Debug;
+		};
+		1602EA2177A345162D0AC807 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.kavach.KavachTests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		19AF22A6AC099079CD015411 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_ENTITLEMENTS = ShareExtension/ShareExtension.entitlements;
+				INFOPLIST_FILE = ShareExtension/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.kavach.app.Share;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		2A88E16243FB90DA426BDB1B /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_ENTITLEMENTS = MessageFilterExtension/MessageFilterExtension.entitlements;
+				INFOPLIST_FILE = MessageFilterExtension/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.kavach.app.MessageFilter;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		4C1D1A249FF0E4353DACDE5F /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_ENTITLEMENTS = CallDirectoryExtension/CallDirectoryExtension.entitlements;
+				INFOPLIST_FILE = CallDirectoryExtension/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.kavach.app.CallDirectory;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		5CCC76E50108BF653E47C807 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_ENTITLEMENTS = ShareExtension/ShareExtension.entitlements;
+				INFOPLIST_FILE = ShareExtension/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.kavach.app.Share;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		5F1CF685700FFA8B6D96068B /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 9560F13E6116A6E445CF8072 /* Kavach.xcconfig */;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = "";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 0.1.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+		8BCF449D413F68109B9DA141 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = App/Kavach.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				INFOPLIST_FILE = App/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.kavach.app;
+				PRODUCT_NAME = Kavach;
+				SDKROOT = iphoneos;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		9EE57557F4E9ECF3A9973AB8 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_ENTITLEMENTS = ReportExtension/ReportExtension.entitlements;
+				INFOPLIST_FILE = ReportExtension/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.kavach.app.Report;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		C0774604D4384901BF19DE66 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.kavach.KavachTests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		C910E267751211C575AB003C /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_IDENTITY = "";
+				CURRENT_PROJECT_VERSION = 1;
+				DEFINES_MODULE = YES;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				GENERATE_INFOPLIST_FILE = YES;
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.kavach.KavachKit;
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VERSIONING_SYSTEM = "apple-generic";
+			};
+			name = Release;
+		};
+		CA87656182F47A351F21F35A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_ENTITLEMENTS = CallDirectoryExtension/CallDirectoryExtension.entitlements;
+				INFOPLIST_FILE = CallDirectoryExtension/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.kavach.app.CallDirectory;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		CB45A90483F089EECC7097AF /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 9560F13E6116A6E445CF8072 /* Kavach.xcconfig */;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 0.1.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		EF1D1104674960D11BDFD2A5 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_ENTITLEMENTS = ReportExtension/ReportExtension.entitlements;
+				INFOPLIST_FILE = ReportExtension/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.kavach.app.Report;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		F3B8D7343A4EC1C988CDF440 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_ENTITLEMENTS = MessageFilterExtension/MessageFilterExtension.entitlements;
+				INFOPLIST_FILE = MessageFilterExtension/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.kavach.app.MessageFilter;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		420B02A8CEF4B40157D683C8 /* Build configuration list for PBXNativeTarget "CallDirectoryExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				4C1D1A249FF0E4353DACDE5F /* Debug */,
+				CA87656182F47A351F21F35A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		43AECEE8EFB466E3DE4026B3 /* Build configuration list for PBXNativeTarget "ReportExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				9EE57557F4E9ECF3A9973AB8 /* Debug */,
+				EF1D1104674960D11BDFD2A5 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		4D36516DB6922FC24BA5AA32 /* Build configuration list for PBXNativeTarget "Kavach" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				8BCF449D413F68109B9DA141 /* Debug */,
+				08FFF75699D074A949FAF3A6 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		5F749FDB04B79020B9124649 /* Build configuration list for PBXNativeTarget "MessageFilterExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F3B8D7343A4EC1C988CDF440 /* Debug */,
+				2A88E16243FB90DA426BDB1B /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		7172C424BE65D3B6F5F82651 /* Build configuration list for PBXNativeTarget "ShareExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				5CCC76E50108BF653E47C807 /* Debug */,
+				19AF22A6AC099079CD015411 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		BC4739504EF659F965F07A48 /* Build configuration list for PBXNativeTarget "KavachKit" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				0A201F41F9C18CB3D4498D8D /* Debug */,
+				C910E267751211C575AB003C /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		C0395440DECCC6C4D6094078 /* Build configuration list for PBXNativeTarget "KavachTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1602EA2177A345162D0AC807 /* Debug */,
+				C0774604D4384901BF19DE66 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		CCE6BA54D6440A35EA49E975 /* Build configuration list for PBXProject "Kavach" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				CB45A90483F089EECC7097AF /* Debug */,
+				5F1CF685700FFA8B6D96068B /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = EE6A59BDDE3DFC3DD044FCBE /* Project object */;
+}

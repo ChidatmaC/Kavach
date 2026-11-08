@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "body": {
+      "type": "string",
+      "minLength": 40,
+      "maxLength": 600
+    }
+  },
+  "required": [
+    "body"
+  ],
+  "additionalProperties": true,
+  "title": "MODEL_WRITER family alert"
+}
